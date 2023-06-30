@@ -40,11 +40,9 @@ form fieldset:last-of-type:has(> button) {
   justify-content: space-between;
 } */
 button {
-  /* background-color: var(--co); */
-  background-color: transparent;
+  background-color: var(--brand-blue);
+  border: 0 solid transparent;
   color: var(--fc);
-  /* border-radius: 8px; */
-  border: 1px solid var(--fc);
   padding: 0.8rem 1.2rem;
   font-size: 1.1em;
   font-weight: 500;
@@ -52,6 +50,20 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+
+button.outline {
+  background-color: transparent;
+  border: 1px solid var(--fc);
+  color: var(--fc);
+}
+button.rounded {
+  border-radius: 2rem;
+}
+button.link {
+  background-color: transparent;
+  color: var(--fc);
+}
+
 button[type=submit] {
   place-self: end;
   justify-self: end;
@@ -70,9 +82,9 @@ button:disabled {
   cursor: not-allowed;
 }
 button:not(:disabled):hover {
-  background-color: var(--c);
-  color: var(--info);
-  border-color: var(--info);
+  background-color: var(--brand-blue-highlight);
+  color: var(--f);
+  border-color: var(--f);
 }
 button:not(:disabled):focus,
 button:not(:disabled):focus-visible {

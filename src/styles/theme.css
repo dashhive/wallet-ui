@@ -2,6 +2,7 @@
 ::backdrop {
   /* From Figma */
   --brand-blue: #008DE4;
+  --brand-blue-highlight: #49b0f0;
 
   --dark-100: #B1C6CC;
   --dark-200: #80929C;
@@ -233,6 +234,10 @@
     content: '☀';
     transform: rotateZ(0deg);
   }
+}
+
+:focus-visible {
+  outline: -webkit-focus-ring-color auto 0;
 }
 
 body {

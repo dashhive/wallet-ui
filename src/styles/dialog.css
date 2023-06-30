@@ -30,7 +30,8 @@ dialog[open]::backdrop {
 }
 
 dialog.left,
-dialog.right {
+dialog.right,
+dialog.fullscreen {
   position: fixed;
   margin: 0;
   padding: 0;
@@ -42,6 +43,11 @@ dialog.right {
   max-height: none;
   transition: all 0.5s ease-in-out;
   overflow: hidden;
+}
+dialog.center {
+  align-content: center;
+  justify-items: center;
+  text-align: center;
 }
 
 dialog.responsive {
@@ -197,6 +203,64 @@ dialog figure {
 /* dialog figure figcaption {
   line-break: anywhere;
 } */
+
+dialog.fullscreen form section {
+  margin: 0;
+  flex: 1 1 auto;
+  display: grid;
+  grid-auto-columns: 1.5fr 2fr;
+  grid-auto-flow: column;
+}
+dialog.fullscreen form section > aside,
+dialog.fullscreen form section > article {
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+dialog.fullscreen form section > aside {
+  background-color: var(--dark-900);
+  padding: 0 3.5rem;
+}
+dialog.fullscreen form section > aside > h2 {
+  color: var(--dark-100);
+  font-size: 3rem;
+  font-weight: 400;
+  line-height: normal;
+  margin: 0;
+}
+dialog.fullscreen form section > aside > p {
+  color: var(--dark-200);
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: normal;
+}
+dialog.fullscreen form section > article {
+  flex-grow: 4;
+  gap: 5rem;
+}
+dialog.fullscreen form section > article > div {
+  width: 70%;
+}
+dialog.fullscreen form section > article > hr {
+  width: 70%;
+  border: 0;
+  border-top: 1px solid var(--dark-600);
+}
+dialog.fullscreen form section > article > div > h3 {
+  margin-top: 0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  color: var(--dark-100);
+}
+dialog.fullscreen form section > article > div > p {
+  margin-bottom: 2.5rem;
+  color: var(--dark-200);
+}
+dialog.fullscreen form section > article > div > button {
+  width: 100%;
+}
 
 @media (min-width: 650px) {
   /* dialog.responsive {
