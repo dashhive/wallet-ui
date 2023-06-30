@@ -1,0 +1,29 @@
+pre {
+  background-color: var(--c);
+  font-family: var(--fm);
+  font-size: 14px;
+  padding: 1rem;
+  max-width: 100%;
+  /* overflow: auto; */
+}
+pre code {
+  white-space: pre-line;
+}
+pre code > * {
+  display: inline;
+}
+pre code .dem {
+  color: var(--note);
+}
+pre code em {
+  color: var(--dang);
+  font-style: normal;
+}
+pre code address {
+  color: var(--succ);
+  font-style: normal;
+}
+pre code output {
+  color: var(--info);
+  font-style: italic;
+}

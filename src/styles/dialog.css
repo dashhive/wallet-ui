@@ -1,0 +1,279 @@
+dialog {
+  background: var(--mdlbg);
+  color: var(--mdlfg);
+  border: 0;
+  font-size: 16px;
+
+  /*
+    From: https://stackoverflow.com/a/64708195
+  */
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+dialog::backdrop {
+  background: var(--mdlbd);
+  opacity: 0;
+  transition: opacity 0.5s;
+}
+dialog[open] {
+  opacity: 1;
+  pointer-events: inherit;
+}
+dialog[open]::backdrop {
+  opacity: 1;
+  pointer-events: inherit;
+}
+
+dialog.left,
+dialog.right {
+  position: fixed;
+  margin: 0;
+  padding: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+  transition: all 0.5s ease-in-out;
+  overflow: hidden;
+}
+
+dialog.responsive {
+  box-sizing: border-box;
+  position: fixed;
+  display: flex;
+  top: 0;
+  /* top: 3rem; */
+  bottom: 0;
+  height: auto;
+  /* height: 100vh; */
+  width: 100%;
+  max-height: 100%;
+  max-width: 100%;
+  border: 0 solid;
+  opacity: 1;
+  z-index: 9;
+  z-index: 10;
+  padding: 0;
+  flex-direction: column;
+}
+dialog form {
+  box-sizing: border-box;
+  display: flex;
+  padding: 0;
+  max-width: 100%;
+  max-height: 100%;
+  width: 100%;
+  flex: 1 1 auto;
+  justify-self: center;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+dialog > form > header,
+dialog > form > footer {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  font-size: 1.25rem;
+}
+dialog > form > header > strong {
+  margin: 1rem 0;
+}
+dialog > form > fieldset {
+  height: 100%;
+  overflow: auto;
+  padding: 1rem;
+}
+dialog > form > fieldset > input,
+dialog > form > fieldset > select,
+dialog > form > fieldset > textarea {
+  text-align: left;
+  padding: 0 1rem;
+  flex: 0 0 auto;
+}
+dialog > form > fieldset > label {
+  text-transform: capitalize;
+}
+
+
+dialog.responsive header {
+  padding: 0 1rem 0 3rem;
+  line-height: 1.5;
+  justify-content: flex-end;
+}
+dialog.responsive form {
+  justify-content: center;
+  /* max-width: 83vw; */
+}
+dialog.responsive fieldset:first-child {
+  justify-content: center;
+  flex: 1 1 auto;
+  text-align: left;
+}
+dialog.responsive form > fieldset:first-child > input,
+dialog.responsive fieldset:last-child {
+  flex: 0 1 auto;
+}
+dialog.responsive fieldset:last-child {
+  padding: 0;
+}
+dialog.responsive fieldset:first-child section {
+  margin: 1rem 0;
+}
+dialog.responsive fieldset:first-child section article {
+  flex-direction: row;
+  display: flex;
+  align-items: flex-start;
+}
+
+dialog.responsive button[type="submit"] {
+  flex: 1 1 auto;
+}
+dialog.responsive button[type="reset"] {
+  position: absolute;
+  top: 0;
+  left: 0;
+  flex: 0 1 auto;
+  width: auto;
+  border: 0 solid transparent;
+  background-color: transparent;
+  transition: none;
+  padding: 1rem;
+  line-height: 1;
+}
+dialog.responsive button[type="reset"]:focus {
+  outline: 0;
+}
+dialog.responsive button[type="reset"]::before {
+  content: '←';
+  /* ← 🡨 🡸 🢀 🢐 🢘 🠸 🠬 🠨 🠜 🠐 🠈 🠀 */
+  font-size: 2rem;
+  line-height: 1;
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
+}
+dialog.responsive button[type="reset"] span {
+  display: none;
+}
+
+dialog.responsive fieldset.nomargin {
+  margin: 0;
+}
+dialog.responsive fieldset.nomargintop {
+  margin-top: 0;
+}
+dialog.responsive fieldset.nomarginbottom {
+  margin-bottom: 0;
+}
+dialog.responsive fieldset.nopad {
+  padding: 0;
+}
+dialog.responsive fieldset.nopadtop {
+  padding-top: 0;
+}
+dialog.responsive fieldset.nopadbottom {
+  padding-bottom: 0;
+}
+
+dialog h4 {
+  margin: .5rem auto;
+}
+dialog h4 + h3 {
+  font-size: 2rem;
+  margin-top: .5rem;
+}
+
+dialog figure {
+  margin: 0;
+  flex: 1 1 auto;
+  align-self: stretch;
+}
+/* dialog figure figcaption {
+  line-break: anywhere;
+} */
+
+@media (min-width: 650px) {
+  /* dialog.responsive {
+    position: fixed;
+    top: 0px;
+    height: 90vh;
+    height: fit-content;
+    max-width: 650px;
+    border: 0 solid;
+    opacity: 1;
+    z-index: 9;
+  } */
+  dialog.responsive form {
+    justify-content: space-between;
+  }
+  dialog.responsive fieldset:first-child {
+    justify-content: center;
+    flex: none;
+    margin-bottom: 1rem;
+  }
+  dialog.responsive form > fieldset:first-child > input,
+  dialog.responsive fieldset:last-child {
+    flex: none;
+  }
+  dialog.responsive button[type="submit"] {
+    flex: none;
+  }
+  dialog.responsive button[type="reset"] {
+    position: initial;
+    /* border: 1px solid transparent; */
+    /* background-color: var(--btnbg); */
+    /* text-align: left;
+    padding-left: 0;
+    padding-right: 0; */
+  }
+  dialog.responsive button[type="reset"]:last-child {
+    flex: 1 1 auto;
+  }
+  dialog.responsive button[type="reset"]:hover {
+    /* background-color: var(--btnbgh); */
+    color: var(--dang);
+  }
+  dialog.responsive button[type="reset"]:focus {
+    outline: 0;
+    outline: 1px solid -webkit-focus-ring-color;
+  }
+  dialog.responsive button[type="reset"]::before {
+    content: none;
+  }
+  dialog.responsive button[type="reset"] span {
+    display: initial;
+  }
+  dialog.responsive form fieldset.inline {
+    justify-content: space-between;
+  }
+  dialog.responsive header {
+    justify-content: space-between;
+    padding: 0.5rem 1rem;
+    font-size: 1.25rem;
+    line-height: initial;
+  }
+
+  dialog.left {
+    left: -40vw;
+    right: auto;
+    width: 40vw;
+  }
+  dialog.left[open] {
+    left: 0;
+  }
+
+  dialog.right {
+    left: auto;
+    right: -40vw;
+    width: 40vw;
+  }
+  dialog.right[open] {
+    right: 0;
+  }
+}

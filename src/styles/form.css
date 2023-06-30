@@ -1,0 +1,254 @@
+
+main form {
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto 1rem;
+  gap: .5rem;
+}
+
+form fieldset {
+  position: relative;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  min-width: 200px;
+  /* width: 100%; */
+  justify-content: left;
+  gap: .5rem;
+  padding: 0;
+}
+form fieldset:disabled {
+  opacity: .3;
+}
+form:has(> fieldset > legend) {
+  margin-top: 2rem;
+}
+form fieldset:has(> legend) {
+  border: 1px solid var(--ch);
+  padding: 1rem;
+  margin-top: -.65rem;
+}
+form fieldset > legend {
+  font-weight: 400;
+  font-size: 1.3rem;
+}
+form fieldset:last-of-type:has(> button) {
+  flex-direction: row;
+  justify-content: center;
+}
+/* form fieldset:last-of-type:has(> [type=reset]) {
+  justify-content: space-between;
+} */
+button {
+  /* background-color: var(--co); */
+  background-color: transparent;
+  color: var(--fc);
+  /* border-radius: 8px; */
+  border: 1px solid var(--fc);
+  padding: 0.8rem 1.2rem;
+  font-size: 1.1em;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.25s;
+}
+button[type=submit] {
+  place-self: end;
+  justify-self: end;
+}
+button[type=reset] {
+  place-self: start;
+  justify-self: start;
+  color: var(--note);
+  border-color: var(--note);
+  border-width: 0;
+}
+button:disabled {
+  /* background-color: var(--d); */
+  color: var(--note);
+  border-color: var(--note);
+  cursor: not-allowed;
+}
+button:not(:disabled):hover {
+  background-color: var(--c);
+  color: var(--info);
+  border-color: var(--info);
+}
+button:not(:disabled):focus,
+button:not(:disabled):focus-visible {
+  /* outline: 4px auto -webkit-focus-ring-color; */
+  outline: 0 auto -webkit-focus-ring-color;
+}
+button[type=reset]:not(:disabled):hover {
+  background-color: var(--c);
+  color: var(--dang);
+  border-color: var(--dang);
+}
+input, select, textarea {
+  background-color: var(--c);
+  color: var(--fc);
+  border: 1px solid var(--ch);
+  /* text-align: center; */
+  line-height: 1;
+  font-size: 1.5rem;
+  width: 100%;
+  height: 3rem;
+  /* max-width: 24rem; */
+  outline: 0;
+  text-align: left;
+  padding: 0 1rem;
+  flex: 0 0 auto;
+}
+textarea {
+  padding: 1rem;
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 4rem;
+}
+
+label {
+  /* line-height: 3rem; */
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  user-select: none;
+  min-width: 100px;
+  gap: 1rem;
+}
+label > input[type=checkbox],
+label + input[type=checkbox] {
+  width: 2rem;
+}
+
+
+input[type=checkbox]:has(+ label.switch) {
+  display: none;
+}
+
+label.switch {
+  position: relative;
+  display: inline-block;
+  width: 64px;
+  height: 32px;
+  background-color: var(--c);
+  border-radius: 32px;
+  transition: background-color 0.3s;
+  min-width: unset;
+  box-sizing: border-box;
+  border: 0;
+  cursor: pointer;
+}
+label.switch::after {
+  content: '';
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 26px;
+  background-color: var(--note);
+  top: 3px;
+  left: 3px;
+  transition: all 0.3s;
+}
+label.switch:active::after {
+	width: 36px;
+  background-color: var(--f);
+}
+
+input[type=checkbox]:checked + label.switch::after {
+  left: calc(100% - 3px);
+	transform: translateX(-100%);
+  background-color: var(--f);
+}
+input[type=checkbox]:checked + label.live::after {
+  background-color: var(--live);
+}
+
+input[type=checkbox]:checked + label.switch {
+  background-color: var(--succ);
+}
+input[type=checkbox]:checked + label.live {
+  background-color: var(--di);
+}
+
+
+
+
+label:has(+ input[type=checkbox]) {
+  flex: 1 1 auto;
+  font-weight: 400;
+  font-size: 1.3rem;
+  justify-content: space-between;
+}
+fieldset label:has(+ input[type=checkbox]) {
+  justify-content: center;
+}
+input:has(+ label > input[type=checkbox][name=show_pass]) {
+  padding-right: 3rem;
+}
+label > input[type=checkbox][name=show_pass] {
+  display: none;
+  width: 0;
+}
+label:has(> input[type=checkbox][name=show_pass]) {
+  position: relative;
+  margin-top: -3.5rem;
+  height: 3rem;
+  width: 3rem;
+  right: 0rem;
+  min-width: auto;
+  place-self: end;
+  justify-content: center;
+  background-color: var(--c);
+  border: 1px solid var(--ch);
+  border-left: 0 solid transparent;
+  flex: 0 0 auto;
+}
+label:has(> input[type=checkbox][name=show_pass])::after {
+  display: flex;
+  content: '👁';
+  color: var(--note);
+}
+label:has(> input[type=checkbox][name=show_pass]:checked)::after {
+  color: var(--l);
+}
+input:has(+ label > input[type=checkbox][name=show_pass]):focus-visible,
+input:focus-visible + label:has(> input[type=checkbox][name=show_pass]) {
+  border-color: var(--l);
+}
+label[for],
+label:has(> input) {
+  cursor: pointer;
+}
+fieldset:not(:disabled) label[for],
+fieldset:not(:disabled) label:has(> input) {
+  cursor: pointer;
+}
+form[name="network"] {
+  justify-content: center;
+}
+
+.center form {
+  width: 100%;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+.center input {
+  max-width: initial;
+  line-height: 2;
+}
+
+
+@media (min-width: 650px) {
+  section > header > form {
+    justify-content: end;
+    align-self: center;
+  }
+  section > header > form fieldset {
+    justify-content: end !important;
+  }
+  section > article > form {
+    background-color: var(--co);
+    padding: 1rem;
+    position: relative;
+  }
+}

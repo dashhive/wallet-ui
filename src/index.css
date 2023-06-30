@@ -1,0 +1,105 @@
+@import url(./styles/theme.css);
+@import url(./styles/table.css);
+@import url(./styles/code.css);
+@import url(./styles/motion.css);
+@import url(./styles/progress.css);
+@import url(./styles/dialog.css);
+@import url(./styles/form.css);
+@import url(./styles/nav.css);
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+}
+
+main {
+  padding: 0;
+  width: 100%;
+}
+
+main h1 { text-align: center; }
+
+main header {
+  margin: 0 auto;
+  padding: 0 2rem;
+  /* max-width: 1100px; */
+  min-height: 85px;
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column-reverse;
+}
+main header h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+main header h2 + div {
+  display: flex;
+}
+main footer {
+  text-align: center;
+}
+
+
+svg {
+  max-width: 50%;
+  margin: 0 auto;
+  display: block;
+}
+
+figure {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+figure h4 {
+  font-size: 2rem;
+}
+
+
+.row {
+  flex-direction: row;
+}
+.col {
+  flex-direction: column;
+}
+.msg {
+  display: flex;
+  flex-direction: column;
+}
+.center {
+  align-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+@media (min-width: 650px) {
+  section {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+  }
+  section > header {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    padding: 0 1rem;
+    min-height: auto;
+  }
+  section > header > * {
+    margin: 0;
+  }
+  section > article {
+    flex: 0 1 31%;
+  }
+  header {
+    flex-direction: row;
+  }
+}

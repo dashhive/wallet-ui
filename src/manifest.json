@@ -1,0 +1,26 @@
+{
+  "name": "Dash Wallet",
+  "short_name": "dwui",
+  "description": "A Graphical User Interface (GUI) for DashWallet.js",
+  "start_url": "/wallet-ui/",
+  "scope": "/wallet-ui/",
+  "dir": "auto",
+  "lang": "en-US",
+  "display": "standalone",
+  "orientation": "portrait",
+	"background_color": "#eeeeee",
+	"theme_color": "#242424",
+  "icons": [
+    {
+      "src": "../public/icons/dash-d-rounded-square-250.png",
+      "sizes": "250x250",
+      "type": "image/png"
+    }
+  ],
+  "protocol_handlers": [
+    {
+      "protocol": "web+dash",
+      "url": "/wallet-ui/contact?to=%s"
+    }
+  ]
+}

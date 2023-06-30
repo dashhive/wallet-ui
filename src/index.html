@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <base href="/src/" />
+  <title>Incubator Wallet</title>
+
+  <script type="text/javascript">
+  if (JSON.parse(localStorage.getItem('theme'))) {
+    document.documentElement.classList.add('it')
+  }
+  if (location.pathname.includes('wallet-ui')) {
+    document.head.querySelector('base').href = '/wallet-ui/'
+  }
+  </script>
+
+  <meta name="application-name" content="Incubator Wallet">
+  <meta name="apple-mobile-web-app-title" content="Incubator Wallet">
+	<meta name="mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-capable" content="yes">
+	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+	<meta name="theme-color" content="#242424">
+	<meta name="msapplication-TileColor" content="#00bbff">
+	<meta name="msapplication-TileImage" content="../public/icons/dash-d-rounded-square-250.png">
+	<meta name="msapplication-config" content="../public/icons/browserconfig.xml">
+
+	<link rel="icon" type="image/png" href="./favicon.png">
+	<link rel="shortcut icon" href="./favicon.png">
+	<link rel="manifest" href="./manifest.json?v=0.0.0" crossorigin="use-credentials">
+
+	<link rel="icon" type="image/png" sizes="250x250" href="../public/icons/dash-d-rounded-square-250.png">
+	<link rel="apple-touch-icon" sizes="250x250" href="../public/icons/dash-d-rounded-square-250.png">
+  <link rel="stylesheet" type="text/css" media="screen" href="./index.css?v=0">
+</head>
+<body class="nt">
+<nav>
+  <a class="brand" href="#home">Incubator Wallet</a>
+  <a class="alias" href="#alias">@alias</a>
+</nav>
+
+<main id="app">
+  <!-- <section class="page" id="onboarding">
+  </section>
+  <section class="page" id="wallet">
+    <h1>Wallets</h1>
+  </section>
+  <section class="page" id="settings">
+    <h1>Settings</h1>
+  </section> -->
+  <footer>
+    <h4>Alpha stage, not production ready. <span>Use at your own risk.</span></h4>
+    <h5>Checkout the <a target="_blank" href="https://github.com/dashhive/wallet-ui">Source Code</a></h5>
+  </footer>
+</main>
+
+<script type="text/javascript" async>
+  (function invertTheme(selector) {
+    let theme = JSON.parse(localStorage.getItem('theme'))
+
+    if (selector) {
+      document.querySelector(selector)?.
+        addEventListener('click', event => {
+          event.preventDefault()
+          theme = !theme
+          localStorage.setItem('theme', theme)
+          document.documentElement.classList.toggle('it')
+        })
+    }
+  })('nav a.theme')
+
+  // if ('serviceWorker' in navigator) {
+  //   navigator.serviceWorker
+  //     .register(`sw.js`)
+  //     .then(function () {
+  //       console.log("Service Worker Registered");
+  //     });
+  // }
+</script>
+<script src="../node_modules/qrcode-svg/dist/qrcode.min.js"></script>
+<script src="./main.js" type="module" async defer></script>
+</body>
+</html>

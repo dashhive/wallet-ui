@@ -1,0 +1,16 @@
+@-webkit-keyframes await-progress {
+  0%   {
+    background-position: -322px;
+  }
+  100% {
+    background-position: 322px;
+  }
+}
+@keyframes await-progress {
+  0%   {
+    background-position: -322px;
+  }
+  100% {
+    background-position: 322px;
+  }
+}

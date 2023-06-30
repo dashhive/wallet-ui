@@ -1,0 +1,358 @@
+:root,
+::backdrop {
+  /* From Figma */
+  --brand-blue: #008DE4;
+
+  --dark-100: #B1C6CC;
+  --dark-200: #80929C;
+  --dark-400: #5E6D7C;
+  --dark-500: #3F474F;
+  --dark-600: #252C33;
+  --dark-800: #111921;
+  --dark-900: #0C1217;
+
+  --grayscale-gray-400: #9DA6A6;
+
+  --c: var(--dark-900);
+  --oc: #222;
+  --mc: #1d1d1d;
+  --di: #333;
+  --hc: #555;
+  --ct: #111a;
+  --d: var(--dark-800);
+  --l: #eee;
+  --lt: #eeea;
+  --lf: #dfdfdf;
+  --f: #fff;
+
+  --info: #0bf;
+  --note: #888;
+  --warn: #fa0;
+  --dang: #f55;
+  --succ: #5b5;
+  --lite: #09c;
+
+  --nav-bound: 75px;
+
+  --bgc: var(--d);
+  --fc: var(--l);
+
+  --nav-bg: var(--n);
+  --nav-abg: var(--c);
+  --nav-a: var(--a);
+
+  --mdlbg: var(--d);
+  --mdlfg: var(--l);
+  --mdlbd: var(--lt);
+
+  --tblalt: var(--di);
+  --tblhdr: var(--e);
+  --tblbrd: var(--co);
+  --tblcap: var(--n);
+
+  --fb: -apple-system, BlinkMacSystemFont, Avenir, "Avenir Next",
+  "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
+  "Droid Sans", "Helvetica Neue", sans-serif;
+  --fm: "IBM Plex Mono", Consolas, "Andale Mono WT", "Andale Mono",
+  "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono",
+  "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco,
+  "Courier New", Courier, monospace;
+  font-family: var(--fb);
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+* { box-sizing: border-box; }
+
+@media (prefers-color-scheme: light) {
+  :root:not(.it),
+  ::backdrop {
+    color-scheme: light;
+    --bgc: var(--l);
+    --fc: var(--d);
+
+    --linkbg: var(--lf);
+    --linkfg: var(--lite);
+    --linkbgh: var(--f);
+    --linkfgh: var(--lite);
+
+    --btnbg: var(--l);
+    --btnfg: var(--di);
+    --btnbgd: var(--lf);
+    --btnfgd: var(--note);
+    --btnbgh: var(--f);
+    --btnfgh: var(--lite);
+
+    --inpbg: var(--f);
+    --inpbd: var(--note);
+    --inpfg: var(--fc);
+    --inpbdi: var(--dang);
+
+    --mdlbg: var(--f);
+    --mdlfg: var(--di);
+    --mdlbd: var(--lt);
+
+    --gridbg: var(--lf);
+    --gridshd: var(--lf);
+  }
+
+  .it {
+    color-scheme: dark;
+    --bgc: var(--d);
+    --fc: var(--l);
+
+    --linkbg: var(--oc);
+    --linkfg: var(--info);
+    --linkbgh: var(--c);
+    --linkfgh: var(--info);
+
+    --btnbg: var(--oc);
+    --btnfg: var(--fc);
+    --btnbgd: var(--d);
+    --btnfgd: var(--note);
+    --btnbgh: var(--c);
+    --btnfgh: var(--info);
+
+    --inpbg: var(--c);
+    --inpbd: var(--hc);
+    --inpfg: var(--fc);
+    --inpbdi: var(--dang);
+
+    --mdlbg: var(--d);
+    --mdlfg: var(--fc);
+    --mdlbd: var(--ct);
+
+    --gridbg: var(--oc);
+    --gridshd: var(--mc);
+  }
+  /* html:not(.it),img,svg,video,html:not(.it) dialog {
+    filter: invert(95%) hue-rotate(180deg);
+  } */
+  progress:indeterminate {
+    background: linear-gradient(
+      90deg,
+      #0000 0%,
+      #0000 50%,
+      var(--lite) 100%
+    );
+  }
+  nav a.theme::before {
+    content: '☀';
+    /* 🌣 ☀ ☼ ☀️ 🌞 */
+    transform: rotateZ(0deg);
+  }
+  html:not(.it) nav a.theme::before {
+    content: '☽';
+    /* 🌛 🌜 🌒 */
+    transform: rotateZ(45deg);
+  }
+}
+@media (prefers-color-scheme: dark) {
+  :root:not(.it),
+  ::backdrop {
+    color-scheme: dark;
+    --bgc: var(--d);
+    --fc: var(--l);
+
+    --linkbg: var(--oc);
+    --linkfg: var(--info);
+    --linkbgh: var(--c);
+    --linkfgh: var(--info);
+
+    --btnbg: var(--oc);
+    --btnfg: var(--fc);
+    --btnbgd: var(--d);
+    --btnfgd: var(--note);
+    --btnbgh: var(--c);
+    --btnfgh: var(--info);
+
+    --inpbg: var(--c);
+    --inpbd: var(--hc);
+    --inpfg: var(--fc);
+    --inpbdi: var(--dang);
+
+    --mdlbg: var(--d);
+    --mdlfg: var(--fc);
+    --mdlbd: var(--ct);
+
+    --gridbg: var(--oc);
+    --gridshd: var(--mc);
+  }
+
+  .it {
+    color-scheme: light;
+    --bgc: var(--l);
+    --fc: var(--d);
+
+    --linkbg: var(--lf);
+    --linkfg: var(--lite);
+    --linkbgh: var(--f);
+    --linkfgh: var(--lite);
+
+    --btnbg: var(--l);
+    --btnfg: var(--di);
+    --btnbgd: var(--lf);
+    --btnfgd: var(--note);
+    --btnbgh: var(--f);
+    --btnfgh: var(--lite);
+
+    --inpbg: var(--f);
+    --inpbd: var(--note);
+    --inpfg: var(--fc);
+    --inpbdi: var(--dang);
+
+    --mdlbg: var(--f);
+    --mdlfg: var(--di);
+    --mdlbd: var(--lt);
+
+    --gridbg: var(--lf);
+    --gridshd: var(--lf);
+  }
+  /* html.it,img,svg,video,html.it dialog {
+    filter: invert(95%) hue-rotate(180deg);
+  } */
+  progress:indeterminate {
+    background: linear-gradient(
+      90deg,
+      #0000 0%,
+      #0000 50%,
+      var(--info) 100%
+    );
+  }
+  nav a.theme::before {
+    content: '☽';
+    transform: rotateZ(45deg);
+  }
+  html:not(.it) nav a.theme::before {
+    content: '☀';
+    transform: rotateZ(0deg);
+  }
+}
+
+body {
+  background: var(--bgc);
+  color: var(--fc);
+}
+
+a {
+  /* color: var(--fc); */
+  color: var(--info);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--info);
+  text-decoration: dashed;
+  text-decoration-line: underline;
+}
+
+svg {
+  fill: currentColor;
+}
+
+svg path {
+  fill: currentColor;
+}
+
+nav {
+  background-color: var(--nav-bg);
+}
+nav a {
+  color: var(--nav-a);
+}
+nav a.active {
+  background-color: var(--nav-abg);
+}
+
+table {
+  border: 1px solid var(--tblbrd);
+}
+
+tr:nth-of-type(2n) {
+  background-color: var(--tblalt);
+}
+
+caption {
+  background-color: var(--tblcap);
+}
+
+th {
+  background-color: var(--tblhdr);
+}
+
+
+.info {
+  color: var(--info);
+}
+.note {
+  color: var(--note);
+}
+.warn {
+  color: var(--warn);
+}
+.dang {
+  color: var(--dang);
+}
+.succ {
+  color: var(--succ);
+}
+.lite {
+  color: var(--lite);
+}
+.live {
+  color: var(--live);
+}
+
+.bg-info {
+  background-color: var(--info);
+}
+.bg-note {
+  background-color: var(--note);
+}
+.bg-warn {
+  background-color: var(--warn);
+}
+.bg-dang {
+  background-color: var(--dang);
+}
+.bg-succ {
+  background-color: var(--succ);
+}
+.bg-lite {
+  background-color: var(--lite);
+}
+.bg-live {
+  background-color: var(--live);
+}
+
+
+.link {
+  border: 0 solid transparent;
+  line-height: 1;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  transition: transform .2s ease-in-out;
+}
+.link:focus,
+.link:focus-visible {
+  outline: 0;
+}
+.link:not(:disabled):hover {
+  background-color: transparent;
+  transform: scale(1.25);
+}
+
+.note {
+  color: var(--note);
+}
+.hide {
+  display: none;
+}
+.over {
+  border: 1px dashed var(--warn);
+}

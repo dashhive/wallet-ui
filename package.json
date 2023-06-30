@@ -1,0 +1,51 @@
+{
+  "name": "wallet-ui",
+  "description": "A Graphical User Interface (GUI) for DashWallet.js",
+  "author": "jojobyte <byte@jojo.io> (https://jojo.io/)",
+  "keywords": [
+    "dash",
+    "wallet",
+    "dashwallet",
+    "cryptocurrency",
+    "xpub",
+    "friends",
+    "gui",
+    "html",
+    "css",
+    "js",
+    "vanilla"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dashhive/wallet-ui.git"
+  },
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "npm run https",
+    "https": "npx sirv-cli -D --single 'src/index.html' --http2 --key ~/localhost.key.pem --cert ~/localhost.pem -p 5443 .",
+    "http": "npx sirv-cli -p 5444 .",
+    "bump": "npm version -m \"chore(release): bump to v%s\"",
+    "fmt": "npx -p prettier@2.x -- prettier -w '**/*.{js,md}'",
+    "lint": "npx -p typescript@4.x -- tsc -p ./jsconfig.json",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "deploy": "node .github/workflows/deploy.js"
+  },
+  "dependencies": {
+    "@dashincubator/base58check": "^1.3.2",
+    "@dashincubator/ripemd160": "^3.0.0",
+    "@dashincubator/secp256k1": "^1.7.1-5",
+    "dashhd": "^3.0.5",
+    "dashkeys": "^1.0.0",
+    "dashphrase": "^1.3.9",
+    "dashsight": "^1.6.0",
+    "dashwallet": "^0.6.0",
+    "qrcode-svg": "^1.1.0",
+    "crypticstorage": "dashhive/CrypticStorage"
+  },
+  "devDependencies": {
+    "@types/node": "^20.3.2"
+  }
+}
