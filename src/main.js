@@ -1,4 +1,7 @@
 import { lit as html } from './helpers/lit.js'
+
+import { generateRecoveryPhrase } from './helpers/utils.js'
+
 import setupDialog from './components/dialog.js'
 
 let onboardingDialog = await setupDialog(
@@ -19,7 +22,13 @@ let onboardingDialog = await setupDialog(
             <h3>Generate a New Wallet</h3>
             <p>This option will give you a brand new wallet and recovery phrase.</p>
 
-            <button class="rounded" type="submit" title="Generate a New Wallet">
+            <button
+              class="rounded"
+              type="submit"
+              title="Generate a New Wallet"
+              name="intent"
+              value="generate"
+            >
               <span>Generate a New Wallet</span>
             </button>
 
@@ -28,9 +37,15 @@ let onboardingDialog = await setupDialog(
           <hr />
           <div>
             <h3>Add an Existing Wallet</h3>
-            <p>Already have a Dash wallet? Click below to add it using your recovery phrase or private key WIF.</p>
+            <p>Already have a Dash wallet? Click below to add it using your recovery phrase.</p>
 
-            <button class="rounded" type="submit" title="Add an Existing Wallet">
+            <button
+              class="rounded"
+              type="submit"
+              title="Add an Existing Wallet"
+              name="intent"
+              value="import"
+            >
               <span>Add an Existing Wallet</span>
             </button>
 
@@ -43,17 +58,28 @@ let onboardingDialog = await setupDialog(
 )
 
 async function main() {
-  let phrase = localStorage.dashRecoveryPhrase
+  let phrase = JSON.parse(
+    localStorage?.dashRecoveryPhrase ||
+    '""'
+  )
+  // let wallet = await generateRecoveryPhrase(phrase)
 
-  console.log('init', { phrase })
+  document.querySelector('main#app')
+    .insertAdjacentElement('afterend', onboardingDialog)
 
   if (!phrase) {
+    onboardingDialog.show()
+
+    // phrase = wallet.recoveryPhrase
+    // localStorage.dashRecoveryPhrase = JSON.stringify(phrase)
+
     // for animation
     // setTimeout(t => {
     //   onboardingDialog.showModal()
     // }, 50)
-    onboardingDialog.show()
   }
+
+  console.log('init', { phrase })
 }
 
 main()
