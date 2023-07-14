@@ -12,6 +12,10 @@
   --dark-800: #111921;
   --dark-900: #0C1217;
 
+  --light-100: #a2ccf6;
+  --light-200: #afe0ff;
+  --light-300: #c7e9ff;
+
   --grayscale-gray-400: #9DA6A6;
 
   --c: var(--dark-900);
@@ -19,9 +23,13 @@
   --mc: #1d1d1d;
   --di: #333;
   --hc: #555;
-  --ct: #111a;
+
+  --ct: var(--dark-100);
+  --cn: var(--dark-200);
   --d: var(--dark-800);
-  --l: #eee;
+  --l: var(--light-300);
+
+  /* --l: #eee; */
   --lt: #eeea;
   --lf: #dfdfdf;
   --f: #fff;
@@ -75,6 +83,10 @@
   :root:not(.it),
   ::backdrop {
     color-scheme: light;
+    --c: var(--brand-blue);
+    --ct: var(--dark-700);
+    --cn: var(--dark-500);
+
     --bgc: var(--l);
     --fc: var(--d);
 
@@ -95,7 +107,7 @@
     --inpfg: var(--fc);
     --inpbdi: var(--dang);
 
-    --mdlbg: var(--f);
+    --mdlbg: var(--l);
     --mdlfg: var(--di);
     --mdlbd: var(--lt);
 
