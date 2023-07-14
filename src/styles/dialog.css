@@ -9,6 +9,7 @@ dialog {
   */
   pointer-events: none;
   opacity: 0;
+  z-index: -1;
   transition: opacity 0.5s;
   display: flex;
   flex-direction: column;
@@ -22,10 +23,12 @@ dialog::backdrop {
 }
 dialog[open] {
   opacity: 1;
+  z-index: 10;
   pointer-events: inherit;
 }
 dialog[open]::backdrop {
   opacity: 1;
+  z-index: 9;
   pointer-events: inherit;
 }
 
@@ -63,9 +66,7 @@ dialog.responsive {
   max-height: 100%;
   max-width: 100%;
   border: 0 solid;
-  opacity: 1;
-  z-index: 9;
-  z-index: 10;
+  /* opacity: 1; */
   padding: 0;
   flex-direction: column;
 }
@@ -208,7 +209,7 @@ dialog.fullscreen form section {
   margin: 0;
   flex: 1 1 auto;
   display: grid;
-  grid-auto-columns: 1.5fr 2fr;
+  grid-auto-columns: 30rem 2fr;
   grid-auto-flow: column;
 }
 dialog.fullscreen form section > aside,
@@ -220,21 +221,22 @@ dialog.fullscreen form section > article {
   flex-direction: column;
 }
 dialog.fullscreen form section > aside {
-  background-color: var(--dark-900);
+  background-color: var(--c);
   padding: 0 3.5rem;
 }
 dialog.fullscreen form section > aside > h2 {
-  color: var(--dark-100);
+  color: var(--ct);
   font-size: 3rem;
   font-weight: 400;
   line-height: normal;
   margin: 0;
 }
 dialog.fullscreen form section > aside > p {
-  color: var(--dark-200);
+  color: var(--cn);
   font-size: 1.125rem;
   font-weight: 400;
   line-height: normal;
+  width: 100%;
 }
 dialog.fullscreen form section > article {
   flex-grow: 4;
@@ -252,11 +254,11 @@ dialog.fullscreen form section > article > div > h3 {
   margin-top: 0;
   font-size: 1.5rem;
   font-weight: 500;
-  color: var(--dark-100);
+  color: var(--ct);
 }
 dialog.fullscreen form section > article > div > p {
   margin-bottom: 2.5rem;
-  color: var(--dark-200);
+  color: var(--cn);
 }
 dialog.fullscreen form section > article > div > button {
   width: 100%;

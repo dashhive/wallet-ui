@@ -109,12 +109,28 @@ export async function setupDialog(el, state = {}) {
   let handleSubmit = event => {
     event.preventDefault()
     form?.removeEventListener('submit', handleSubmit)
-    dialog.close('submit')
+
+    let fd = new FormData(event.target, event.submitter
+      )
+    let fde = Object.fromEntries(fd.entries())
+
+    dialog.returnValue = String(fde.intent)
+
+    console.log(
+      'handleSubmit',
+      [event],
+    )
+
+    dialog.close(String(fde.intent))
   }
 
   let handleReset = event => {
     event.preventDefault()
     form?.removeEventListener('close', handleReset)
+    console.log(
+      'handleReset',
+      [event.target],
+    )
     dialog.close('cancel')
   }
 
@@ -125,20 +141,21 @@ export async function setupDialog(el, state = {}) {
         event,
         event.target === dialog
       )
-      form?.removeEventListener('close', handleClick)
+      // form?.removeEventListener('close', handleClick)
       dialog.close('cancel')
     }
   }
 
+  // dialog.addEventListener('cancel', handleClose)
   dialog.addEventListener('close', handleClose)
   dialog.addEventListener('click', handleClick)
+
+  dialog.insertAdjacentElement('afterbegin', form)
 
   form.addEventListener('reset', handleReset)
   form.addEventListener('submit', handleSubmit)
 
-  dialog.insertAdjacentElement('afterbegin', form)
-
-  el.insertAdjacentElement('afterend', dialog)
+  // el.insertAdjacentElement('afterend', dialog)
 
   return dialog
 }
