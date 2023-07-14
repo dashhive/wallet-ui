@@ -7,7 +7,7 @@ A Graphical User Interface (GUI) for
 ## Roadmap
 ### Stage 1
  - [x] Initial Project Setup
- - [ ] Implementation of `dashsight` & `dashwallet` modules
+ - [ ] Implementation of `DashTX`, `DashHd`, `DashKeys` & `DashPhrase` modules
 	 - [ ] To [generate a new wallet](https://github.com/dashhive/DashWallet.js#walletgeneratewalletinfo)
 	 - [ ] To restore an existing wallet via recovery phrase and/or WIFs
 	 - [ ] To [get balance of wallet](https://github.com/dashhive/DashWallet.js#walletbalances)
