@@ -7,10 +7,10 @@ A Graphical User Interface (GUI) for
 ## Roadmap
 ### Stage 1
  - [x] Initial Project Setup
- - [ ] Implementation of `DashTX`, `DashHd`, `DashKeys` & `DashPhrase` modules
-	 - [ ] To [generate a new wallet](https://github.com/dashhive/DashWallet.js#walletgeneratewalletinfo)
-	 - [ ] To restore an existing wallet via recovery phrase and/or WIFs
-	 - [ ] To [get balance of wallet](https://github.com/dashhive/DashWallet.js#walletbalances)
+ - [ ] Implementation of `DashHd` & `DashPhrase` modules
+	 - [ ] To generate a new wallet
+	 - [ ] To restore an existing wallet via recovery phrase
+ - [ ] Get balance of wallet
  - [ ] Add Usage Controls
 	 - [ ] [Share Pairing Contact Info](https://github.com/dashhive/DashWallet.js#walletbefriendfrienddetails)
 	 - [ ] Add a Contact
@@ -23,10 +23,10 @@ A Graphical User Interface (GUI) for
 	 - [ ] Request
 	 - [ ] Edit
 	 - [ ] Remove
-
-### Stage 2
  - [ ] Backup Wallet & Contacts
  - [ ] Encrypt wallet data in local storage
+
+### Stage 2
  - [ ] Transactions view
 	 - [ ] Table with filter/sort
 	 - [ ] Select & Copy as CSV
