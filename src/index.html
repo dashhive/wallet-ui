@@ -21,8 +21,8 @@
 	<meta name="mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-capable" content="yes">
 	<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-	<meta name="theme-color" content="#242424">
-	<meta name="msapplication-TileColor" content="#00bbff">
+	<meta name="theme-color" content="#111921">
+	<meta name="msapplication-TileColor" content="#0C1217">
 	<meta name="msapplication-TileImage" content="../public/icons/dash-d-rounded-square-250.png">
 	<meta name="msapplication-config" content="../public/icons/browserconfig.xml">
 
@@ -35,40 +35,23 @@
   <link rel="stylesheet" type="text/css" media="screen" href="./index.css?v=0">
 </head>
 <body class="nt">
-<nav>
-  <a class="brand" href="#home">Incubator Wallet</a>
-  <a class="alias" href="#alias">@alias</a>
-</nav>
 
-<main id="app">
-  <!-- <section class="page" id="onboarding">
-  </section>
-  <section class="page" id="wallet">
-    <h1>Wallets</h1>
-  </section>
-  <section class="page" id="settings">
-    <h1>Settings</h1>
-  </section> -->
-  <footer>
-    <h4>Alpha stage, not production ready. <span>Use at your own risk.</span></h4>
-    <h5>Checkout the <a target="_blank" href="https://github.com/dashhive/wallet-ui">Source Code</a></h5>
-  </footer>
-</main>
+<main id="app"></main>
 
 <script type="text/javascript" async>
-  (function invertTheme(selector) {
-    let theme = JSON.parse(localStorage.getItem('theme'))
+  // (function invertTheme(selector) {
+  //   let theme = JSON.parse(localStorage.getItem('theme'))
 
-    if (selector) {
-      document.querySelector(selector)?.
-        addEventListener('click', event => {
-          event.preventDefault()
-          theme = !theme
-          localStorage.setItem('theme', theme)
-          document.documentElement.classList.toggle('it')
-        })
-    }
-  })('nav a.theme')
+  //   if (selector) {
+  //     document.querySelector(selector)?.
+  //       addEventListener('click', event => {
+  //         event.preventDefault()
+  //         theme = !theme
+  //         localStorage.setItem('theme', theme)
+  //         document.documentElement.classList.toggle('it')
+  //       })
+  //   }
+  // })('nav a.theme')
 
   // if ('serviceWorker' in navigator) {
   //   navigator.serviceWorker

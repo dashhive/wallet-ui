@@ -1,0 +1,11 @@
+.icon-x {
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center center;
+  background-image: url("data:image/svg+xml,%3Csvg width='24' height='25' viewBox='0 0 24 25' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cg id='X'%3E%3Cg id='X_2'%3E%3Cpath id='Vector (Stroke)' fill-rule='evenodd' clip-rule='evenodd' d='M19.2803 5.21967C19.5732 5.51256 19.5732 5.98744 19.2803 6.28033L5.78033 19.7803C5.48744 20.0732 5.01256 20.0732 4.71967 19.7803C4.42678 19.4874 4.42678 19.0126 4.71967 18.7197L18.2197 5.21967C18.5126 4.92678 18.9874 4.92678 19.2803 5.21967Z' fill='%23B1C6CC'/%3E%3Cpath id='Vector (Stroke)_2' fill-rule='evenodd' clip-rule='evenodd' d='M4.71967 5.21967C5.01256 4.92678 5.48744 4.92678 5.78033 5.21967L19.2803 18.7197C19.5732 19.0126 19.5732 19.4874 19.2803 19.7803C18.9874 20.0732 18.5126 20.0732 18.2197 19.7803L4.71967 6.28033C4.42678 5.98744 4.42678 5.51256 4.71967 5.21967Z' fill='%23B1C6CC'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E%0A");
+
+  display: inline-block;
+  height: 1.5rem;
+  width: 1.5rem;
+  line-height: 1;
+}

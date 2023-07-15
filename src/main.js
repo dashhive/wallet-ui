@@ -2,13 +2,136 @@ import { lit as html } from './helpers/lit.js'
 
 import { generateRecoveryPhrase } from './helpers/utils.js'
 
+import setupNav from './components/nav.js'
+import setupMainFooter from './components/main-footer.js'
 import setupDialog from './components/dialog.js'
 
-let onboardingDialog = await setupDialog(
+let bodyNav = await setupNav(
+  document.querySelector('main#app'),
+  {}
+)
+
+let mainFtr = await setupMainFooter(
+  document.querySelector('main#app'),
+  {}
+)
+
+let walletGen = setupDialog(
+  document.querySelector('main#app'),
+  {
+    name: 'New Wallet',
+    submitTxt: 'Next',
+    submitAlt: 'Next Form',
+    cancelTxt: 'Cancel',
+    cancelAlt: `Cancel Form`,
+    closeTxt: html`<i class="icon-x"></i>`,
+    closeAlt: `Close`,
+    footer: state => html`
+      <footer class="inline">
+        <button
+          class="rounded"
+          type="submit"
+          name="intent"
+          value="request"
+          title="${state.submitAlt}"
+        >
+          <span>${state.submitTxt}</span>
+        </button>
+      </footer>
+    `,
+    content: state => html`
+      ${state.header(state)}
+
+      <fieldset>
+        <label for="thing">
+          Thing
+        </label>
+        <input
+          type="text"
+          id="thing"
+          name="thing"
+          placeholder="Do Something"
+          minlength="1"
+          spellcheck="false"
+        />
+        <p>Some instructions</p>
+
+        <div class="error"></div>
+      </fieldset>
+
+      <fieldset>
+        <label for="thing">
+          Thing
+        </label>
+        <input
+          type="text"
+          id="thing"
+          name="thing"
+          placeholder="Do Something"
+          minlength="1"
+          spellcheck="false"
+        />
+        <p>Some instructions</p>
+
+        <div class="error"></div>
+      </fieldset>
+
+      ${state.footer(state)}
+    `,
+    fields: html`
+      <label for="thing">
+        Thing
+      </label>
+      <input
+        type="text"
+        id="thing"
+        name="thing"
+        placeholder="Do Something"
+        minlength="1"
+        spellcheck="false"
+      />
+      <p>Some instructions</p>
+
+      <label for="thing">
+        Thing
+      </label>
+      <input
+        type="text"
+        id="thing"
+        name="thing"
+        placeholder="Do Something"
+        minlength="1"
+        spellcheck="false"
+      />
+      <p>Some instructions</p>
+    `,
+  }
+)
+
+let onboard = setupDialog(
   document.querySelector('main#app'),
   {
     name: 'Onboarding Flow',
     placement: 'fullscreen',
+    // elements: {
+    //   dialog: document.querySelector('dialog'),
+    // },
+    events: {
+      handleClose: state => async event => {
+        event.preventDefault()
+        event.stopPropagation()
+        console.log('CLOSE OVERRIDE!', state, event)
+        // walletGen.render()
+        // walletGen.showModal()
+      },
+      handleSubmit: state => async event => {
+        event.preventDefault()
+        event.stopPropagation()
+        console.log('OVERRIDE!', state, event)
+        walletGen.render()
+        walletGen.showModal()
+      },
+    },
     header: () => ``,
     footer: () => ``,
     content: state => html`
@@ -64,11 +187,14 @@ async function main() {
   )
   // let wallet = await generateRecoveryPhrase(phrase)
 
-  document.querySelector('main#app')
-    .insertAdjacentElement('afterend', onboardingDialog)
+  // document.querySelector('main#app')
+  //   .insertAdjacentElement('afterend', onbrdEl)
+  // walletGen.render()
+  onboard.render()
 
   if (!phrase) {
-    onboardingDialog.show()
+    // walletGen.show()
+    onboard.show()
 
     // phrase = wallet.recoveryPhrase
     // localStorage.dashRecoveryPhrase = JSON.stringify(phrase)
@@ -78,6 +204,9 @@ async function main() {
     //   onboardingDialog.showModal()
     // }, 50)
   }
+
+  bodyNav.render()
+  mainFtr.render()
 
   console.log('init', { phrase })
 }

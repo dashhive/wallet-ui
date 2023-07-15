@@ -51,8 +51,8 @@
   --nav-a: var(--a);
 
   --mdlbg: var(--d);
-  --mdlfg: var(--l);
-  --mdlbd: var(--lt);
+  --mdlfg: var(--f);
+  --mdlbd: var(--dark-900);
 
   --tblalt: var(--di);
   --tblhdr: var(--e);
@@ -138,8 +138,8 @@
     --inpbdi: var(--dang);
 
     --mdlbg: var(--d);
-    --mdlfg: var(--fc);
-    --mdlbd: var(--ct);
+    --mdlfg: var(--f);
+    --mdlbd: var(--dark-900);
 
     --gridbg: var(--oc);
     --gridshd: var(--mc);
@@ -191,8 +191,8 @@
     --inpbdi: var(--dang);
 
     --mdlbg: var(--d);
-    --mdlfg: var(--fc);
-    --mdlbd: var(--ct);
+    --mdlfg: var(--f);
+    --mdlbd: var(--dark-900);
 
     --gridbg: var(--oc);
     --gridshd: var(--mc);
@@ -361,7 +361,7 @@ th {
 }
 .link:not(:disabled):hover {
   background-color: transparent;
-  transform: scale(1.25);
+  /* transform: scale(1.25); */
 }
 
 .note {
