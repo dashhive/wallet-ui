@@ -28,8 +28,17 @@ export async function setupMainFooter(
 
   return {
     element: container,
-    render: (position = 'beforeend') =>
-      el.insertAdjacentElement(position, container)
+    render: (position = 'beforeend') => {
+      // el.insertAdjacentElement(position, container)
+      for (let child of container.content.childNodes) {
+        if (child.nodeType !== 3) {
+          el.insertAdjacentElement(
+            position,
+            child,
+          )
+        }
+      }
+    }
   }
 }
 

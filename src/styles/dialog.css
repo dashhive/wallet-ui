@@ -52,6 +52,7 @@ dialog.center {
   justify-items: center;
   text-align: center;
   border-radius: 1rem;
+  max-width: 34rem !important;
 }
 
 dialog.responsive {
@@ -96,6 +97,17 @@ dialog > form > footer {
 dialog > form > footer {
   column-gap: .25rem;
 }
+dialog > form > footer sub {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--dark-100);
+}
+dialog > form > footer sup {
+  font-size: .875rem;
+  font-weight: 400;
+  color: var(--dark-200);
+  margin-bottom: 1.25rem;
+}
 dialog > form > footer button {
   padding: .75rem 1rem;
 }
@@ -118,7 +130,8 @@ dialog > form > fieldset {
 }
 dialog > form > fieldset > input,
 dialog > form > fieldset > select,
-dialog > form > fieldset > textarea {
+dialog > form > fieldset > textarea,
+dialog > form > fieldset > div:has(input + div) {
   text-align: left;
   padding: 0 1rem;
   flex: 0 0 auto;
@@ -136,10 +149,21 @@ dialog > form > fieldset > label {
   line-height: 1;
 }
 dialog > form > fieldset > input + p {
-  color: var(--dark-200);
+  color: var(--cn);
   font-size: 1rem;
   font-weight: 400;
   margin: .5rem 0;
+}
+dialog > form > fieldset > p {
+  display: flex;
+  padding: .25rem;
+  margin: .8rem;
+  align-items: flex-start;
+  gap: .625rem;
+}
+dialog > form > fieldset > p > span {
+  padding: .25rem;
+  border: 1px solid var(--dark-500);
 }
 
 
@@ -157,20 +181,21 @@ dialog.responsive fieldset:first-child {
   flex: 1 1 auto;
   text-align: left;
 }
-dialog.responsive form > fieldset:first-child > input,
+dialog.responsive form > fieldset > input,
 dialog.responsive fieldset:last-child {
   flex: 0 1 auto;
 }
 dialog.responsive fieldset:last-child {
   padding: 0;
 }
-dialog.responsive fieldset:first-child section {
-  margin: 1rem 0;
+dialog.responsive fieldset section {
+  padding: 1rem;
 }
-dialog.responsive fieldset:first-child section article {
+dialog.responsive fieldset section article {
   flex-direction: row;
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
 }
 
 dialog.responsive button[type="submit"] {

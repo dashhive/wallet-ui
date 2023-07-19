@@ -1,4 +1,5 @@
 import { lit as html } from '../helpers/lit.js'
+import { formDataEntries } from '../helpers/utils.js'
 
 const initialState = {
   id: 'Dialog',
@@ -68,12 +69,37 @@ const initialState = {
 
     <p>Some instructions</p>
   `,
+  slugs: {
+  },
   elements: {
     // dialog: (() => document.createElement('dialog'))(),
     // form: (() => document.createElement('form'))(),
     // progress: (() => document.createElement('progress'))(),
   },
   events: {
+    handleChange: state => event => {
+      event.preventDefault()
+      if (
+        event?.target?.validity?.patternMismatch &&
+        event?.target?.type !== 'checkbox'
+      ) {
+        console.log(
+          'handle dialog change',
+          event?.target?.validationMessage,
+          event?.target?.validity,
+          [event.target],
+          event?.target?.type
+        )
+        let label = event.target?.previousElementSibling?.textContent?.trim()
+        if (label) {
+          event.target.setCustomValidity(`Invalid ${label}`)
+        }
+        // event.target.reportValidity()
+      } else if (event?.target?.validity?.valid) {
+        event.target.setCustomValidity('')
+      }
+      event.target.reportValidity()
+    },
     handleClose: state => async event => {
       event.preventDefault()
       state.elements.dialog?.removeEventListener(
@@ -105,9 +131,12 @@ const initialState = {
       event.preventDefault()
       state.elements.form?.removeEventListener('submit', state.events.handleSubmit)
 
-      let fd = new FormData(event.target, event.submitter
-        )
-      let fde = Object.fromEntries(fd.entries())
+      let fde = formDataEntries(event)
+
+      // event.target.passphrase.setCustomValidity(
+      //   'Unable to decrypt wallet(s)'
+      // )
+      // event.target.passphrase.reportValidity()
 
       state.elements.dialog.returnValue = String(fde.intent)
 
@@ -142,25 +171,30 @@ const initialState = {
 }
 
 export function setupDialog(
-  el, stateB = {}
+  el, setupState = {}
 ) {
   let state = {
     ...initialState,
-    ...stateB,
+    ...setupState,
+    slugs: {
+      ...initialState.slugs,
+      ...setupState.slugs,
+    },
     events: {
       ...initialState.events,
-      ...stateB.events,
+      ...setupState.events,
     },
     elements: {
       ...initialState.elements,
-      ...stateB.elements,
+      ...setupState.elements,
     }
   }
 
   // state = Object.assign({}, initialState, state)
 
-  let dialogSlug = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
-  let formSlug = state.name?.toLowerCase().replace(' ', '_')
+  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
+  state.slugs.form = state.name?.toLowerCase().replace(' ', '_')
+
   // let {
   //   progress,
   //   dialog,
@@ -178,13 +212,13 @@ export function setupDialog(
   progress.classList.add('pending')
 
   dialog.innerHTML = ``
-  dialog.id = dialogSlug
+  dialog.id = state.slugs.dialog
   if (state.responsive) {
     dialog.classList.add('responsive')
   }
   dialog.classList.add(state.placement)
 
-  form.name = `${formSlug}`
+  form.name = `${state.slugs.form}`
   form.method = 'dialog'
   form.innerHTML = state.content(state)
 
@@ -207,6 +241,10 @@ export function setupDialog(
   )
 
   form.addEventListener(
+    'change',
+    state.events.handleChange(state)
+  )
+  form.addEventListener(
     'reset',
     state.events.handleReset(state)
   )
@@ -220,8 +258,34 @@ export function setupDialog(
     show: () => dialog.show(),
     showModal: () => dialog.showModal(),
     close: returnVal => dialog.close(returnVal),
-    render: (position = 'afterend') => {
-      console.log('DIALOG RENDER', position, dialogSlug)
+    render: (
+      position = 'afterend',
+      renderState = {},
+    ) => {
+      state = {
+        ...state,
+        ...renderState,
+        slugs: {
+          ...state.slugs,
+          ...renderState.slugs,
+        },
+        events: {
+          ...state.events,
+          ...renderState.events,
+        },
+        elements: {
+          ...state.elements,
+          ...renderState.elements,
+        }
+      }
+
+      dialog.id = state.slugs.dialog
+      form.name = `${state.slugs.form}`
+      form.innerHTML = state.content(state)
+
+      console.log('DIALOG RENDER STATE', state, renderState)
+
+      console.log('DIALOG RENDER', position, state.slugs.dialog)
       el.insertAdjacentElement(position, dialog)
     }
   }
