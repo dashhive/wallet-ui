@@ -1,4 +1,5 @@
 import { lit as html } from '../helpers/lit.js'
+import { formDataEntries } from '../helpers/utils.js'
 
 const initialState = {
   id: 'Dialog',
@@ -7,11 +8,17 @@ const initialState = {
   submitAlt: 'Submit Form',
   cancelTxt: 'Cancel',
   cancelAlt: `Cancel Form`,
+  closeTxt: 'X',
+  closeAlt: `Close`,
   placement: 'center',
   responsive: true,
+  delay: 500,
   header: state => html`
     <header>
       <strong>${state.name}</strong>
+      <button class="link" type="reset" value="close" title="${state.closeAlt}">
+        <span>${state.closeTxt}</span>
+      </button>
     </header>
   `,
   content: state => html`
@@ -27,10 +34,22 @@ const initialState = {
   `,
   footer: state => html`
     <footer class="inline">
-      <button class="link" type="reset" value="cancel" title="${state.cancelAlt}">
+      <button
+        class="rounded"
+        type="submit"
+        name="intent"
+        value="send"
+        title="${state.cancelAlt}"
+      >
         <span>${state.cancelTxt}</span>
       </button>
-      <button class="link" type="submit" title="${state.submitAlt}">
+      <button
+        class="rounded"
+        type="submit"
+        name="intent"
+        value="request"
+        title="${state.submitAlt}"
+      >
         <span>${state.submitTxt}</span>
       </button>
     </footer>
@@ -50,114 +69,226 @@ const initialState = {
 
     <p>Some instructions</p>
   `,
-  delay: 500
+  slugs: {
+  },
+  elements: {
+    // dialog: (() => document.createElement('dialog'))(),
+    // form: (() => document.createElement('form'))(),
+    // progress: (() => document.createElement('progress'))(),
+  },
+  events: {
+    handleChange: state => event => {
+      event.preventDefault()
+      if (
+        event?.target?.validity?.patternMismatch &&
+        event?.target?.type !== 'checkbox'
+      ) {
+        console.log(
+          'handle dialog change',
+          event?.target?.validationMessage,
+          event?.target?.validity,
+          [event.target],
+          event?.target?.type
+        )
+        let label = event.target?.previousElementSibling?.textContent?.trim()
+        if (label) {
+          event.target.setCustomValidity(`Invalid ${label}`)
+        }
+        // event.target.reportValidity()
+      } else if (event?.target?.validity?.valid) {
+        event.target.setCustomValidity('')
+      }
+      event.target.reportValidity()
+    },
+    handleClose: state => async event => {
+      event.preventDefault()
+      state.elements.dialog?.removeEventListener(
+        'close',
+        state.events.handleClose
+      )
+      // @ts-ignore
+      // event?.target?.remove()
+      console.log(
+        'handle dialog close',
+        event,
+        event.target === state.elements.dialog,
+        state.elements.dialog.returnValue
+      )
+
+      if (state.elements.dialog.returnValue !== 'cancel') {
+        // handle submit
+        // state.elements.dialog.close('submit')
+      } else {
+        // handle cancel
+        // state.elements.dialog.close('cancel')
+      }
+
+      setTimeout(t => {
+        event?.target?.remove()
+      }, state.delay)
+    },
+    handleSubmit: state => event => {
+      event.preventDefault()
+      state.elements.form?.removeEventListener('submit', state.events.handleSubmit)
+
+      let fde = formDataEntries(event)
+
+      // event.target.passphrase.setCustomValidity(
+      //   'Unable to decrypt wallet(s)'
+      // )
+      // event.target.passphrase.reportValidity()
+
+      state.elements.dialog.returnValue = String(fde.intent)
+
+      console.log(
+        'handleSubmit',
+        [event],
+      )
+
+      state.elements.dialog.close(String(fde.intent))
+    },
+    handleReset: state => event => {
+      event.preventDefault()
+      state.elements.form?.removeEventListener('close', state.events.handleReset)
+      console.log(
+        'handleReset',
+        [event.target],
+      )
+      state.elements.dialog.close('cancel')
+    },
+    handleClick: state => event => {
+      if (event.target === state.elements.dialog) {
+        console.log(
+          'handle dialog backdrop click',
+          event,
+          event.target === state.elements.dialog
+        )
+        // form?.removeEventListener('close', handleClick)
+        state.elements.dialog.close('cancel')
+      }
+    }
+  },
 }
 
-export async function setupDialog(el, state = {}) {
-  state = {
+export function setupDialog(
+  el, setupState = {}
+) {
+  let state = {
     ...initialState,
-    ...state,
+    ...setupState,
+    slugs: {
+      ...initialState.slugs,
+      ...setupState.slugs,
+    },
+    events: {
+      ...initialState.events,
+      ...setupState.events,
+    },
+    elements: {
+      ...initialState.elements,
+      ...setupState.elements,
+    }
   }
 
-  let dialogSlug = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
-  let formSlug = state.name?.toLowerCase().replace(' ', '_')
+  // state = Object.assign({}, initialState, state)
+
+  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
+  state.slugs.form = state.name?.toLowerCase().replace(' ', '_')
+
+  // let {
+  //   progress,
+  //   dialog,
+  //   form,
+  // } = state.elements
 
   const dialog = document.createElement('dialog')
   const form = document.createElement('form')
   const progress = document.createElement('progress')
 
+  state.elements.dialog = dialog
+  state.elements.form = form
+  state.elements.progress = progress
+
   progress.classList.add('pending')
 
   dialog.innerHTML = ``
-
-  dialog.id = dialogSlug
+  dialog.id = state.slugs.dialog
   if (state.responsive) {
     dialog.classList.add('responsive')
   }
   dialog.classList.add(state.placement)
 
-  form.name = `${formSlug}`
+  form.name = `${state.slugs.form}`
   form.method = 'dialog'
-
   form.innerHTML = state.content(state)
 
-  let handleClose = async event => {
-    event.preventDefault()
-    dialog?.removeEventListener('close', handleClose)
-    // @ts-ignore
-    // event?.target?.remove()
-    console.log(
-      'handle dialog close',
-      event,
-      event.target === dialog,
-      dialog.returnValue
-    )
+  // dialog.addEventListener(
+  //   'cancel',
+  //   state.events.handleClose(state)
+  // )
+  dialog.addEventListener(
+    'close',
+    state.events.handleClose(state)
+  )
+  dialog.addEventListener(
+    'click',
+    state.events.handleClick(state)
+  )
 
-    if (dialog.returnValue !== 'cancel') {
-      // handle submit
-      // dialog.close('submit')
-    } else {
-      // handle cancel
-      // dialog.close('cancel')
+  dialog.insertAdjacentElement(
+    'afterbegin',
+    form
+  )
+
+  form.addEventListener(
+    'change',
+    state.events.handleChange(state)
+  )
+  form.addEventListener(
+    'reset',
+    state.events.handleReset(state)
+  )
+  form.addEventListener(
+    'submit',
+    state.events.handleSubmit(state)
+  )
+
+  return {
+    element: dialog,
+    show: () => dialog.show(),
+    showModal: () => dialog.showModal(),
+    close: returnVal => dialog.close(returnVal),
+    render: (
+      position = 'afterend',
+      renderState = {},
+    ) => {
+      state = {
+        ...state,
+        ...renderState,
+        slugs: {
+          ...state.slugs,
+          ...renderState.slugs,
+        },
+        events: {
+          ...state.events,
+          ...renderState.events,
+        },
+        elements: {
+          ...state.elements,
+          ...renderState.elements,
+        }
+      }
+
+      dialog.id = state.slugs.dialog
+      form.name = `${state.slugs.form}`
+      form.innerHTML = state.content(state)
+
+      console.log('DIALOG RENDER STATE', state, renderState)
+
+      console.log('DIALOG RENDER', position, state.slugs.dialog)
+      el.insertAdjacentElement(position, dialog)
     }
-
-    setTimeout(t => {
-      event?.target?.remove()
-    }, state.delay)
   }
-
-  let handleSubmit = event => {
-    event.preventDefault()
-    form?.removeEventListener('submit', handleSubmit)
-
-    let fd = new FormData(event.target, event.submitter
-      )
-    let fde = Object.fromEntries(fd.entries())
-
-    dialog.returnValue = String(fde.intent)
-
-    console.log(
-      'handleSubmit',
-      [event],
-    )
-
-    dialog.close(String(fde.intent))
-  }
-
-  let handleReset = event => {
-    event.preventDefault()
-    form?.removeEventListener('close', handleReset)
-    console.log(
-      'handleReset',
-      [event.target],
-    )
-    dialog.close('cancel')
-  }
-
-  let handleClick = event => {
-    if (event.target === dialog) {
-      console.log(
-        'handle dialog backdrop click',
-        event,
-        event.target === dialog
-      )
-      // form?.removeEventListener('close', handleClick)
-      dialog.close('cancel')
-    }
-  }
-
-  // dialog.addEventListener('cancel', handleClose)
-  dialog.addEventListener('close', handleClose)
-  dialog.addEventListener('click', handleClick)
-
-  dialog.insertAdjacentElement('afterbegin', form)
-
-  form.addEventListener('reset', handleReset)
-  form.addEventListener('submit', handleSubmit)
-
-  // el.insertAdjacentElement('afterend', dialog)
-
-  return dialog
 }
 
 export default setupDialog

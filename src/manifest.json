@@ -9,7 +9,7 @@
   "display": "standalone",
   "orientation": "portrait",
 	"background_color": "#eeeeee",
-	"theme_color": "#242424",
+	"theme_color": "#111921",
   "icons": [
     {
       "src": "../public/icons/dash-d-rounded-square-250.png",

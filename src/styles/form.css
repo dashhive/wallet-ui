@@ -32,10 +32,79 @@ form fieldset > legend {
   font-weight: 400;
   font-size: 1.3rem;
 }
+form fieldset svg {
+  margin: 0;
+  max-width: max-content;
+}
 form fieldset:last-of-type:has(> button) {
   flex-direction: row;
   justify-content: center;
 }
+form fieldset > div:has(input + button),
+form fieldset > div:has(input + label) {
+  /* background-color: var(--c); */
+  display: flex;
+  flex-direction: row;
+  /* border-radius: 6.25rem; */
+  align-items: center;
+}
+form fieldset > div > input:has(+ button),
+form fieldset > div > input:has(+ label),
+form fieldset > div > input[type="text"]:has(+ label),
+form fieldset > div > input[type="password"]:has(+ label) {
+  flex: 1 1 auto;
+  border-top-left-radius: 6.25rem;
+  border-bottom-left-radius: 6.25rem;
+  border: 1px solid var(--dark-600);
+  border-right: 0 solid transparent;
+}
+form fieldset > div > input + button,
+form fieldset > div > input + label,
+form fieldset > div > input[type="text"] + label,
+form fieldset > div > input[type="password"] + label {
+  border: 1px solid var(--dark-600);
+  border-left: 0 solid transparent;
+  flex: 1 1 auto;
+  background-color: var(--c);
+  color: var(--dark-500);
+  height: 3rem;
+  min-width: min-content;
+  border-top-right-radius: 6.25rem;
+  border-bottom-right-radius: 6.25rem;
+  padding: 0 1.2rem;
+  transition: color .1s ease-in-out;
+}
+form fieldset > div > input:not(:focus):not(:placeholder-shown):invalid + label {
+  border: 1px solid var(--inpbdi);
+  border-left: 0 solid transparent;
+}
+form fieldset > div > input + button:not(:disabled):hover,
+form fieldset > div > input:not(:disabled) + label:hover,
+form fieldset > div > input[type="text"]:not(:disabled) + label:hover,
+form fieldset > div > input[type="password"]:not(:disabled) + label:hover {
+  background-color: var(--c);
+  color: var(--fc);
+}
+label:has(> input[type=checkbox][name=show_pass]) svg {
+  display: none;
+}
+label:has(> input[type=checkbox][name=show_pass]) svg use {
+  align-content: center;
+  align-items: center;
+  align-self: center;
+  justify-content: center;
+  justify-items: center;
+  justify-self: center;
+  flex: 1 1 auto;
+}
+label:has(> input[type=checkbox][name=show_pass]:not(:checked)) .closed-eye,
+label:has(> input[type=checkbox][name=show_pass]:checked) .open-eye {
+  display: flex;
+}
+/* form fieldset > div > input + button i {
+  fill: currentColor;
+  color: var(--fc);
+} */
 /* form fieldset:last-of-type:has(> [type=reset]) {
   justify-content: space-between;
 } */
@@ -59,13 +128,30 @@ button.outline {
 button.rounded {
   border-radius: 2rem;
 }
+button.rounded:has(+ button.rounded),
+button.rounded:not(:last-of-type) {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+button.rounded:not(:first-of-type) {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+button.pill,
 button.link {
   background-color: transparent;
   color: var(--fc);
 }
+button.pill {
+  display: flex;
+  column-gap: .25rem;
+}
+button.pill:not(:disabled):hover {
+  background-color: var(--dark-600);
+}
 
 button[type=submit] {
-  place-self: end;
+  /* place-self: end; */
   justify-self: end;
 }
 button[type=reset] {
@@ -92,24 +178,34 @@ button:not(:disabled):focus-visible {
   outline: 0 auto -webkit-focus-ring-color;
 }
 button[type=reset]:not(:disabled):hover {
-  background-color: var(--c);
+  /* background-color: var(--c); */
   color: var(--dang);
   border-color: var(--dang);
 }
+
+
 input, select, textarea {
   background-color: var(--c);
   color: var(--fc);
   border: 1px solid var(--ch);
   /* text-align: center; */
   line-height: 1;
-  font-size: 1.5rem;
+  /* font-size: 1.5rem; */
+  font-size: .875rem;
   width: 100%;
   height: 3rem;
   /* max-width: 24rem; */
   outline: 0;
   text-align: left;
-  padding: 0 1rem;
+  padding: 1rem;
   flex: 0 0 auto;
+}
+input::placeholder {
+  color: var(--dark-500);
+}
+input:not(:focus):not(:placeholder-shown):invalid {
+  border-color: var(--inpbdi);
+  outline: var(--inpbdi);
 }
 textarea {
   padding: 1rem;
@@ -194,12 +290,12 @@ label:has(+ input[type=checkbox]) {
 fieldset label:has(+ input[type=checkbox]) {
   justify-content: center;
 }
-input:has(+ label > input[type=checkbox][name=show_pass]) {
-  padding-right: 3rem;
-}
 label > input[type=checkbox][name=show_pass] {
   display: none;
   width: 0;
+}
+/* input:has(+ label > input[type=checkbox][name=show_pass]) {
+  padding-right: 3rem;
 }
 label:has(> input[type=checkbox][name=show_pass]) {
   position: relative;
@@ -226,7 +322,7 @@ label:has(> input[type=checkbox][name=show_pass]:checked)::after {
 input:has(+ label > input[type=checkbox][name=show_pass]):focus-visible,
 input:focus-visible + label:has(> input[type=checkbox][name=show_pass]) {
   border-color: var(--l);
-}
+} */
 label[for],
 label:has(> input) {
   cursor: pointer;

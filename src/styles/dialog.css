@@ -27,7 +27,7 @@ dialog[open] {
   pointer-events: inherit;
 }
 dialog[open]::backdrop {
-  opacity: 1;
+  opacity: .9;
   z-index: 9;
   pointer-events: inherit;
 }
@@ -51,6 +51,8 @@ dialog.center {
   align-content: center;
   justify-items: center;
   text-align: center;
+  border-radius: 1rem;
+  max-width: 34rem !important;
 }
 
 dialog.responsive {
@@ -60,9 +62,9 @@ dialog.responsive {
   top: 0;
   /* top: 3rem; */
   bottom: 0;
-  height: auto;
+  /* height: auto; */
   /* height: 100vh; */
-  width: 100%;
+  /* width: 100%; */
   max-height: 100%;
   max-width: 100%;
   border: 0 solid;
@@ -76,6 +78,7 @@ dialog form {
   padding: 0;
   max-width: 100%;
   max-height: 100%;
+  min-height: 31.25rem;
   width: 100%;
   flex: 1 1 auto;
   justify-self: center;
@@ -87,26 +90,80 @@ dialog > form > header,
 dialog > form > footer {
   display: flex;
   justify-content: space-between;
-  padding: 0.5rem 1rem;
+  padding: 1.5rem;
   font-size: 1.25rem;
+  overflow: hidden;
+}
+dialog > form > footer {
+  column-gap: .25rem;
+}
+dialog > form > footer sub {
+  font-size: .75rem;
+  font-weight: 500;
+  color: var(--dark-100);
+}
+dialog > form > footer sup {
+  font-size: .875rem;
+  font-weight: 400;
+  color: var(--dark-200);
+  margin-bottom: 1.25rem;
+}
+dialog > form > footer button {
+  padding: .75rem 1rem;
+}
+dialog > form > header {
+  border-bottom: 1px solid var(--dark-600, #252C33);
+}
+dialog header button[type="reset"]:last-child {
+  padding: 0 .5rem;
 }
 dialog > form > header > strong {
-  margin: 1rem 0;
+  margin: 0 0 0 1rem;
+  font-size: 1.5rem;
 }
 dialog > form > fieldset {
   height: 100%;
   overflow: auto;
-  padding: 1rem;
+  padding: 2rem 1rem;
+  min-width: 33.75rem;
+  flex: 1 1 auto;
 }
 dialog > form > fieldset > input,
 dialog > form > fieldset > select,
-dialog > form > fieldset > textarea {
+dialog > form > fieldset > textarea,
+dialog > form > fieldset > div:has(input + div) {
   text-align: left;
   padding: 0 1rem;
   flex: 0 0 auto;
+  border-radius: 6.25rem;
+  border: 1px solid var(--dark-600);
 }
+dialog > form > fieldset > input + p,
 dialog > form > fieldset > label {
+  text-align: left;
   text-transform: capitalize;
+  color: var(--grayscale-gray-400);
+  padding: 0 1rem;
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+dialog > form > fieldset > input + p {
+  color: var(--cn);
+  font-size: 1rem;
+  font-weight: 400;
+  margin: .5rem 0;
+}
+dialog > form > fieldset > p {
+  display: flex;
+  padding: .25rem;
+  margin: .8rem;
+  align-items: flex-start;
+  gap: .625rem;
+}
+dialog > form > fieldset > p > span {
+  padding: .25rem;
+  border: 1px solid var(--dark-500);
 }
 
 
@@ -124,20 +181,21 @@ dialog.responsive fieldset:first-child {
   flex: 1 1 auto;
   text-align: left;
 }
-dialog.responsive form > fieldset:first-child > input,
+dialog.responsive form > fieldset > input,
 dialog.responsive fieldset:last-child {
   flex: 0 1 auto;
 }
 dialog.responsive fieldset:last-child {
   padding: 0;
 }
-dialog.responsive fieldset:first-child section {
-  margin: 1rem 0;
+dialog.responsive fieldset section {
+  padding: 1rem;
 }
-dialog.responsive fieldset:first-child section article {
+dialog.responsive fieldset section article {
   flex-direction: row;
   display: flex;
   align-items: flex-start;
+  justify-content: space-between;
 }
 
 dialog.responsive button[type="submit"] {
@@ -154,6 +212,10 @@ dialog.responsive button[type="reset"] {
   transition: none;
   padding: 1rem;
   line-height: 1;
+}
+dialog.responsive footer button[type="reset"],
+dialog.responsive footer button[type="submit"] {
+  flex: 1 1 50%;
 }
 dialog.responsive button[type="reset"]:focus {
   outline: 0;
@@ -287,9 +349,9 @@ dialog.fullscreen form section > article > div > button {
   dialog.responsive fieldset:last-child {
     flex: none;
   }
-  dialog.responsive button[type="submit"] {
+  /* dialog.responsive button[type="submit"] {
     flex: none;
-  }
+  } */
   dialog.responsive button[type="reset"] {
     position: initial;
     /* border: 1px solid transparent; */
@@ -298,7 +360,7 @@ dialog.fullscreen form section > article > div > button {
     padding-left: 0;
     padding-right: 0; */
   }
-  dialog.responsive button[type="reset"]:last-child {
+  dialog.responsive footer button[type="reset"]:last-child {
     flex: 1 1 auto;
   }
   dialog.responsive button[type="reset"]:hover {
@@ -307,7 +369,7 @@ dialog.fullscreen form section > article > div > button {
   }
   dialog.responsive button[type="reset"]:focus {
     outline: 0;
-    outline: 1px solid -webkit-focus-ring-color;
+    /* outline: 1px solid -webkit-focus-ring-color; */
   }
   dialog.responsive button[type="reset"]::before {
     content: none;
@@ -320,7 +382,8 @@ dialog.fullscreen form section > article > div > button {
   }
   dialog.responsive header {
     justify-content: space-between;
-    padding: 0.5rem 1rem;
+    align-items: center;
+    padding: 1rem;
     font-size: 1.25rem;
     line-height: initial;
   }

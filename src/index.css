@@ -1,4 +1,5 @@
 @import url(./styles/theme.css);
+@import url(./styles/icons.css);
 @import url(./styles/table.css);
 @import url(./styles/code.css);
 @import url(./styles/motion.css);
@@ -78,25 +79,44 @@ figure h4 {
   justify-items: center;
   text-align: center;
 }
+.tag {
+  display: inline-block;
+  border: 1px solid var(--dark-500);
+  margin: 0 .1rem .4rem 0;
+  padding: .25rem;
+}
+
+.ta-left {
+  text-align: left;
+}
+.ta-center {
+  text-align: center;
+}
+.ta-right {
+  text-align: right;
+}
+.ta-justify {
+  text-align: justify;
+}
 
 @media (min-width: 650px) {
-  section {
+  main section {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     margin-top: 1rem;
   }
-  section > header {
+  main section > header {
     flex: 1 1 auto;
     display: flex;
     flex-direction: row;
     padding: 0 1rem;
     min-height: auto;
   }
-  section > header > * {
+  main section > header > * {
     margin: 0;
   }
-  section > article {
+  main section > article {
     flex: 0 1 31%;
   }
   header {

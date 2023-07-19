@@ -58,3 +58,49 @@ export async function generateRecoveryPhrase(
     address,
   }
 }
+
+export function formDataEntries(event) {
+  let fd = new FormData(
+    event.target,
+    event.submitter
+  )
+
+  return Object.fromEntries(fd.entries())
+}
+
+export function phraseToEl(phrase, el = 'span', cls = 'tag') {
+  let words = phrase?.split(' ')
+  return words?.map(
+    w => `<${el} class="${cls}">${w}</${el}>`
+  )?.join(' ')
+}
+
+export function copyToClipboard(event) {
+  event.preventDefault()
+  // let copyText = document.querySelector(sel);
+  event.target.previousElementSibling.select();
+  document.execCommand("copy");
+}
+
+export function setClipboard(event) {
+  event.preventDefault()
+  let el = event.target?.previousElementSibling
+  let val = el.textContent?.trim()
+  if (el.nodeName === 'INPUT') {
+    val = el.value?.trim()
+  }
+  const type = "text/plain";
+  const blob = new Blob([val], { type });
+  const data = [new ClipboardItem({ [type]: blob })];
+
+  navigator.clipboard.write(data).then(
+    (cv) => {
+      /* success */
+      console.log('setClipboard', cv)
+    },
+    (ce) => {
+      console.error('setClipboard fail', ce)
+      /* failure */
+    }
+  );
+}
