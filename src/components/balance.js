@@ -45,26 +45,6 @@ const initialState = {
         'handle balance change',
         [event.target],
       )
-      // if (
-      //   event?.target?.validity?.patternMismatch &&
-      //   event?.target?.type !== 'checkbox'
-      // ) {
-      //   console.log(
-      //     'handle balance change',
-      //     event?.target?.validationMessage,
-      //     event?.target?.validity,
-      //     [event.target],
-      //     event?.target?.type
-      //   )
-      //   let label = event.target?.previousElementSibling?.textContent?.trim()
-      //   if (label) {
-      //     event.target.setCustomValidity(`Invalid ${label}`)
-      //   }
-      //   // event.target.reportValidity()
-      // } else if (event?.target?.validity?.valid) {
-      //   event.target.setCustomValidity('')
-      // }
-      // event.target.reportValidity()
     },
     handleClick: state => event => {
       console.log(
@@ -72,8 +52,6 @@ const initialState = {
         event,
         event.target === state.elements.balance
       )
-      // if (event.target === state.elements.balance) {
-      // }
     }
   },
 }
@@ -105,17 +83,12 @@ export async function setupBalance(
   }
 
   state.slugs.figure = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
-  // state.slugs.form = state.name?.toLowerCase().replace(' ', '_')
 
   const figure = document.createElement('figure')
 
   state.elements.figure = figure
 
-  // figure.innerHTML = ``
   figure.id = state.slugs.figure
-  // if (state.responsive) {
-  //   figure.classList.add('responsive')
-  // }
   figure.classList.add(state.placement)
   figure.innerHTML = state.content(state)
 
@@ -127,11 +100,6 @@ export async function setupBalance(
     'change',
     state.events.handleChange(state)
   )
-
-  // figure.insertAdjacentElement(
-  //   'afterbegin',
-  //   form
-  // )
 
   return {
     element: figure,
