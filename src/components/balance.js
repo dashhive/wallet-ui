@@ -47,8 +47,9 @@ const initialState = {
       )
     },
     handleClick: state => event => {
+      event.preventDefault()
       console.log(
-        'handle balance backdrop click',
+        'handle balance click',
         event,
         event.target === state.elements.balance
       )

@@ -12,6 +12,7 @@ import setupMainFooter from './components/main-footer.js'
 import setupSVGSprite from './components/svg-sprite.js'
 import setupBalance from './components/balance.js'
 import setupDialog from './components/dialog.js'
+import setupInputAmount from './components/input-amount.js'
 
 let alias
 let phrase
@@ -460,6 +461,126 @@ let onboard = setupDialog(
   }
 )
 
+let inputAmount = setupInputAmount(
+  mainApp,
+  {
+    // name: 'Send or Request',
+    // sendTxt: 'Send',
+    // sendAlt: 'Send Dash',
+    // requestTxt: 'Request',
+    // requestAlt: 'Request Dash',
+    // cancelTxt: 'Cancel',
+    // cancelAlt: `Cancel Form`,
+    // closeTxt: html`<i class="icon-x"></i>`,
+    // closeAlt: `Close`,
+  }
+)
+
+let sendOrRequest = setupDialog(
+  mainApp,
+  {
+    name: 'Send or Request',
+    sendTxt: 'Send',
+    sendAlt: 'Send Dash',
+    requestTxt: 'Request',
+    requestAlt: 'Request Dash',
+    cancelTxt: 'Cancel',
+    cancelAlt: `Cancel Form`,
+    closeTxt: html`<i class="icon-x"></i>`,
+    closeAlt: `Close`,
+    footer: state => html`
+      <footer class="inline row">
+        <button
+          class="rounded"
+          type="submit"
+          name="intent"
+          value="send"
+          title="${state.sendAlt}"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use xlink:href="#icon-arrow-circle-up"></use>
+          </svg>
+          <span>${state.sendTxt}</span>
+        </button>
+        <button
+          class="rounded"
+          type="submit"
+          name="intent"
+          value="request"
+          title="${state.requestAlt}"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use xlink:href="#icon-arrow-circle-down"></use>
+          </svg>
+          <span>${state.requestTxt}</span>
+        </button>
+      </footer>
+    `,
+    content: state => html`
+      ${state.header(state)}
+
+      <fieldset>
+        <label for="to">
+          To
+        </label>
+        <div>
+          <input
+            type="text"
+            id="${state.slugs.form}_to"
+            name="to"
+            placeholder="enter @alias or dash address"
+            spellcheck="false"
+          />
+        </div>
+
+        ${inputAmount.renderAsHTML()}
+
+        <div class="error"></div>
+      </fieldset>
+
+      ${state.footer(state)}
+    `,
+    events: {
+      handleClose: state => async event => {
+        event.preventDefault()
+        event.stopPropagation()
+        console.log('SEND OR REQUEST CLOSE OVERRIDE!', state, event)
+      },
+      handleSubmit: state => async event => {
+        event.preventDefault()
+        event.stopPropagation()
+        event.target.to.setCustomValidity(
+          ''
+        )
+        event.target.to.reportValidity()
+
+        let fde = formDataEntries(event)
+
+        console.log('SEND OR REQUEST OVERRIDE!', state, event, fde)
+
+        if (fde.intent === 'send' && !fde.to) {
+          event.target.to.setCustomValidity(
+            'You must specify a contact or address to send to'
+          )
+          event.target.to.reportValidity()
+          return;
+        }
+
+        sendOrRequest.close()
+
+        console.log(
+          'SEND OR REQUEST OVERRIDE DIALOG!',
+          [fde]
+        )
+      },
+    },
+  }
+)
+
+
+
+
+
 async function main() {
   alias = JSON.parse(
     localStorage?.dashAlias ||
@@ -469,26 +590,6 @@ async function main() {
     localStorage?.dashRecoveryPhrase ||
     '""'
   )
-  document.addEventListener('change', async event => {
-    // @ts-ignore
-    let { name: fieldName, parentElement, form } = event?.target
-    // let output
-
-    if (
-      fieldName === 'show_pass'
-    ) {
-      event.stopPropagation()
-      event.preventDefault()
-
-      let { phrase, show_pass, } = form
-
-      if (show_pass?.checked) {
-        phrase.type = 'text'
-      } else {
-        phrase.type = 'password'
-      }
-    }
-  })
 
   // document.querySelector('main#app')
   //   .insertAdjacentElement('afterend', onbrdEl)
@@ -520,6 +621,38 @@ async function main() {
   mainFtr.render()
 
   mainApp.insertAdjacentHTML('afterbegin', html`
+    <form name="send_or_request" class="inline row">
+      <button
+        class="rounded outline"
+        type="submit"
+        name="intent"
+        value="send"
+        title="Send"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use xlink:href="#icon-arrow-circle-up"></use>
+        </svg>
+        <span>
+          Send
+        </span>
+      </button>
+      <button
+        class="rounded outline"
+        type="submit"
+        name="intent"
+        value="request"
+        title="Request"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <use xlink:href="#icon-arrow-circle-down"></use>
+        </svg>
+        <span>
+          Request
+        </span>
+      </button>
+    </form>
+  `)
+  mainApp.insertAdjacentHTML('afterbegin', html`
     <header></header>
   `)
 
@@ -527,10 +660,67 @@ async function main() {
     mainApp.querySelector('& > header'),
     {
       addr: wallet.address,
+      // events: {
+      //   handleClick: state => event => {
+      //     event.preventDefault()
+      //     console.log(
+      //       'handle balance click',
+      //       event,
+      //       event.target === state.elements.balance,
+      //     )
+      //     sendOrRequest.render()
+      //     sendOrRequest.showModal()
+      //   }
+      // }
     }
   )
   dashBalance.render()
   svgSprite.render()
+
+  document.addEventListener('submit', async event => {
+    let {
+      // @ts-ignore
+      name: formName, parentElement, form,
+    } = event?.target
+
+    if (formName === 'send_or_request') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      let fde = formDataEntries(event)
+
+      console.log(
+        'global form submit',
+        formName,
+        form,
+        fde,
+        // parentElement,
+      )
+
+      sendOrRequest.render()
+      sendOrRequest.showModal()
+    }
+  })
+  document.addEventListener('change', async event => {
+    // @ts-ignore
+    let { name: fieldName, parentElement, form } = event?.target
+    // let output
+
+    if (
+      fieldName === 'show_pass'
+    ) {
+      event.stopPropagation()
+      event.preventDefault()
+
+      let { phrase, show_pass, } = form
+
+      if (show_pass?.checked) {
+        phrase.type = 'text'
+      } else {
+        phrase.type = 'password'
+      }
+    }
+  })
 
   console.log('init', {
     phrase: phrase.split(' ')?.length,

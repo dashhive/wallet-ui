@@ -47,6 +47,7 @@ main header h2 + div {
 main header figure {
   align-items: flex-start;
   row-gap: .25rem;
+  margin: 0;
 }
 main header figure figcaption:has(+ div) {
   color: var(--dark-200, #80929C);
@@ -133,6 +134,19 @@ figure h4 {
     flex-wrap: wrap;
     gap: 1rem;
     margin-top: 1rem;
+  }
+  main > header + form,
+  main > header + section {
+    display: flex;
+    justify-content: space-between;
+    padding: 1.5rem;
+    font-size: 1.25rem;
+    overflow: hidden;
+    column-gap: 0.5rem;
+  }
+  main > header + form button,
+  main > header + section button {
+    flex: 1 1 auto;
   }
   main section > header {
     flex: 1 1 auto;

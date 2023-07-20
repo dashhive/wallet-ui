@@ -114,6 +114,52 @@ form fieldset > div > input[type="password"]:not(:disabled) + label:hover {
   background-color: var(--c);
   color: var(--fc);
 }
+/* form fieldset:has(.field) {
+  flex: 1 1 50%;
+} */
+form .field {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid transparent;
+  border-radius: 1.5rem;
+  padding: 1rem 1.5rem;
+  margin-top: 3rem;
+  flex: 0;
+  max-width: 21rem;
+  min-width: initial;
+  align-self: center;
+  align-items: flex-start;
+}
+form .field > div {
+  display: flex;
+}
+form .field > div > label + input {
+  background-color: transparent;
+  border: 1px solid transparent;
+  font-size: 3.75rem;
+  font-weight: 800;
+  padding: 0;
+  border-radius: 0;
+  color: var(--f);
+  flex: 1 1 auto;
+}
+form .field > div > label:has(+ input) {
+  min-width: initial;
+}
+form .field:has(> div > label + input:focus) {
+  border: 1px solid var(--dark-200);
+}
+
+/* form fieldset > div > input + button i {
+  fill: currentColor;
+  color: var(--fc);
+} */
+/* form fieldset:last-of-type:has(> [type=reset]) {
+  justify-content: space-between;
+} */
+
+
+
 label:has(> input[type=checkbox][name=show_pass]) svg {
   display: none;
 }
@@ -130,14 +176,14 @@ label:has(> input[type=checkbox][name=show_pass]:not(:checked)) .closed-eye,
 label:has(> input[type=checkbox][name=show_pass]:checked) .open-eye {
   display: flex;
 }
-/* form fieldset > div > input + button i {
-  fill: currentColor;
-  color: var(--fc);
-} */
-/* form fieldset:last-of-type:has(> [type=reset]) {
-  justify-content: space-between;
-} */
+
+
+
 button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  column-gap: .25rem;
   background-color: var(--brand-blue);
   border: 0 solid transparent;
   color: var(--fc);
@@ -151,8 +197,8 @@ button {
 
 button.outline {
   background-color: transparent;
-  border: 1px solid var(--fc);
-  color: var(--fc);
+  border: 1px solid var(--dark-200);
+  color: var(--dark-200);
 }
 button.rounded {
   border-radius: 2rem;
@@ -174,9 +220,6 @@ button.link {
 button.pill {
   display: flex;
   column-gap: .25rem;
-}
-button.pill:not(:disabled):hover {
-  background-color: var(--dark-600);
 }
 
 button[type=submit] {
@@ -210,6 +253,14 @@ button[type=reset]:not(:disabled):hover {
   /* background-color: var(--c); */
   color: var(--dang);
   border-color: var(--dang);
+}
+button.pill:not(:disabled):hover {
+  background-color: var(--dark-600);
+}
+button.outline:not(:disabled):hover {
+  background-color: var(--brand-blue);
+  border: 1px solid var(--brand-blue);
+  color: var(--f);
 }
 
 
