@@ -40,21 +40,49 @@ form fieldset:last-of-type:has(> button) {
   flex-direction: row;
   justify-content: center;
 }
+form fieldset > div[data-prefix]::before {
+  content: attr(data-prefix);
+  position: absolute;
+  display: flex;
+  left: 2rem;
+  color: var(--dark-500);
+}
+form fieldset > div[data-prefix]:has(> input:focus:not(:placeholder-shown))::before {
+  color: var(--fc);
+}
+form fieldset > div[data-prefix] > input {
+  padding-left: 2rem;
+}
+/* form fieldset > div[data-prefix] > input:focus:placeholder-shown {
+  padding-left: 2rem;
+}
+form fieldset > div[data-prefix] > input:focus:not(:placeholder-shown) {
+  padding-left: 2rem;
+} */
+form fieldset > div:has(input),
 form fieldset > div:has(input + button),
-form fieldset > div:has(input + label) {
+form fieldset > div:has(input + label),
+form fieldset > div:has(label + input) {
   /* background-color: var(--c); */
   display: flex;
   flex-direction: row;
   /* border-radius: 6.25rem; */
   align-items: center;
 }
+form fieldset > div > input {
+  flex: 1 1 auto;
+  border-radius: 6.25rem;
+  border: 1px solid var(--dark-600);
+}
 form fieldset > div > input:has(+ button),
 form fieldset > div > input:has(+ label),
 form fieldset > div > input[type="text"]:has(+ label),
 form fieldset > div > input[type="password"]:has(+ label) {
   flex: 1 1 auto;
-  border-top-left-radius: 6.25rem;
-  border-bottom-left-radius: 6.25rem;
+  /* border-top-left-radius: 6.25rem;
+  border-bottom-left-radius: 6.25rem; */
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
   border: 1px solid var(--dark-600);
   border-right: 0 solid transparent;
 }
@@ -69,8 +97,9 @@ form fieldset > div > input[type="password"] + label {
   color: var(--dark-500);
   height: 3rem;
   min-width: min-content;
-  border-top-right-radius: 6.25rem;
-  border-bottom-right-radius: 6.25rem;
+  border-radius: 6.25rem;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
   padding: 0 1.2rem;
   transition: color .1s ease-in-out;
 }

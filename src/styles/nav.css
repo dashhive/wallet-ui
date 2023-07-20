@@ -65,11 +65,12 @@ nav a {
   text-align: center;
 
   display: flex;
-  line-height: 40px;
-  height: 5rem;
-  padding: 1rem;
+  align-items: center;
+  /* line-height: 40px; */
+  height: 100%;
+  /* padding: 1rem; */
   /* width: 100%; */
-  flex-direction: column;
+  /* flex-direction: column; */
 
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -95,5 +96,5 @@ nav a sub {
   align-self: center;
 }
 nav a svg {
-  width: 100%;
+  height: 100%;
 }

@@ -6,7 +6,11 @@ const initialState = {
   },
   content: state => html`
     <nav>
-      <a class="brand" href="#home">Incubator Wallet</a>
+      <a class="brand" href="#home">
+        <svg viewBox="0 0 101 32">
+          <use xlink:href="#icon-logo"></use>
+        </svg>
+      </a>
       <a class="alias" href="#me">@${state.data?.alias}</a>
     </nav>
   `,

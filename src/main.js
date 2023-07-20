@@ -158,16 +158,19 @@ let walletGen = setupDialog(
         <label for="alias">
           Alias
         </label>
-        <input
-          type="text"
-          id="${state.slugs.form}_alias"
-          name="alias"
-          placeholder="@your_alias"
-          minlength="2"
-          pattern="${aliasRegex.source}"
-          required
-          spellcheck="false"
-        />
+        <div
+          data-prefix="@"
+        >
+          <input
+            type="text"
+            id="${state.slugs.form}_alias"
+            name="alias"
+            placeholder="your_alias"
+            pattern="${aliasRegex.source}"
+            required
+            spellcheck="false"
+          />
+        </div>
 
         <div class="error"></div>
       </fieldset>
@@ -269,7 +272,7 @@ let walletImp = setupDialog(
             type="password"
             id="phrase"
             name="phrase"
-            placeholder="Dash Recovery Phrase"
+            placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
             pattern="${phraseRegex.source}"
             required
             spellcheck="false"
@@ -285,7 +288,7 @@ let walletImp = setupDialog(
             </svg>
           </label>
         </div>
-        <p>Paste a 12 word recovery phrase to add an existing wallet.</p>
+        <p>Import an existing wallet by pasting a 12 word recovery phrase.</p>
 
         <div class="error"></div>
       </fieldset>
@@ -294,15 +297,20 @@ let walletImp = setupDialog(
         <label for="alias">
           Alias
         </label>
-        <input
-          type="text"
-          id="${state.slugs.form}_alias"
-          name="alias"
-          placeholder="@your_alias"
-          pattern="${aliasRegex.source}"
-          required
-          spellcheck="false"
-        />
+        <div
+          data-prefix="@"
+        >
+          <input
+            type="text"
+            id="${state.slugs.form}_alias"
+            name="alias"
+            placeholder="your_alias"
+            pattern="${aliasRegex.source}"
+            required
+            spellcheck="false"
+          />
+        </div>
+        <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>
 
         <div class="error"></div>
       </fieldset>
@@ -401,6 +409,12 @@ let onboard = setupDialog(
     header: () => ``,
     footer: () => ``,
     content: state => html`
+      <a class="brand" href="#home">
+        <svg viewBox="0 0 101 32">
+          <use xlink:href="#icon-logo"></use>
+        </svg>
+        <span class="pill">Incubator</span>
+      </a>
       <section>
         <aside>
           <h2>Welcome to the new Dash Wallet</h2>
@@ -454,7 +468,7 @@ async function main() {
   document.addEventListener('change', async event => {
     // @ts-ignore
     let { name: fieldName, parentElement, form } = event?.target
-    let output
+    // let output
 
     if (
       fieldName === 'show_pass'

@@ -16,6 +16,25 @@ dialog {
   align-items: center;
   justify-content: center;
 }
+dialog .brand {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* height: 7.15rem; */
+  left: 3.5rem;
+  top: 1.5rem;
+  font-size: 0.75rem;
+  text-decoration: none;
+}
+dialog .brand svg {
+  max-width: initial;
+  width: 8rem;
+  margin: 0;
+}
+dialog .brand svg + .pill {
+  margin-top: .7rem;
+}
 dialog::backdrop {
   background: var(--mdlbd);
   opacity: 0;
@@ -44,7 +63,7 @@ dialog.fullscreen {
   height: 100vh;
   max-width: none;
   max-height: none;
-  transition: all 0.5s ease-in-out;
+  /* transition: all 0.5s ease-in-out; */
   overflow: hidden;
 }
 dialog.center {
@@ -160,6 +179,14 @@ dialog > form > fieldset > p {
   margin: .8rem;
   align-items: flex-start;
   gap: .625rem;
+  color: var(--dark-200);
+}
+dialog > form > fieldset > div + p {
+  font-size: 0.75rem;
+  font-style: normal;
+  font-weight: 400;
+  margin: .25rem 0 .25rem 1rem;
+  text-align: left;
 }
 dialog > form > fieldset > p > span {
   padding: .25rem;

@@ -46,7 +46,7 @@
   --bgc: var(--d);
   --fc: var(--l);
 
-  --nav-bg: var(--n);
+  --nav-bg: var(--dark-900);
   --nav-abg: var(--c);
   --nav-a: var(--a);
 
@@ -372,4 +372,18 @@ th {
 }
 .over {
   border: 1px dashed var(--warn);
+}
+
+.brand {
+  color: var(--brand-blue);
+}
+.brand:hover {
+  color: var(--brand-blue-highlight);
+}
+
+.pill {
+  background-color: var(--dark-600);
+  color: var(--dark-200);
+  padding: 0.25rem 0.75rem;
+  border-radius: 6.25rem;
 }
