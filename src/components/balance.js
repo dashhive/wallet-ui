@@ -1,6 +1,5 @@
 import { lit as html } from '../helpers/lit.js'
-import { checkWalletFunds } from '../helpers/utils.js'
-import { fixedDash } from '../helpers/dash.js'
+import { checkWalletFunds, fixedDash } from '../helpers/utils.js'
 
 const initialState = {
   id: 'Balance',
@@ -8,6 +7,7 @@ const initialState = {
   placement: 'ta-left',
   responsive: true,
   delay: 500,
+  wallet: {},
   walletFunds: {},
   addr: null,
   header: state => html`
@@ -106,10 +106,10 @@ export async function setupBalance(
   figure.classList.add(state.placement)
   figure.innerHTML = state.content(state)
 
-  console.log('state?.addr', state?.addr)
+  console.log('state?.wallet', state?.wallet)
 
-  if (state?.addr) {
-    checkWalletFunds(state.addr)
+  if (state?.wallet) {
+    checkWalletFunds(state.wallet?.address)
       .then(wf => {
         state.walletFunds = wf
         figure.innerHTML = state.content(state)
