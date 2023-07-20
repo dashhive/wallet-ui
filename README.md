@@ -13,8 +13,8 @@ A Graphical User Interface (GUI) for
  - [ ] UI Components
    - [x] Wallet balance from DashSight.js
    - [ ] Buttons
-     - [ ] Send
-     - [ ] Request
+     - [x] Send
+     - [x] Request
      - [ ] New Contact
    - [ ] Dialogs
      - [ ] Send
