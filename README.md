@@ -11,7 +11,7 @@ A Graphical User Interface (GUI) for
 	 - [x] To generate a new wallet
 	 - [x] To restore an existing wallet via recovery phrase
  - [ ] UI Components
-   - [ ] Wallet balance from DashSight.js
+   - [x] Wallet balance from DashSight.js
    - [ ] Buttons
      - [ ] Send
      - [ ] Request
