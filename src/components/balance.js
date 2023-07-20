@@ -1,5 +1,6 @@
 import { lit as html } from '../helpers/lit.js'
 import { checkWalletFunds } from '../helpers/utils.js'
+import { fixedDash } from '../helpers/dash.js'
 
 const initialState = {
   id: 'Balance',
@@ -12,27 +13,45 @@ const initialState = {
   header: state => html`
     <figcaption>${state.name} ${state.id}</figcaption>
   `,
-  content: state => html`
+  content: state => {
+    let funds = '0'
+    let balance = html`${funds}`
+
+    if (state.walletFunds.balance) {
+      funds = fixedDash(state.walletFunds.balance)
+
+      let fundsInt = parseInt(
+        funds,
+        10
+      )
+      let fundsFract = parseFloat(
+        funds
+      ).toFixed(3).split('.')[1]
+      let fundsRemainder = funds.split(
+        fundsFract
+      )[1]
+
+      balance = html`${
+        fundsInt
+      }<sub><span>.${
+        fundsFract
+      }</span>${
+        fundsRemainder
+      }</sub>`
+    }
+
+    return html`
     ${state.header(state)}
 
-    <div>
+    <div title="${funds}">
       <svg width="32" height="33" viewBox="0 0 32 33">
         <use xlink:href="#icon-dash-mark"></use>
       </svg>
-      ${
-        parseInt(
-          state.walletFunds.balance,
-          10
-        )
-      }<sub>.${
-        parseFloat(
-          state.walletFunds.balance
-        ).toFixed(3).split('.')[1]
-      }</sub>
+      ${balance}
     </div>
 
     ${state.footer(state)}
-  `,
+  `},
   footer: state => html``,
   slugs: {
   },
@@ -77,12 +96,6 @@ export async function setupBalance(
     }
   }
 
-  console.log('state?.addr', state?.addr)
-
-  if (state?.addr !== null) {
-    state.walletFunds = await checkWalletFunds(state.addr)
-  }
-
   state.slugs.figure = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
 
   const figure = document.createElement('figure')
@@ -92,6 +105,16 @@ export async function setupBalance(
   figure.id = state.slugs.figure
   figure.classList.add(state.placement)
   figure.innerHTML = state.content(state)
+
+  console.log('state?.addr', state?.addr)
+
+  if (state?.addr) {
+    checkWalletFunds(state.addr)
+      .then(wf => {
+        state.walletFunds = wf
+        figure.innerHTML = state.content(state)
+      })
+  }
 
   figure.addEventListener(
     'click',

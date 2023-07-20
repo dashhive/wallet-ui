@@ -70,6 +70,10 @@ main header figure figcaption + div svg {
 main header figure figcaption + div sub {
   align-self: self-end;
   font-size: 2.75rem;
+  color: var(--dark-600);
+}
+main header figure figcaption + div sub span {
+  color: var(--f);
 }
 main footer {
   text-align: center;

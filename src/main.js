@@ -10,7 +10,6 @@ import {
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
 import setupSVGSprite from './components/svg-sprite.js'
-import setupBalance from './components/balance.js'
 import setupDialog from './components/dialog.js'
 import setupInputAmount from './components/input-amount.js'
 
@@ -656,25 +655,17 @@ async function main() {
     <header></header>
   `)
 
-  let dashBalance = await setupBalance(
-    mainApp.querySelector('& > header'),
-    {
-      addr: wallet.address,
-      // events: {
-      //   handleClick: state => event => {
-      //     event.preventDefault()
-      //     console.log(
-      //       'handle balance click',
-      //       event,
-      //       event.target === state.elements.balance,
-      //     )
-      //     sendOrRequest.render()
-      //     sendOrRequest.showModal()
-      //   }
-      // }
-    }
-  )
-  dashBalance.render()
+  import('./components/balance.js')
+    .then(async ({ setupBalance }) => {
+      let dashBalance = await setupBalance(
+        mainApp.querySelector('& > header'),
+        {
+          addr: wallet?.address,
+        }
+      )
+      dashBalance.render()
+    })
+
   svgSprite.render()
 
   document.addEventListener('submit', async event => {
