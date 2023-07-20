@@ -72,9 +72,6 @@ const initialState = {
   slugs: {
   },
   elements: {
-    // dialog: (() => document.createElement('dialog'))(),
-    // form: (() => document.createElement('form'))(),
-    // progress: (() => document.createElement('progress'))(),
   },
   events: {
     handleChange: state => event => {
@@ -133,11 +130,6 @@ const initialState = {
 
       let fde = formDataEntries(event)
 
-      // event.target.passphrase.setCustomValidity(
-      //   'Unable to decrypt wallet(s)'
-      // )
-      // event.target.passphrase.reportValidity()
-
       state.elements.dialog.returnValue = String(fde.intent)
 
       console.log(
@@ -163,7 +155,6 @@ const initialState = {
           event,
           event.target === state.elements.dialog
         )
-        // form?.removeEventListener('close', handleClick)
         state.elements.dialog.close('cancel')
       }
     }
@@ -190,16 +181,8 @@ export function setupDialog(
     }
   }
 
-  // state = Object.assign({}, initialState, state)
-
   state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
   state.slugs.form = state.name?.toLowerCase().replace(' ', '_')
-
-  // let {
-  //   progress,
-  //   dialog,
-  //   form,
-  // } = state.elements
 
   const dialog = document.createElement('dialog')
   const form = document.createElement('form')
