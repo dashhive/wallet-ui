@@ -9,10 +9,12 @@ import {
 
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
-import setupDialog from './components/dialog.js'
 import setupSVGSprite from './components/svg-sprite.js'
+import setupBalance from './components/balance.js'
+import setupDialog from './components/dialog.js'
 
 let phrase
+let wallet
 
 let phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
@@ -21,24 +23,26 @@ let aliasRegex = new RegExp(
   /^[a-zA-Z0-9]{2,}$/
 )
 
+let mainApp = document.querySelector('main#app')
+
 
 let bodyNav = await setupNav(
-  document.querySelector('main#app'),
+  mainApp,
   {}
 )
 
 let mainFtr = await setupMainFooter(
-  document.querySelector('main#app'),
+  mainApp,
   {}
 )
 
 let svgSprite = await setupSVGSprite(
-  document.querySelector('main#app'),
+  mainApp,
   {}
 )
 
 let walletBak = setupDialog(
-  document.querySelector('main#app'),
+  mainApp,
   {
     name: 'New Wallet',
     submitTxt: 'Done',
@@ -128,7 +132,7 @@ let walletBak = setupDialog(
 )
 
 let walletGen = setupDialog(
-  document.querySelector('main#app'),
+  mainApp,
   {
     name: 'New Wallet',
     submitTxt: 'Next',
@@ -211,10 +215,10 @@ let walletGen = setupDialog(
         localStorage.dashAlias = JSON.stringify(fde.alias)
 
         walletBak.render(
-          'afterend',
           {
             wallet,
-          }
+          },
+          'afterend',
         )
         walletBak.showModal()
 
@@ -238,7 +242,7 @@ let walletGen = setupDialog(
 )
 
 let walletImp = setupDialog(
-  document.querySelector('main#app'),
+  mainApp,
   {
     name: 'Existing Wallet',
     submitTxt: 'Add Wallet',
@@ -370,7 +374,7 @@ let walletImp = setupDialog(
 )
 
 let onboard = setupDialog(
-  document.querySelector('main#app'),
+  mainApp,
   {
     name: 'Onboarding Flow',
     placement: 'fullscreen',
@@ -499,13 +503,34 @@ async function main() {
     // setTimeout(t => {
     //   onboardingDialog.showModal()
     // }, 50)
+  } else {
+    wallet = await generateRecoveryPhrase(phrase)
   }
 
   bodyNav.render()
   mainFtr.render()
+
+  mainApp.insertAdjacentHTML('afterbegin', html`
+    <header></header>
+  `)
+
+  let dashBalance = await setupBalance(
+    mainApp.querySelector('& > header'),
+    {
+      addr: wallet.address,
+    }
+  )
+  dashBalance.render(
+    {
+      addr: wallet.address,
+    },
+  )
   svgSprite.render()
 
-  console.log('init', { phrase: phrase.split(' ')?.length })
+  console.log('init', {
+    phrase: phrase.split(' ')?.length,
+    wallet,
+  })
 }
 
 main()

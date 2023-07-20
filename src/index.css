@@ -19,19 +19,21 @@ body {
 main {
   padding: 0;
   width: 100%;
+  max-width: 40rem;
+  justify-self: center;
 }
 
 main h1 { text-align: center; }
 
 main header {
-  margin: 0 auto;
+  margin: 2.5rem auto 0;
   padding: 0 2rem;
   /* max-width: 1100px; */
   min-height: 85px;
   width: 100%;
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
   flex-direction: column-reverse;
 }
 main header h2 {
@@ -42,16 +44,41 @@ main header h2 {
 main header h2 + div {
   display: flex;
 }
+main header figure {
+  align-items: flex-start;
+  row-gap: .25rem;
+}
+main header figure figcaption:has(+ div) {
+  color: var(--dark-200, #80929C);
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+main header figure figcaption + div {
+  display: flex;
+  font-size: 3.75rem;
+  font-weight: 800;
+  line-height: 1;
+  margin: 0;
+}
+main header figure figcaption + div svg {
+  align-self: center;
+  margin-right: 1rem;
+}
+main header figure figcaption + div sub {
+  align-self: self-end;
+  font-size: 2.75rem;
+}
 main footer {
   text-align: center;
 }
 
 
-svg {
+/* svg {
   max-width: 50%;
   margin: 0 auto;
   display: block;
-}
+} */
 
 figure {
   display: flex;
