@@ -660,7 +660,8 @@ async function main() {
       let dashBalance = await setupBalance(
         mainApp.querySelector('& > header'),
         {
-          addr: wallet?.address,
+          wallet,
+          // addr: wallet?.address,
         }
       )
       dashBalance.render()
