@@ -26,7 +26,7 @@
   "scripts": {
     "start": "npm run https",
     "https": "npx sirv-cli -D --single 'src/index.html' --http2 --key ~/localhost.key.pem --cert ~/localhost.pem -p 5443 .",
-    "http": "npx sirv-cli -p 5444 .",
+    "http": "npx sirv-cli -D --single 'src/index.html' -p 3080 .",
     "bump": "npm version -m \"chore(release): bump to v%s\"",
     "fmt": "npx -p prettier@2.x -- prettier -w '**/*.{js,md}'",
     "lint": "npx -p typescript@4.x -- tsc -p ./jsconfig.json",
