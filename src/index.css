@@ -55,6 +55,7 @@ main header figure figcaption:has(+ div) {
   line-height: 1;
 }
 main header figure figcaption + div {
+  color: var(--f);
   display: flex;
   font-size: 3.75rem;
   font-weight: 800;
