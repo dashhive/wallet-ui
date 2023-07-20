@@ -96,5 +96,8 @@ nav a sub {
   align-self: center;
 }
 nav a svg {
+  margin: 0 auto;
+  display: block;
   height: 100%;
+  max-width: 50%;
 }

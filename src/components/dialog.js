@@ -259,8 +259,8 @@ export function setupDialog(
     showModal: () => dialog.showModal(),
     close: returnVal => dialog.close(returnVal),
     render: (
-      position = 'afterend',
       renderState = {},
+      position = 'afterend',
     ) => {
       state = {
         ...state,
