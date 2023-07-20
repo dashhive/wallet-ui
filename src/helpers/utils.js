@@ -2,8 +2,24 @@ import {
   // Base58Check,
   DashHd,
   DashPhrase,
+  DashSight,
   // DashKeys,
 } from '../imports.js'
+
+// @ts-ignore
+let dashsight = DashSight.create({
+  baseUrl: 'https://insight.dash.org',
+  // baseUrl: 'https://dashsight.dashincubator.dev',
+});
+
+export async function checkWalletFunds(addr) {
+  console.info('check wallet addr', addr)
+  let walletFunds = await dashsight.getInstantBalance(addr)
+
+  console.info('check wallet funds', walletFunds)
+
+  return walletFunds
+}
 
 export async function generateRecoveryPhrase(
   phrase,
