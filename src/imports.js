@@ -19,7 +19,6 @@ import '../node_modules/dashphrase/dashphrase.js';
 import '../node_modules/dashsight/dashsight.js';
 import '../node_modules/dashsight/dashsocket.js';
 import '../node_modules/@dashincubator/secp256k1/secp256k1.js';
-import '../node_modules/@dashincubator/base58check/base58check.js';
 import '../node_modules/crypticstorage/crypticstorage.js';
 
 // import * as DashWalletTypes from '../node_modules/dashwallet/dashwallet.js';
@@ -29,8 +28,6 @@ import * as DashPhraseTypes from '../node_modules/dashphrase/dashphrase.js';
 import * as DashSightTypes from '../node_modules/dashsight/dashsight.js';
 import * as DashSocketTypes from '../node_modules/dashsight/dashsocket.js';
 import * as Secp256k1Types from '../node_modules/@dashincubator/secp256k1/secp256k1.js';
-import * as Base58CheckTypes from '../node_modules/@dashincubator/base58check/base58check.js';
-import * as RIPEMD160Types from '../node_modules/@dashincubator/ripemd160/ripemd160.js';
 import * as CrypticStorageTypes from '../node_modules/crypticstorage/crypticstorage.js';
 
 // /** @type {DashWalletTypes} */
@@ -47,10 +44,6 @@ export let DashSight = window?.DashSight || globalThis?.DashSight;
 export let DashSocket = window?.DashSocket || globalThis?.DashSocket;
 /** @type {Secp256k1Types} */
 export let Secp256k1 = window?.nobleSecp256k1 || globalThis?.nobleSecp256k1;
-/** @type {Base58CheckTypes} */
-export let Base58Check = window?.Base58Check || globalThis?.Base58Check;
-/** @type {RIPEMD160Types} */
-export let RIPEMD160 = window?.RIPEMD160 || globalThis?.RIPEMD160;
 /** @type {CrypticStorageTypes} */
 export let CrypticStorage =
   window?.CrypticStorage || globalThis?.CrypticStorage;
@@ -63,7 +56,5 @@ export default {
   DashSight,
   DashSocket,
   Secp256k1,
-  Base58Check,
-  RIPEMD160,
   CrypticStorage,
 };
