@@ -36,14 +36,6 @@ export async function setupNav(
   return {
     element: container,
     render: (position = 'beforebegin') => {
-      // el.insertAdjacentHTML(position, html`
-      //   <nav>
-      //     <a class="brand" href="#home">Incubator Wallet</a>
-      //     <a class="alias" href="#me">@${state.data?.alias}</a>
-      //   </nav>
-      // `)
-      // for some reason `container.content.children`
-      // only gets the first element, not all elements
       for (let child of container.content.childNodes) {
         if (child.nodeType !== 3) {
           el.insertAdjacentElement(

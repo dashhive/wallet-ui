@@ -13,6 +13,7 @@ import setupSVGSprite from './components/svg-sprite.js'
 import setupBalance from './components/balance.js'
 import setupDialog from './components/dialog.js'
 
+let alias
 let phrase
 let wallet
 
@@ -25,11 +26,6 @@ let aliasRegex = new RegExp(
 
 let mainApp = document.querySelector('main#app')
 
-
-let bodyNav = await setupNav(
-  mainApp,
-  {}
-)
 
 let mainFtr = await setupMainFooter(
   mainApp,
@@ -465,6 +461,10 @@ let onboard = setupDialog(
 )
 
 async function main() {
+  alias = JSON.parse(
+    localStorage?.dashAlias ||
+    '""'
+  )
   phrase = JSON.parse(
     localStorage?.dashRecoveryPhrase ||
     '""'
@@ -507,6 +507,15 @@ async function main() {
     wallet = await generateRecoveryPhrase(phrase)
   }
 
+  let bodyNav = await setupNav(
+    mainApp,
+    {
+      data: {
+        alias
+      },
+    }
+  )
+
   bodyNav.render()
   mainFtr.render()
 
@@ -520,11 +529,7 @@ async function main() {
       addr: wallet.address,
     }
   )
-  dashBalance.render(
-    {
-      addr: wallet.address,
-    },
-  )
+  dashBalance.render()
   svgSprite.render()
 
   console.log('init', {
