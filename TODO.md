@@ -1,0 +1,26 @@
+## Todo
+
+ - [ ] UI Components
+   - [x] Wallet balance from DashSight.js
+   - [ ] Buttons
+     - [x] Send
+     - [x] Request
+     - [ ] New Contact
+   - [ ] Dialogs
+     - [ ] Send
+     - [ ] Request
+     - [ ] Share QR Code
+     - [ ] Scan QR Code
+     - [ ] Add a Contact
+     - [ ] Send / Request to Contact
+   - [ ] Fiat balance from:
+     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
+     - symbol=DASH${symbol}
+   - [ ] Styled Drop Down List
+   - [ ] Type Ahead Input Field
+   - [ ] Contacts List
+     - [ ] Contact Item
+       - [ ] Avatar
+       - [ ] Alias
+       - [ ] Send Btn
+       - [ ] Request Btn
