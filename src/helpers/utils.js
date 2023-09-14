@@ -5,12 +5,15 @@ import {
   DashSight,
   // DashKeys,
 } from '../imports.js'
+import { DatabaseSetup } from './db.js'
 
 // @ts-ignore
 let dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
 });
+
+const db = await DatabaseSetup()
 
 export async function walletSchema(
   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
@@ -53,6 +56,170 @@ export async function walletSchema(
   return wallets
 }
 
+/**
+ *
+ * @example
+ *    let addr = getAddr(wallet, 0, 0, 0)
+ *
+ * @param {HDWallet} wallet
+ * @param {Number} [accountIndex]
+ * @param {Number} [addressIndex]
+ * @param {Number} [use]
+ *
+ * @returns
+ */
+export async function getAddr(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE,
+) {
+  let account = await wallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(use);
+  let xprv = await DashHd.toXPrv(xkey);
+  let xpub = await DashHd.toXPub(xkey);
+  let xpubKey = await DashHd.fromXKey(xpub);
+  let xpubId = await DashHd.toId(xpubKey);
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+  // let keyId = await DashHd.toId(xkey);
+
+  return {
+    // keyId,
+    // account,
+    // xkey,
+    xprv,
+    xpub,
+    xpubKey,
+    xpubId,
+    // key,
+    address
+  }
+}
+
+export async function initWallet(
+  wallet,
+  accountIndex = 0,
+  addrIndex = 0,
+  info = {},
+) {
+  let initInfo = {
+    name: '',
+    email: '', // gravatar?
+    picture: '', // avatar
+    sub: '',
+    xpub: '',
+    preferred_username: '',
+  }
+
+  info = {
+    ...initInfo,
+    ...info,
+  }
+
+  let addr = await getAddr(
+    wallet.wallet,
+  )
+
+  let { address, xpubId } = addr
+
+  let storedReceiveAddr = await db.addresses.setItem(
+    `receiveaddr__${address}`,
+    {
+      walletId: wallet.id,
+      accountIndex,
+      addrIndex
+    }
+  )
+
+  console.log('storedReceiveAddr in db', storedReceiveAddr)
+
+  let alias = info.preferred_username
+  let contacts = '{}'
+
+  return {
+    contacts: '{}',
+  }
+}
+
+/**
+ *
+ * @param {String} [phraseOrXkey]
+ * @param {Number} [accountIndex]
+ * @param {Number} [addressIndex]
+ * @param {Number} [use]
+ *
+ * @returns {Promise<SeedWallet>}
+ */
+export async function deriveWalletData(
+  phraseOrXkey,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE
+) {
+  let recoveryPhraseArr = phraseOrXkey?.split(' ')
+  let targetBitEntropy = 128;
+  let secretSalt = ''; // "TREZOR";
+  let recoveryPhrase
+  let seed
+  let wallet
+  let wpub
+  let id
+  let account
+  // let use = DashHd.RECEIVE;
+  let xkey, xprv, xpub, xkeyId
+  let addressKey, addressKeyId
+  let address
+
+  if (!phraseOrXkey) {
+    recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
+  }
+
+  if (recoveryPhraseArr?.length >= 12) {
+    recoveryPhrase = phraseOrXkey;
+  }
+
+  if (
+    ['xprv','xpub'].includes(
+      phraseOrXkey.substring(0,4)
+    )
+    // phraseOrXkey.lastIndexOf('xprv', 0) === 0 ||
+    // phraseOrXkey.lastIndexOf('xpub', 0) === 0
+  ) {
+    // recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
+    xkey = await DashHd.fromXKey(phraseOrXkey);
+  } else {
+  seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
+  wallet = await DashHd.fromSeed(seed);
+    wpub = await DashHd.toXPub(wallet);
+    id = await DashHd.toId(wallet);
+  account = await wallet.deriveAccount(accountIndex);
+  xkey = await account.deriveXKey(use);
+  xprv = await DashHd.toXPrv(xkey);
+  }
+
+  xkeyId = await DashHd.toId(xkey);
+  xpub = await DashHd.toXPub(xkey);
+  addressKey = await xkey.deriveAddress(addressIndex);
+  addressKeyId = await DashHd.toId(addressKey);
+  address = await DashHd.toAddr(addressKey.publicKey);
+
+  return {
+    id,
+    addressKeyId,
+    address,
+    xkeyId,
+    xkey,
+    xprv,
+    xpub,
+    seed,
+    wpub,
+    wallet,
+    account,
+    recoveryPhrase,
+  }
+}
+
 export async function checkWalletFunds(addr) {
   console.info('check wallet addr', addr)
   let walletFunds = await dashsight.getInstantBalance(addr)
@@ -62,66 +229,14 @@ export async function checkWalletFunds(addr) {
   return walletFunds
 }
 
-export async function generateRecoveryPhrase(
-  phrase,
-  accountIndex = 0
-) {
-  let recoveryPhraseArr = phrase?.split(' ')
-  let targetBitEntropy = 128;
-  let secretSalt = ''; // "TREZOR";
-  let recoveryPhrase
-  let seed
-  let wallet
-  // let accountIndex = 0;
-  let addressIndex = 0;
-  let account
-  let use = DashHd.RECEIVE;
-  let xkey
-  let xprv
-  let xpub
-  let key
-  let privateKey
-  let wif
-  let address
-
-  if (recoveryPhraseArr?.length >= 12) {
-    recoveryPhrase = phrase
-  }
-
-  if (!phrase) {
-    recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
-  }
-
-  seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
-  wallet = await DashHd.fromSeed(seed);
-  account = await wallet.deriveAccount(accountIndex);
-  xkey = await account.deriveXKey(use);
-  xprv = await DashHd.toXPrv(xkey);
-  xpub = await DashHd.toXPub(xkey);
-  key = await xkey.deriveAddress(addressIndex);
-  address = await DashHd.toAddr(key.publicKey);
-
-  // wif = await DashHd.toWif(key?.privateKey || privateKey);
-
-  return {
-    address,
-    xkey,
-    xprv,
-    xpub,
-    seed,
-    wallet,
-    account,
-    recoveryPhrase,
-    // wif,
-  }
-}
-
 export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   let words = phrase?.split(' ')
   return words?.map(
     w => `<${el} class="${cls}">${w}</${el}>`
   )?.join(' ')
-}export const DUFFS = 100000000;
+}
+
+export const DUFFS = 100000000;
 
 /**
  * @param {Number} duffs - ex: 00000000
