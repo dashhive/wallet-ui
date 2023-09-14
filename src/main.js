@@ -1,10 +1,11 @@
 import { lit as html } from './helpers/lit.js'
 
 import {
-  generateRecoveryPhrase,
+  deriveWalletData,
   formDataEntries,
   phraseToEl,
   setClipboard,
+  initWallet,
 } from './helpers/utils.js'
 
 import setupNav from './components/nav.js'
@@ -13,16 +14,21 @@ import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 import setupInputAmount from './components/input-amount.js'
 
-let alias
+let selected_wallet
+let selected_alias
 let phrase
 let wallet
+let wallets
 
 let phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
 )
 let aliasRegex = new RegExp(
-  /^[a-zA-Z0-9]{2,}$/
+  /^[a-zA-Z0-9]{1,}$/
 )
+
+let bodyNav
+let dashBalance
 
 let mainApp = document.querySelector('main#app')
 
@@ -155,7 +161,7 @@ let walletGen = setupDialog(
       ${state.header(state)}
 
       <fieldset>
-        <label for="alias">
+        <label for="${state.slugs.form}_alias">
           Alias
         </label>
         <div
@@ -202,7 +208,7 @@ let walletGen = setupDialog(
         }
 
         // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
-        let wallet = await generateRecoveryPhrase()
+        let wallet = await deriveWalletData()
 
         console.log('GENERATE wallet!', wallet)
 
@@ -294,7 +300,7 @@ let walletImp = setupDialog(
       </fieldset>
 
       <fieldset>
-        <label for="alias">
+        <label for="${state.slugs.form}_alias">
           Alias
         </label>
         <div
@@ -349,7 +355,13 @@ let walletImp = setupDialog(
           return;
         }
 
-        let wallet = await generateRecoveryPhrase(fde.phrase)
+        phrase = `${fde.phrase}`
+
+        let initialized
+        let wallet = await deriveWalletData(phrase)
+
+        selected_alias = `${fde.alias}`
+        selected_wallet = wallet.id
 
         console.log('IMPORT wallet!', wallet)
 
@@ -581,37 +593,38 @@ let sendOrRequest = setupDialog(
 
 
 async function main() {
-  alias = JSON.parse(
-    localStorage?.dashAlias ||
-    '""'
-  )
-  phrase = JSON.parse(
-    localStorage?.dashRecoveryPhrase ||
-    '""'
-  )
+  // alias = JSON.parse(
+  //   localStorage?.dashAlias ||
+  //   '""'
+  // )
+  selected_wallet = localStorage?.selected_wallet
+  selected_alias = localStorage?.selected_alias
+
+  phrase = wallets?.[selected_alias]
+    ?.wallets?.[selected_wallet]?.phrase || ''
 
   // document.querySelector('main#app')
   //   .insertAdjacentElement('afterend', onbrdEl)
-  // walletGen.render()
+
   onboard.render()
 
   if (!phrase) {
-    // walletGen.show()
     onboard.show()
-
-    // for animation
-    // setTimeout(t => {
-    //   onboardingDialog.showModal()
-    // }, 50)
   } else {
-    wallet = await generateRecoveryPhrase(phrase)
+    wallet = await deriveWalletData(phrase)
+
+    if (!wallets[selected_alias]) {
+      await initWallet(wallet, 0, 0, {
+        preferred_username: selected_alias,
+      })
+    }
   }
 
-  let bodyNav = await setupNav(
+  bodyNav = await setupNav(
     mainApp,
     {
       data: {
-        alias
+        alias: selected_alias
       },
     }
   )
@@ -657,11 +670,10 @@ async function main() {
 
   import('./components/balance.js')
     .then(async ({ setupBalance }) => {
-      let dashBalance = await setupBalance(
+      dashBalance = await setupBalance(
         mainApp.querySelector('& > header'),
         {
           wallet,
-          // addr: wallet?.address,
         }
       )
       dashBalance.render()
