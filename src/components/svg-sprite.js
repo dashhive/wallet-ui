@@ -1,6 +1,7 @@
 import { lit as svg } from '../helpers/lit.js'
 
 const initialState = {
+  rendered: null,
   content: state => svg`<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" style="display: none;">
   <defs>
   <g id="icon-logo">
@@ -71,10 +72,13 @@ export async function setupSVGSprite(
       // el.insertAdjacentElement(position, container)
       for (let child of container.content.childNodes) {
         if (child.nodeType !== 3) {
-          el.insertAdjacentElement(
-            position,
-            child,
-          )
+          if (!state.rendered) {
+            el.insertAdjacentElement(
+              position,
+              child,
+            )
+            state.rendered = child
+          }
         }
       }
     }

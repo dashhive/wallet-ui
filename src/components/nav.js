@@ -4,18 +4,17 @@ const initialState = {
   data: {
     alias: 'alias'
   },
+  rendered: null,
   content: state => html`
-    <nav>
-      <a class="brand" href="#home">
-        <svg viewBox="0 0 101 32">
-          <use xlink:href="#icon-logo"></use>
-        </svg>
-      </a>
-      <a class="alias" href="#me">@${state.data?.alias}</a>
-    </nav>
+    <a class="brand" href="#home">
+      <svg viewBox="0 0 101 32">
+        <use xlink:href="#icon-logo"></use>
+      </svg>
+    </a>
+    <a class="alias" href="#me">@${state.data?.alias}</a>
   `,
   elements: {
-    container: document.createElement('template'),
+    nav: document.createElement('nav'),
   },
 }
 
@@ -28,22 +27,44 @@ export async function setupNav(
   }
 
   let {
-    container,
+    nav,
   } = state.elements
 
-  container.innerHTML = state.content(state)
+  nav.innerHTML = state.content(state)
 
   return {
-    element: container,
-    render: (position = 'beforebegin') => {
-      for (let child of container.content.childNodes) {
-        if (child.nodeType !== 3) {
-          el.insertAdjacentElement(
-            position,
-            child,
-          )
+    element: nav,
+    render: (
+      renderState = {},
+      position = 'beforebegin',
+    ) => {
+      state = {
+        ...state,
+        ...renderState,
+        elements: {
+          ...state.elements,
+          ...renderState.elements,
         }
       }
+
+      nav.innerHTML = state.content(state)
+
+      if (!state.rendered) {
+        el.insertAdjacentElement(position, nav)
+        state.rendered = nav
+      }
+
+      // for (let child of container.content.childNodes) {
+      //   if (child.nodeType !== 3) {
+      //     // if (!state.rendered) {
+      //       el.insertAdjacentElement(
+      //         position,
+      //         child,
+      //       )
+      //       state.rendered = child
+      //     // }
+      //   }
+      // }
     }
   }
 }

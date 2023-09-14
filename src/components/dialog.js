@@ -11,6 +11,7 @@ const initialState = {
   closeTxt: 'X',
   closeAlt: `Close`,
   placement: 'center',
+  rendered: null,
   responsive: true,
   delay: 500,
   header: state => html`
@@ -269,7 +270,11 @@ export function setupDialog(
       console.log('DIALOG RENDER STATE', state, renderState)
 
       console.log('DIALOG RENDER', position, state.slugs.dialog)
-      el.insertAdjacentElement(position, dialog)
+
+      if (!state.rendered) {
+        el.insertAdjacentElement(position, dialog)
+        state.rendered = dialog
+      }
     }
   }
 }

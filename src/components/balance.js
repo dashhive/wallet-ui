@@ -5,53 +5,63 @@ const initialState = {
   id: 'Balance',
   name: 'Dash',
   placement: 'ta-left',
+  rendered: null,
   responsive: true,
   delay: 500,
   wallet: {},
   walletFunds: {},
   addr: null,
+  maxlen: 10,
+  fract: 8,
   header: state => html`
     <figcaption>${state.name} ${state.id}</figcaption>
   `,
   content: state => {
-    let funds = '0'
-    let balance = html`${funds}`
+    let funds = 0
+    let balance = `${funds}`
 
     if (state.walletFunds.balance) {
-      funds = fixedDash(state.walletFunds.balance)
+      funds += state.walletFunds.balance
+      balance = fixedDash(funds, state.fract)
 
-      let fundsInt = parseInt(
-        funds,
-        10
+      console.log('balance fixedDash', balance, balance.length)
+
+      let [fundsInt,fundsFract] = balance.split('.')
+      state.maxlen -= fundsInt.length
+
+      let fundsFraction = fundsFract?.substring(
+        0, Math.min(Math.max(0, state.maxlen), 3)
       )
-      let fundsFract = parseFloat(
-        funds
-      ).toFixed(3).split('.')[1]
-      let fundsRemainder = funds.split(
-        fundsFract
-      )[1]
+
+      let fundsRemainder = fundsFract?.substring(
+        fundsFraction.length,
+        Math.max(0, state.maxlen)
+      )
+
+      // console.log('balance funds', {fundsInt, fundsFraction, fundsRemainder})
 
       balance = html`${
         fundsInt
       }<sub><span>.${
-        fundsFract
+        fundsFraction
       }</span>${
         fundsRemainder
       }</sub>`
     }
 
     return html`
-    ${state.header(state)}
+      ${state.header(state)}
 
-    <div title="${funds}">
-      <svg width="32" height="33" viewBox="0 0 32 33">
-        <use xlink:href="#icon-dash-mark"></use>
-      </svg>
-      ${balance}
-    </div>
+      <div title="${funds}">
+        <svg width="32" height="33" viewBox="0 0 32 33">
+          <use xlink:href="#icon-dash-mark"></use>
+        </svg>
+        ${balance}
+      </div>
 
-    ${state.footer(state)}
-  `},
+      ${state.footer(state)}
+    `
+  },
   footer: state => html``,
   slugs: {
   },
@@ -151,10 +161,22 @@ export async function setupBalance(
       figure.id = state.slugs.figure
       figure.innerHTML = state.content(state)
 
+      if (state?.wallet) {
+        checkWalletFunds(state.wallet?.address)
+          .then(wf => {
+            state.walletFunds = wf
+            figure.innerHTML = state.content(state)
+          })
+      }
+
       console.log('BALANCE RENDER STATE', state, renderState)
 
       console.log('BALANCE RENDER', position, state.slugs.figure)
-      el.insertAdjacentElement(position, figure)
+
+      if (!state.rendered) {
+        el.insertAdjacentElement(position, figure)
+        state.rendered = figure
+      }
     }
   }
 }
