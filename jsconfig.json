@@ -12,6 +12,7 @@
       "ESNext",
       "WebWorker"
     ],
+    "resolveJsonModule": true,
     "declaration": true,
     "declarationDir": ".",
     "declarationMap": true,
@@ -26,6 +27,7 @@
     "typeRoots": [
       "typings",
       "node_modules/@types",
+      "node_modules/localforage/typings",
     ]
   },
   "include": [
