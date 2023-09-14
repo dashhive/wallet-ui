@@ -1,6 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
 
 const initialState = {
+  rendered: null,
   content: state => html`
     <footer>
       <h4>Alpha stage, not production ready. <span>Use at your own risk.</span></h4>
@@ -28,14 +29,20 @@ export async function setupMainFooter(
 
   return {
     element: container,
-    render: (position = 'beforeend') => {
+    render: (
+      renderState = {},
+      position = 'beforeend',
+    ) => {
       // el.insertAdjacentElement(position, container)
       for (let child of container.content.childNodes) {
         if (child.nodeType !== 3) {
-          el.insertAdjacentElement(
-            position,
-            child,
-          )
+          if (!state.rendered) {
+            el.insertAdjacentElement(
+              position,
+              child,
+            )
+            state.rendered = child
+          }
         }
       }
     }

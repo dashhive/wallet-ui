@@ -5,6 +5,7 @@ const initialState = {
   id: 'Input',
   name: 'Amount',
   placement: 'field',
+  rendered: null,
   responsive: true,
   delay: 500,
   content: state => html`
@@ -177,7 +178,11 @@ export function setupInputAmount(
       console.log('AMOUNT RENDER STATE', state, renderState)
 
       console.log('AMOUNT RENDER', position, state.slugs.fieldset)
-      el.insertAdjacentElement(position, fieldset)
+
+      if (!state.rendered) {
+        el.insertAdjacentElement(position, fieldset)
+        state.rendered = fieldset
+      }
     }
   }
 }
