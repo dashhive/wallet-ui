@@ -7,10 +7,11 @@
      - [x] Request
      - [ ] New Contact
    - [ ] Dialogs
-     - [ ] Send
-     - [ ] Request
-     - [ ] Share QR Code
-     - [ ] Scan QR Code
+     - [x] Send
+     - [x] Request
+     - [ ] QR Code
+       - [ ] Share
+       - [ ] Scan
      - [ ] Add a Contact
      - [ ] Send / Request to Contact
    - [ ] Fiat balance from:
