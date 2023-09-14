@@ -1,7 +1,7 @@
 /**
  *
  * @param {TemplateStringsArray} s
- * @param  {...any} args
+ * @param  {...any} v
  *
  * @returns {string}
  */
