@@ -6,6 +6,7 @@ import {
   phraseToEl,
   setClipboard,
   initWallet,
+  // getAddr,
 } from './helpers/utils.js'
 
 import setupNav from './components/nav.js'
@@ -208,13 +209,34 @@ let walletGen = setupDialog(
         }
 
         // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
+
+        let initialized
         let wallet = await deriveWalletData()
+
+        phrase = wallet.recoveryPhrase
+        selected_wallet = wallet.id
+        selected_alias = `${fde.alias}`
+
+        if (!wallets?.[selected_alias]) {
+          initialized = await initWallet(wallet, 0, 0, {
+            preferred_username: selected_alias,
+          })
+          wallets = initialized.wallets
+        }
+
+        localStorage.selected_wallet = selected_wallet
+        localStorage.selected_alias = selected_alias
 
         console.log('GENERATE wallet!', wallet)
 
-        phrase = wallet.recoveryPhrase
-        localStorage.dashRecoveryPhrase = JSON.stringify(phrase)
-        localStorage.dashAlias = JSON.stringify(fde.alias)
+        bodyNav.render({
+          data: {
+            alias: selected_alias
+          },
+        })
+        dashBalance.render({
+          wallet,
+        })
 
         walletBak.render(
           {
@@ -363,11 +385,26 @@ let walletImp = setupDialog(
         selected_alias = `${fde.alias}`
         selected_wallet = wallet.id
 
+        if (!wallets?.[selected_alias]) {
+          initialized = await initWallet(wallet, 0, 0, {
+            preferred_username: selected_alias,
+          })
+          wallets = initialized.wallets
+        }
+
+        localStorage.selected_wallet = selected_wallet
+        localStorage.selected_alias = selected_alias
+
         console.log('IMPORT wallet!', wallet)
 
-        phrase = wallet.recoveryPhrase
-        localStorage.dashRecoveryPhrase = JSON.stringify(phrase)
-        localStorage.dashAlias = JSON.stringify(fde.alias)
+        bodyNav.render({
+          data: {
+            alias: selected_alias
+          },
+        })
+        dashBalance.render({
+          wallet,
+        })
 
         walletImp.close()
         onboard.close()
@@ -593,10 +630,10 @@ let sendOrRequest = setupDialog(
 
 
 async function main() {
-  // alias = JSON.parse(
-  //   localStorage?.dashAlias ||
-  //   '""'
-  // )
+  wallets = JSON.parse(
+    localStorage?.wallets ||
+    '{}'
+  )
   selected_wallet = localStorage?.selected_wallet
   selected_alias = localStorage?.selected_alias
 
