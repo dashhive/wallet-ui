@@ -1,6 +1,6 @@
 {
-  "name": "Dash Wallet",
-  "short_name": "dwui",
+  "name": "Dash Incubator Wallet",
+  "short_name": "diwui",
   "description": "A Graphical User Interface (GUI) for DashWallet.js",
   "start_url": "/wallet-ui/",
   "scope": "/wallet-ui/",
