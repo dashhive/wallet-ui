@@ -20,6 +20,7 @@ import '../node_modules/dashsight/dashsight.js';
 import '../node_modules/dashsight/dashsocket.js';
 import '../node_modules/@dashincubator/secp256k1/secp256k1.js';
 import '../node_modules/crypticstorage/crypticstorage.js';
+import '../node_modules/localforage/dist/localforage.js';
 
 // import * as DashWalletTypes from '../node_modules/dashwallet/dashwallet.js';
 import * as DashKeysTypes from '../node_modules/dashkeys/dashkeys.js';
@@ -29,6 +30,7 @@ import * as DashSightTypes from '../node_modules/dashsight/dashsight.js';
 import * as DashSocketTypes from '../node_modules/dashsight/dashsocket.js';
 import * as Secp256k1Types from '../node_modules/@dashincubator/secp256k1/secp256k1.js';
 import * as CrypticStorageTypes from '../node_modules/crypticstorage/crypticstorage.js';
+// import * as LocalForageTypes from '../node_modules/localforage/dist/localforage.js';
 
 // /** @type {DashWalletTypes} */
 // export let DashWallet = window?.Wallet || globalThis?.Wallet;
@@ -48,6 +50,9 @@ export let Secp256k1 = window?.nobleSecp256k1 || globalThis?.nobleSecp256k1;
 export let CrypticStorage =
   window?.CrypticStorage || globalThis?.CrypticStorage;
 
+export let localforage =
+  window?.localforage || globalThis?.localforage;
+
 export default {
   // DashWallet,
   DashKeys,
@@ -57,4 +62,5 @@ export default {
   DashSocket,
   Secp256k1,
   CrypticStorage,
+  localforage,
 };
