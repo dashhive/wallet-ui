@@ -1,13 +1,23 @@
 import { lit as html } from './helpers/lit.js'
 
 import {
+  // checkWalletFunds,
+  batchAddressGenerate,
   deriveWalletData,
   formDataEntries,
   phraseToEl,
   setClipboard,
-  initWallet,
   // getAddr,
 } from './helpers/utils.js'
+
+import {
+  store,
+  initWallet,
+  // loadWallets,
+  loadAlias,
+  checkWalletFunds,
+  updateAllFunds,
+} from './helpers/wallet.js'
 
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
@@ -630,15 +640,66 @@ let sendOrRequest = setupDialog(
 
 
 async function main() {
-  wallets = JSON.parse(
-    localStorage?.wallets ||
-    '{}'
-  )
+  // wallets = JSON.parse(
+  //   localStorage?.wallets ||
+  //   '{}'
+  // )
+
   selected_wallet = localStorage?.selected_wallet
   selected_alias = localStorage?.selected_alias
 
-  phrase = wallets?.[selected_alias]
-    ?.wallets?.[selected_wallet]?.phrase || ''
+  console.log(
+    'selected wallets & alias',
+    selected_wallet,
+    selected_alias,
+  )
+
+  let alias = await loadAlias(selected_alias)
+  // wallets = await loadWallets()
+  wallets = alias?.$wallets
+
+  console.log(
+    'main load wallets & alias',
+    wallets,
+    alias,
+  )
+
+  // let oldWallets = {
+  //   'jojo': {
+  //     wallets: {
+  //       '1ZG5hqFvGDk': {
+  //         name: 'main', // laptop
+  //         phrase: 'zoo zoo zoo wrong',
+  //       },
+  //       'A8gdas78adf': {
+  //         name: 'phone',
+  //         phrase: 'zoo zoo zoo right',
+  //       },
+  //     }
+  //   },
+  //   'hardware': {
+  //     wallets: {
+  //       'h8adsn3295': {
+  //         name: 'hardware wallet',
+  //         phrase: 'zoo zoo zoo hard',
+  //       },
+  //     }
+  //   }
+  // }
+
+  // let newWallets = {
+  //   '1ZG5hqFvGDk__jojo': {
+  //     name: 'main', // laptop
+  //     ciphertext: 'zoo zoo zoo wrong',
+  //   },
+  //   'A8gdas78adf__jojo': {
+  //     name: 'phone',
+  //     ciphertext: 'zoo zoo zoo right',
+  //   }
+  // }
+
+  phrase = wallets?.[selected_wallet]
+    ?.keystore?.crypto?.ciphertext || ''
 
   // document.querySelector('main#app')
   //   .insertAdjacentElement('afterend', onbrdEl)
@@ -650,11 +711,46 @@ async function main() {
   } else {
     wallet = await deriveWalletData(phrase)
 
-    if (!wallets[selected_alias]) {
-      await initWallet(wallet, 0, 0, {
-        preferred_username: selected_alias,
-      })
+    let accountIndex = wallets?.[selected_wallet]
+      ?.accountIndex || 0
+    // let addressIndex = wallets?.[selected_wallet]
+    //   ?.addressIndex || 0
+    let addressIndex = 0
+    let acctBatch = accountIndex + 5
+    let accts = {}
+
+    for (;accountIndex < acctBatch;accountIndex++) {
+      accts[`bat__${accountIndex}`] = await batchAddressGenerate(
+        wallet.wallet,
+        accountIndex,
+        addressIndex,
+        0,
+        3
+      )
     }
+
+    let addrFunds = {}
+
+    for (let ac in accts) {
+      for (let a of accts[ac].addresses) {
+        checkWalletFunds(a, wallet)
+          .then(async (output) => {
+            addrFunds[a.address] = output
+          })
+      }
+    }
+
+    console.log(
+      'onload batch addr gen funds',
+      accts,
+      addrFunds,
+    )
+
+    // if (!wallets?.[selected_wallet]) {
+    //   await initWallet(wallet, 0, 0, {
+    //     preferred_username: selected_alias,
+    //   })
+    // }
   }
 
   bodyNav = await setupNav(
@@ -713,7 +809,9 @@ async function main() {
           wallet,
         }
       )
-      dashBalance.render()
+      dashBalance.render({
+        wallet,
+      })
     })
 
   svgSprite.render()
@@ -767,6 +865,15 @@ async function main() {
     phrase: phrase.split(' ')?.length,
     wallet,
   })
+
+  updateAllFunds(wallet)
+    .then(funds => {
+      console.log('updateAllFunds', funds)
+
+      dashBalance?.render({
+        wallet,
+      })
+    })
 }
 
 main()
