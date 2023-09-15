@@ -1,5 +1,6 @@
 import { lit as html } from '../helpers/lit.js'
-import { checkWalletFunds, fixedDash } from '../helpers/utils.js'
+import { fixedDash, } from '../helpers/utils.js'
+import { getTotalFunds, } from '../helpers/wallet.js'
 
 const initialState = {
   id: 'Balance',
@@ -116,15 +117,7 @@ export async function setupBalance(
   figure.classList.add(state.placement)
   figure.innerHTML = state.content(state)
 
-  console.log('state?.wallet', state?.wallet)
-
-  if (state?.wallet) {
-    checkWalletFunds(state.wallet?.address)
-      .then(wf => {
-        state.walletFunds = wf
-        figure.innerHTML = state.content(state)
-      })
-  }
+  // console.log('state?.wallet', state?.wallet)
 
   figure.addEventListener(
     'click',
@@ -162,9 +155,15 @@ export async function setupBalance(
       figure.innerHTML = state.content(state)
 
       if (state?.wallet) {
-        checkWalletFunds(state.wallet?.address)
-          .then(wf => {
-            state.walletFunds = wf
+        getTotalFunds(state?.wallet)
+          .then(balance => {
+            console.log(
+              'BALANCE getTotalFunds',
+              state,
+              renderState,
+              balance,
+            )
+            state.walletFunds = { balance }
             figure.innerHTML = state.content(state)
           })
       }
