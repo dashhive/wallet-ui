@@ -5,15 +5,12 @@ import {
   DashSight,
   // DashKeys,
 } from '../imports.js'
-import { DatabaseSetup } from './db.js'
 
 // @ts-ignore
 let dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
 });
-
-const db = await DatabaseSetup()
 
 export async function walletSchema(
   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
@@ -54,92 +51,6 @@ export async function walletSchema(
   // ],
 
   return wallets
-}
-
-/**
- *
- * @example
- *    let addr = getAddr(wallet, 0, 0, 0)
- *
- * @param {HDWallet} wallet
- * @param {Number} [accountIndex]
- * @param {Number} [addressIndex]
- * @param {Number} [use]
- *
- * @returns
- */
-export async function getAddr(
-  wallet,
-  accountIndex = 0,
-  addressIndex = 0,
-  use = DashHd.RECEIVE,
-) {
-  let account = await wallet.deriveAccount(accountIndex);
-  let xkey = await account.deriveXKey(use);
-  let xprv = await DashHd.toXPrv(xkey);
-  let xpub = await DashHd.toXPub(xkey);
-  let xpubKey = await DashHd.fromXKey(xpub);
-  let xpubId = await DashHd.toId(xpubKey);
-  let key = await xkey.deriveAddress(addressIndex);
-  let address = await DashHd.toAddr(key.publicKey);
-  // let keyId = await DashHd.toId(xkey);
-
-  return {
-    // keyId,
-    // account,
-    // xkey,
-    xprv,
-    xpub,
-    xpubKey,
-    xpubId,
-    // key,
-    address
-  }
-}
-
-export async function initWallet(
-  wallet,
-  accountIndex = 0,
-  addrIndex = 0,
-  info = {},
-) {
-  let initInfo = {
-    name: '',
-    email: '', // gravatar?
-    picture: '', // avatar
-    sub: '',
-    xpub: '',
-    preferred_username: '',
-  }
-
-  info = {
-    ...initInfo,
-    ...info,
-  }
-
-  let addr = await getAddr(
-    wallet.wallet,
-  )
-
-  let { address, xpubId } = addr
-
-  let storedReceiveAddr = await db.addresses.setItem(
-    `receiveaddr__${address}`,
-    {
-      walletId: wallet.id,
-      accountIndex,
-      addrIndex
-    }
-  )
-
-  console.log('storedReceiveAddr in db', storedReceiveAddr)
-
-  let alias = info.preferred_username
-  let contacts = '{}'
-
-  return {
-    contacts: '{}',
-  }
 }
 
 /**
@@ -189,13 +100,13 @@ export async function deriveWalletData(
     // recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
     xkey = await DashHd.fromXKey(phraseOrXkey);
   } else {
-  seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
-  wallet = await DashHd.fromSeed(seed);
+    seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
+    wallet = await DashHd.fromSeed(seed);
     wpub = await DashHd.toXPub(wallet);
     id = await DashHd.toId(wallet);
-  account = await wallet.deriveAccount(accountIndex);
-  xkey = await account.deriveXKey(use);
-  xprv = await DashHd.toXPrv(xkey);
+    account = await wallet.deriveAccount(accountIndex);
+    xkey = await account.deriveXKey(use);
+    xprv = await DashHd.toXPrv(xkey);
   }
 
   xkeyId = await DashHd.toId(xkey);
@@ -217,6 +128,108 @@ export async function deriveWalletData(
     wallet,
     account,
     recoveryPhrase,
+  }
+}
+
+/**
+ *
+ * @example
+ *    let acct = deriveAccountData(wallet, 0, 0, 0)
+ *
+ * @param {HDWallet} wallet
+ * @param {Number} [accountIndex]
+ * @param {Number} [addressIndex]
+ * @param {Number} [use]
+ *
+ * @returns
+ */
+export async function deriveAccountData(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE,
+) {
+  let account = await wallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(use);
+  let xkeyId = await DashHd.toId(xkey);
+  let xprv = await DashHd.toXPrv(xkey);
+  let xpub = await DashHd.toXPub(xkey);
+  let xpubKey = await DashHd.fromXKey(xpub);
+  let xpubId = await DashHd.toId(xpubKey);
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  return {
+    account,
+    xkeyId,
+    xkey,
+    xprv,
+    xpub,
+    xpubKey,
+    xpubId,
+    key,
+    address
+  }
+}
+
+/**
+ *
+ * @example
+ *    let addr = deriveAddressData(wallet, 0, 0, 0)
+ *
+ * @param {HDWallet} wallet
+ * @param {Number} [accountIndex]
+ * @param {Number} [addressIndex]
+ * @param {Number} [use]
+ *
+ * @returns
+ */
+export async function deriveAddressData(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE,
+) {
+  let account = await wallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(use);
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  return address
+  // return {
+  //   account,
+  //   xkey,
+  //   key,
+  //   address
+  // }
+}
+
+export async function batchAddressGenerate(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE,
+  batchSize = 20
+) {
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  let account = await wallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(use);
+
+  for (;addressIndex < batchLimit; addressIndex++) {
+    let key = await xkey.deriveAddress(addressIndex);
+    let address = await DashHd.toAddr(key.publicKey);
+    addresses.push({
+      address,
+      addressIndex,
+      accountIndex,
+    })
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: addressIndex,
   }
 }
 
