@@ -1,5 +1,11 @@
 ## Todo
-
+ - [ ] Data Structure
+   - [x] Recovery Phrase (Key Store)
+   - [x] Alias
+   - [ ] Contacts
+ - [x] On Load
+   - [x] Wallets from new structure
+   - [ ] Update & cache balances
  - [ ] UI Components
    - [x] Wallet balance from DashSight.js
    - [ ] Buttons
