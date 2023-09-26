@@ -4,6 +4,8 @@ main form {
   flex-direction: column;
   margin: 0 auto 1rem;
   gap: .5rem;
+  justify-content: center;
+  flex: 1 1 auto;
 }
 
 form fieldset {

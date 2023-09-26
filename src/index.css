@@ -172,25 +172,26 @@ figure h4 {
   padding-bottom: 1rem;
 }
 
+main > header + form,
+main > header + section {
+  display: flex;
+  justify-content: space-between;
+  padding: 1.5rem;
+  font-size: 1.25rem;
+  overflow: hidden;
+  column-gap: 0.5rem;
+}
+main > header + form button,
+main > header + section button {
+  flex: 1 1 50%;
+}
+
 @media (min-width: 650px) {
   main section {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
     margin-top: 1rem;
-  }
-  main > header + form,
-  main > header + section {
-    display: flex;
-    justify-content: space-between;
-    padding: 1.5rem;
-    font-size: 1.25rem;
-    overflow: hidden;
-    column-gap: 0.5rem;
-  }
-  main > header + form button,
-  main > header + section button {
-    flex: 1 1 50%;
   }
   main section > header {
     flex: 1 1 auto;

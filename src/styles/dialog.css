@@ -71,7 +71,7 @@ dialog.center {
   justify-items: center;
   text-align: center;
   border-radius: 1rem;
-  max-width: 34rem !important;
+  max-width: 100% !important;
 }
 
 dialog.responsive {
@@ -135,6 +135,7 @@ dialog > form > header {
 }
 dialog header button[type="reset"]:last-child {
   padding: 0 .5rem;
+  place-self: center;
 }
 dialog > form > header > strong {
   margin: 0 0 0 1rem;
@@ -144,7 +145,7 @@ dialog > form > fieldset {
   height: 100%;
   overflow: auto;
   padding: 2rem 1rem;
-  min-width: 33.75rem;
+  min-width: 100%;
   flex: 1 1 auto;
 }
 dialog > form > fieldset > input,
@@ -195,13 +196,15 @@ dialog > form > fieldset > p > span {
 
 
 dialog.responsive header {
-  padding: 0 1rem 0 3rem;
+  /* padding: 0 1rem 0 3rem;
+  justify-content: flex-start; */
+  padding: .5rem;
   line-height: 1.5;
-  justify-content: flex-end;
 }
 dialog.responsive form {
   justify-content: center;
-  /* max-width: 83vw; */
+  box-sizing: border-box;
+  max-width: calc(100% - 4px);
 }
 dialog.responsive fieldset:first-child {
   justify-content: center;
@@ -228,7 +231,7 @@ dialog.responsive fieldset section article {
 dialog.responsive button[type="submit"] {
   flex: 1 1 auto;
 }
-dialog.responsive button[type="reset"] {
+/* dialog.responsive button[type="reset"] {
   position: absolute;
   top: 0;
   left: 0;
@@ -249,14 +252,13 @@ dialog.responsive button[type="reset"]:focus {
 }
 dialog.responsive button[type="reset"]::before {
   content: '←';
-  /* ← 🡨 🡸 🢀 🢐 🢘 🠸 🠬 🠨 🠜 🠐 🠈 🠀 */
   font-size: 2rem;
   line-height: 1;
   font-family: "SF Mono", "Monaco", "Inconsolata", "Fira Mono", "Droid Sans Mono", "Source Code Pro", monospace;
 }
 dialog.responsive button[type="reset"] span {
   display: none;
-}
+} */
 
 dialog.responsive fieldset.nomargin {
   margin: 0;
@@ -298,8 +300,8 @@ dialog.fullscreen form section {
   margin: 0;
   flex: 1 1 auto;
   display: grid;
-  grid-auto-columns: 30rem 2fr;
-  grid-auto-flow: column;
+  grid-auto-rows: 0 1fr;
+  grid-auto-flow: row;
 }
 dialog.fullscreen form section > aside,
 dialog.fullscreen form section > article {
@@ -312,6 +314,7 @@ dialog.fullscreen form section > article {
 dialog.fullscreen form section > aside {
   background-color: var(--c);
   padding: 0 3.5rem;
+  justify-content: flex-end;
 }
 dialog.fullscreen form section > aside > h2 {
   color: var(--ct);
@@ -329,7 +332,9 @@ dialog.fullscreen form section > aside > p {
 }
 dialog.fullscreen form section > article {
   flex-grow: 4;
-  gap: 5rem;
+  gap: 2rem;
+  justify-content: flex-end;
+  padding-bottom: 3rem;
 }
 dialog.fullscreen form section > article > div {
   width: 70%;
@@ -365,7 +370,21 @@ dialog.fullscreen form section > article > div > button {
     z-index: 9;
   } */
   dialog.responsive form {
+    max-width: inherit;
     justify-content: space-between;
+  }
+  dialog.fullscreen form section {
+    grid-auto-rows: 1fr;
+    grid-auto-columns: 30rem 2fr;
+    grid-auto-flow: column;
+  }
+  dialog.fullscreen form section > aside {
+    justify-content: center;
+  }
+  dialog.fullscreen form section > article {
+    gap: 5rem;
+    justify-content: center;
+    padding-bottom: 0;
   }
   dialog.responsive fieldset:first-child {
     justify-content: center;
@@ -431,5 +450,17 @@ dialog.fullscreen form section > article > div > button {
   }
   dialog.right[open] {
     right: 0;
+  }
+
+  dialog.center {
+    max-width: 34rem !important;
+  }
+
+  dialog > form > fieldset {
+    /* height: 100%;
+    overflow: auto;
+    padding: 2rem 1rem; */
+    min-width: 33.75rem;
+    /* flex: 1 1 auto; */
   }
 }
