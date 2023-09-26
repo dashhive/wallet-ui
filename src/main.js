@@ -12,6 +12,7 @@ import {
 
 import {
   store,
+  decryptWallet,
   initWallet,
   // loadWallets,
   loadAlias,
@@ -30,6 +31,7 @@ let selected_alias
 let phrase
 let wallet
 let wallets
+let encryptionPassword
 
 let phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
@@ -52,6 +54,202 @@ let mainFtr = await setupMainFooter(
 let svgSprite = await setupSVGSprite(
   mainApp,
   {}
+)
+
+let walletEncrypt = setupDialog(
+  mainApp,
+  {
+    name: 'Encrypt Wallet',
+    submitTxt: 'Encrypt',
+    submitAlt: 'Encrypt Wallet',
+    cancelTxt: 'Cancel',
+    cancelAlt: `Cancel Form`,
+    closeTxt: html`<i class="icon-x"></i>`,
+    closeAlt: `Close`,
+    footer: state => html`
+      <footer class="inline col">
+        <sup>Encrypt sensitive wallet data stored in the browser.</sup>
+        <button
+          class="rounded"
+          type="submit"
+          name="intent"
+          value="new_wallet"
+          title="${state.submitAlt}"
+        >
+          <span>${state.submitTxt}</span>
+        </button>
+      </footer>
+    `,
+    content: state => html`
+      ${state.header(state)}
+
+      <fieldset>
+        <label for="encryptionPassword">
+          Encryption Password
+        </label>
+        <div>
+          <input
+            type="password"
+            id="encryptionPassword"
+            name="pass"
+            placeholder="superS3cr3t"
+            minlength="1"
+            required
+            spellcheck="false"
+          />
+          <label title="Show/Hide Password">
+            <input name="show_pass" type="checkbox" />
+            <!-- <i class="icon-eye-closed"></i> -->
+            <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
+              <use xlink:href="#icon-eye-open"></use>
+            </svg>
+            <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-eye-closed"></use>
+            </svg>
+          </label>
+        </div>
+        <div class="py-3 px-3">
+          <label for="rememberPass" class="jc-left">
+            <sub>
+              Remember password for browser session
+            </sub>
+          </label>
+          <input
+            id="rememberPass"
+            name="remember"
+            type="checkbox"
+          />
+          <label for="rememberPass" class="switch" title="Remember for session"></label>
+        </div>
+
+        <div class="error"></div>
+      </fieldset>
+
+      ${state.footer(state)}
+    `,
+    fields: html``,
+    events: {
+      handleClose: (
+        state,
+        resolve = res=>{},
+        reject = res=>{},
+      ) => async event => {
+        event.preventDefault()
+        // state.elements.dialog?.removeEventListener(
+        //   'close',
+        //   state.events.handleClose
+        // )
+        // @ts-ignore
+        // event?.target?.remove()
+        console.log(
+          'handle dialog close',
+          event,
+          event.target === state.elements.dialog,
+          state.elements.dialog.returnValue
+        )
+
+        if (state.elements.dialog.returnValue !== 'cancel') {
+          // handle submit
+          // state.elements.dialog.close('submit')
+          resolve(state.elements.dialog.returnValue)
+        } else {
+          // handle cancel
+          // state.elements.dialog.close('cancel')
+          reject()
+        }
+        console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
+
+        // setTimeout(t => {
+        //   event?.target?.remove()
+        // }, state.delay)
+      },
+      handleSubmit: state => async event => {
+        event.preventDefault()
+        event.stopPropagation()
+
+        event.target.pass.setCustomValidity('')
+        event.target.pass.reportValidity()
+
+        console.log('ENCRYPT OVERRIDE!', state, event)
+
+        let fde = formDataEntries(event)
+
+        if (!fde.pass) {
+          event.target.pass.setCustomValidity(
+            'An encryption password is required'
+          )
+          event.target.reportValidity()
+          return;
+        }
+
+        // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
+
+        let initialized
+        // let wallet = await deriveWalletData()
+        // let { wallet } = state
+        let wallet = state.wallet
+
+        console.log(
+          'walletEncrypt state.wallet',
+          wallet,
+          state,
+          fde
+        )
+
+        phrase = wallet.recoveryPhrase
+        encryptionPassword = fde.pass
+        // selected_wallet = wallet.id
+        // selected_alias = `${fde.alias}`
+
+        if (fde.remember) {
+          sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
+        }
+
+        if (!wallets?.[selected_alias]) {
+          initialized = await initWallet(
+            fde.pass,
+            wallet,
+            0,
+            0,
+            {
+              preferred_username: selected_alias,
+            }
+          )
+          wallets = initialized.wallets
+        }
+
+        localStorage.selected_wallet = selected_wallet
+        localStorage.selected_alias = selected_alias
+
+        console.log('ENCRYPT wallet!', wallet)
+
+        bodyNav.render({
+          data: {
+            alias: selected_alias
+          },
+        })
+        dashBalance.render({
+          wallet,
+        })
+
+        onboard.close()
+        walletEncrypt.close()
+
+        // if (fde?.intent === 'generate') {
+        //   walletGen.render()
+        //   walletGen.showModal()
+        // } else if (fde?.intent === 'import') {
+        //   walletImp.render()
+        //   walletImp.showModal()
+        // }
+
+        console.log(
+          'ENCRYPT OVERRIDE DIALOG!',
+          [fde]
+        )
+      },
+    },
+  }
 )
 
 let walletBak = setupDialog(
@@ -112,21 +310,30 @@ let walletBak = setupDialog(
     `,
     fields: html``,
     events: {
-      handleClose: state => async event => {
-        event.preventDefault()
-        event.stopPropagation()
-        console.log('BACKUP CLOSE OVERRIDE!', state, event)
-        walletBak.close()
-      },
+      // handleClose: state => async event => {
+      //   event.preventDefault()
+      //   event.stopPropagation()
+      //   console.log('BACKUP CLOSE OVERRIDE!', state, event)
+      //   // walletBak.close()
+      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
         console.log('BACKUP OVERRIDE!', state, event)
 
+        let { wallet } = state
+
         let fde = formDataEntries(event)
 
+        walletEncrypt.render(
+          {
+            wallet,
+          },
+          'afterend',
+        )
+        await walletEncrypt.showModal()
+
         walletBak.close()
-        onboard.close()
 
         console.log(
           'BACKUP OVERRIDE DIALOG!',
@@ -134,7 +341,10 @@ let walletBak = setupDialog(
         )
       },
       handleClick: state => async event => {
-        if (event.target?.classList?.contains('copy')) {
+        if (
+          event.target?.classList?.contains('copy') ||
+          event.target?.classList?.contains('icon-copy')
+        ) {
           event.preventDefault()
           event.stopPropagation()
           setClipboard(event)
@@ -227,12 +437,13 @@ let walletGen = setupDialog(
         selected_wallet = wallet.id
         selected_alias = `${fde.alias}`
 
-        if (!wallets?.[selected_alias]) {
-          initialized = await initWallet(wallet, 0, 0, {
-            preferred_username: selected_alias,
-          })
-          wallets = initialized.wallets
-        }
+        // ENCRYPT FIRST
+        // if (!wallets?.[selected_alias]) {
+        //   initialized = await initWallet(wallet, 0, 0, {
+        //     preferred_username: selected_alias,
+        //   })
+        //   wallets = initialized.wallets
+        // }
 
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
@@ -309,7 +520,7 @@ let walletImp = setupDialog(
           <input
             type="password"
             id="phrase"
-            name="phrase"
+            name="pass"
             placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
             pattern="${phraseRegex.source}"
             required
@@ -372,8 +583,8 @@ let walletImp = setupDialog(
 
         console.log('IMPORT FDE', fde)
 
-        if (!fde.phrase) {
-          event.target.phrase.setCustomValidity(
+        if (!fde.pass) {
+          event.target.pass.setCustomValidity(
             'A recovery phrase is required'
           )
           event.target.reportValidity()
@@ -387,20 +598,21 @@ let walletImp = setupDialog(
           return;
         }
 
-        phrase = `${fde.phrase}`
+        phrase = `${fde.pass}`
 
-        let initialized
+        // let initialized
         let wallet = await deriveWalletData(phrase)
 
         selected_alias = `${fde.alias}`
         selected_wallet = wallet.id
 
-        if (!wallets?.[selected_alias]) {
-          initialized = await initWallet(wallet, 0, 0, {
-            preferred_username: selected_alias,
-          })
-          wallets = initialized.wallets
-        }
+        // ENCRYPT FIRST
+        // if (!wallets?.[selected_alias]) {
+        //   initialized = await initWallet(wallet, 0, 0, {
+        //     preferred_username: selected_alias,
+        //   })
+        //   wallets = initialized.wallets
+        // }
 
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
@@ -416,8 +628,15 @@ let walletImp = setupDialog(
           wallet,
         })
 
+        walletEncrypt.render(
+          {
+            wallet,
+          },
+          'afterend',
+        )
+        await walletEncrypt.showModal()
+
         walletImp.close()
-        onboard.close()
 
         console.log(
           'IMPORT OVERRIDE DIALOG!',
@@ -640,13 +859,9 @@ let sendOrRequest = setupDialog(
 
 
 async function main() {
-  // wallets = JSON.parse(
-  //   localStorage?.wallets ||
-  //   '{}'
-  // )
-
-  selected_wallet = localStorage?.selected_wallet
-  selected_alias = localStorage?.selected_alias
+  encryptionPassword = window.atob(sessionStorage.encryptionPassword || '')
+  selected_wallet = localStorage?.selected_wallet || ''
+  selected_alias = localStorage?.selected_alias || ''
 
   console.log(
     'selected wallets & alias',
@@ -655,56 +870,215 @@ async function main() {
   )
 
   let alias = await loadAlias(selected_alias)
-  // wallets = await loadWallets()
   wallets = alias?.$wallets
 
   console.log(
     'main load wallets & alias',
-    wallets,
+    // wallets,
     alias,
   )
 
-  // let oldWallets = {
-  //   'jojo': {
-  //     wallets: {
-  //       '1ZG5hqFvGDk': {
-  //         name: 'main', // laptop
-  //         phrase: 'zoo zoo zoo wrong',
-  //       },
-  //       'A8gdas78adf': {
-  //         name: 'phone',
-  //         phrase: 'zoo zoo zoo right',
-  //       },
-  //     }
-  //   },
-  //   'hardware': {
-  //     wallets: {
-  //       'h8adsn3295': {
-  //         name: 'hardware wallet',
-  //         phrase: 'zoo zoo zoo hard',
-  //       },
-  //     }
-  //   }
-  // }
+  svgSprite.render()
 
-  // let newWallets = {
-  //   '1ZG5hqFvGDk__jojo': {
-  //     name: 'main', // laptop
-  //     ciphertext: 'zoo zoo zoo wrong',
-  //   },
-  //   'A8gdas78adf__jojo': {
-  //     name: 'phone',
-  //     ciphertext: 'zoo zoo zoo right',
-  //   }
-  // }
+  document.addEventListener('submit', async event => {
+    let {
+      // @ts-ignore
+      name: formName, parentElement, form,
+    } = event?.target
 
-  phrase = wallets?.[selected_wallet]
+    if (formName === 'send_or_request') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      let fde = formDataEntries(event)
+
+      console.log(
+        'global form submit',
+        formName,
+        form,
+        fde,
+        // parentElement,
+      )
+
+      sendOrRequest.render()
+      sendOrRequest.showModal()
+    }
+  })
+  document.addEventListener('change', async event => {
+    let {
+      // @ts-ignore
+      name: fieldName,
+    // @ts-ignore
+      parentElement,
+      // @ts-ignore
+      form,
+    } = event?.target
+    // let output
+
+    console.log('form change',
+    {
+      fieldName,
+      form,
+    })
+
+    if (
+      fieldName === 'show_pass'
+    ) {
+      event.stopPropagation()
+      event.preventDefault()
+
+      let { pass, show_pass, } = form
+
+      if (show_pass?.checked) {
+        pass.type = 'text'
+      } else {
+        pass.type = 'password'
+      }
+    }
+  })
+
+  let ks_phrase = wallets?.[selected_wallet]
     ?.keystore?.crypto?.ciphertext || ''
+  let ks_iv = wallets?.[selected_wallet]
+    ?.keystore?.crypto?.cipherparams?.iv || ''
+  let ks_salt = wallets?.[selected_wallet]
+    ?.keystore?.crypto?.kdfparams?.salt || ''
 
-  // document.querySelector('main#app')
-  //   .insertAdjacentElement('afterend', onbrdEl)
+  try {
+    phrase = await decryptWallet(
+      encryptionPassword,
+      ks_iv,
+      ks_salt,
+      ks_phrase
+    )
+  } catch(err) {
+    console.error('[fail] decrypting recovery phrase', err)
+  }
 
-  onboard.render()
+  if (
+    !phrase &&
+    ks_phrase && ks_iv && ks_salt
+  ) {
+    sessionStorage.removeItem('encryptionPassword')
+
+    walletEncrypt.render(
+      {
+        wallet,
+
+        name: 'Decrypt Wallet',
+        submitTxt: 'Decrypt',
+        submitAlt: 'Decrypt Wallet',
+        events: {
+          handleSubmit: state => async event => {
+            event.preventDefault()
+            event.stopPropagation()
+            console.log('DECRYPT OVERRIDE!', state, event)
+
+            let fde = formDataEntries(event)
+
+            if (!fde.pass) {
+              event.target.pass.setCustomValidity(
+                'A decryption password is required'
+              )
+              event.target.reportValidity()
+              return;
+            }
+            let decryptedRecoveryPhrase
+
+            try {
+              decryptedRecoveryPhrase = await decryptWallet(
+                fde.pass,
+                ks_iv,
+                ks_salt,
+                ks_phrase
+              )
+            } catch(err) {
+              console.error('[fail] decrypting recovery phrase', err)
+              event.target.pass.setCustomValidity(
+                'Unable to decrypt recovery phrase. Did you type the correct encryption password?'
+              )
+              event.target.reportValidity()
+              return;
+            }
+
+            console.log(
+              'phrase && ks_iv && ks_salt',
+              {
+                ks_phrase,
+                ks_iv,
+                ks_salt,
+                decryptedRecoveryPhrase,
+                fde,
+              }
+            )
+
+            phrase = decryptedRecoveryPhrase
+            encryptionPassword = fde.pass
+
+            if (fde.remember) {
+              sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
+            }
+
+            // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
+
+            // let initialized
+            // let wallet = await deriveWalletData()
+            // let { wallet } = state
+            // let wallet = state.wallet
+
+            // phrase = wallet.recoveryPhrase
+
+            // if (!wallets?.[selected_alias]) {
+            //   initialized = await initWallet(
+            //     fde.pass,
+            //     wallet,
+            //     0,
+            //     0,
+            //     {
+            //       preferred_username: selected_alias,
+            //     }
+            //   )
+            //   wallets = initialized.wallets
+            // }
+
+            // localStorage.selected_wallet = selected_wallet
+            // localStorage.selected_alias = selected_alias
+
+            // console.log('DECRYPT wallet!', wallet)
+
+            // bodyNav.render({
+            //   data: {
+            //     alias: selected_alias
+            //   },
+            // })
+            // dashBalance.render({
+            //   wallet,
+            // })
+
+            // onboard.close()
+            walletEncrypt.close()
+
+            console.log(
+              'DECRYPT OVERRIDE DIALOG!',
+              [fde]
+            )
+          },
+        }
+      },
+      'afterend',
+    )
+    await walletEncrypt.showModal()
+  } else {
+    onboard.render()
+  }
+
+  console.log(
+    'DECRYPTION DONE',
+    {
+      phrase,
+      encryptionPassword,
+    }
+  )
 
   if (!phrase) {
     onboard.show()
@@ -814,55 +1188,8 @@ async function main() {
       })
     })
 
-  svgSprite.render()
-
-  document.addEventListener('submit', async event => {
-    let {
-      // @ts-ignore
-      name: formName, parentElement, form,
-    } = event?.target
-
-    if (formName === 'send_or_request') {
-      event.preventDefault()
-      event.stopPropagation()
-
-      let fde = formDataEntries(event)
-
-      console.log(
-        'global form submit',
-        formName,
-        form,
-        fde,
-        // parentElement,
-      )
-
-      sendOrRequest.render()
-      sendOrRequest.showModal()
-    }
-  })
-  document.addEventListener('change', async event => {
-    // @ts-ignore
-    let { name: fieldName, parentElement, form } = event?.target
-    // let output
-
-    if (
-      fieldName === 'show_pass'
-    ) {
-      event.stopPropagation()
-      event.preventDefault()
-
-      let { phrase, show_pass, } = form
-
-      if (show_pass?.checked) {
-        phrase.type = 'text'
-      } else {
-        phrase.type = 'password'
-      }
-    }
-  })
-
   console.log('init', {
-    phrase: phrase.split(' ')?.length,
+    phrase: phrase?.split(' ')?.length,
     wallet,
   })
 
