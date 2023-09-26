@@ -77,33 +77,37 @@ const initialState = {
   events: {
     handleChange: state => event => {
       event.preventDefault()
+      // console.log(
+      //   'handle dialog change',
+      //   event?.target?.validationMessage,
+      //   event?.target?.validity,
+      //   [event.target],
+      //   event?.target?.type
+      // )
       if (
         event?.target?.validity?.patternMismatch &&
         event?.target?.type !== 'checkbox'
       ) {
-        console.log(
-          'handle dialog change',
-          event?.target?.validationMessage,
-          event?.target?.validity,
-          [event.target],
-          event?.target?.type
-        )
         let label = event.target?.previousElementSibling?.textContent?.trim()
         if (label) {
           event.target.setCustomValidity(`Invalid ${label}`)
         }
-        // event.target.reportValidity()
-      } else if (event?.target?.validity?.valid) {
+      // } else if (event?.target?.validity?.valid) {
+      } else {
         event.target.setCustomValidity('')
       }
       event.target.reportValidity()
     },
-    handleClose: state => async event => {
+    handleClose: (
+      state,
+      resolve = res=>{},
+      reject = res=>{},
+    ) => async event => {
       event.preventDefault()
-      state.elements.dialog?.removeEventListener(
-        'close',
-        state.events.handleClose
-      )
+      // state.elements.dialog?.removeEventListener(
+      //   'close',
+      //   state.events.handleClose
+      // )
       // @ts-ignore
       // event?.target?.remove()
       console.log(
@@ -116,9 +120,11 @@ const initialState = {
       if (state.elements.dialog.returnValue !== 'cancel') {
         // handle submit
         // state.elements.dialog.close('submit')
+        resolve(state.elements.dialog.returnValue)
       } else {
         // handle cancel
         // state.elements.dialog.close('cancel')
+        reject()
       }
 
       setTimeout(t => {
@@ -206,59 +212,113 @@ export function setupDialog(
   form.method = 'dialog'
   form.innerHTML = state.content(state)
 
-  // dialog.addEventListener(
-  //   'cancel',
-  //   state.events.handleClose(state)
-  // )
-  dialog.addEventListener(
-    'close',
-    state.events.handleClose(state)
-  )
-  dialog.addEventListener(
-    'click',
-    state.events.handleClick(state)
-  )
+  function addListeners(
+    resolve,
+    reject,
+  ) {
+    // dialog.addEventListener(
+    //   'cancel',
+    //   state.events.handleClose(state)
+    // )
+    dialog.addEventListener(
+      'close',
+      state.events.handleClose(state, resolve, reject)
+    )
+    dialog.addEventListener(
+      'click',
+      state.events.handleClick(state)
+    )
 
-  dialog.insertAdjacentElement(
-    'afterbegin',
-    form
-  )
+    dialog.insertAdjacentElement(
+      'afterbegin',
+      form
+    )
 
-  form.addEventListener(
-    'change',
-    state.events.handleChange(state)
-  )
-  form.addEventListener(
-    'reset',
-    state.events.handleReset(state)
-  )
-  form.addEventListener(
-    'submit',
-    state.events.handleSubmit(state)
-  )
+    form.addEventListener(
+      'change',
+      state.events.handleChange(state)
+    )
+    form.addEventListener(
+      'reset',
+      state.events.handleReset(state)
+    )
+    form.addEventListener(
+      'submit',
+      state.events.handleSubmit(state)
+    )
+  }
+
+  function removeListeners(
+    resolve,
+    reject,
+  ) {
+    dialog.removeEventListener(
+      'close',
+      state.events.handleClose(state, resolve, reject)
+    )
+    dialog.removeEventListener(
+      'click',
+      state.events.handleClick(state)
+    )
+
+    form.removeEventListener(
+      'change',
+      state.events.handleChange(state)
+    )
+    form.removeEventListener(
+      'reset',
+      state.events.handleReset(state)
+    )
+    form.removeEventListener(
+      'submit',
+      state.events.handleSubmit(state)
+    )
+  }
+
+  // addListeners()
 
   return {
     element: dialog,
-    show: () => dialog.show(),
-    showModal: () => dialog.showModal(),
+    // TODO: Remove old event listeners for promises
+    // FIX: SEMI-Functional, needs more work
+    show: () => new Promise((resolve, reject) => {
+      // if (state.rendered) {
+      //   removeListeners(state)
+      // }
+      removeListeners(resolve, reject)
+      addListeners(resolve, reject)
+      dialog.show()
+    }),
+    // TODO: Remove old event listeners for promises
+    // FIX: SEMI-Functional, needs more work
+    showModal: () => new Promise((resolve, reject) => {
+      removeListeners(resolve, reject)
+      addListeners(resolve, reject)
+      dialog.showModal()
+    }),
     close: returnVal => dialog.close(returnVal),
-    render: (
+    render: async (
       renderState = {},
       position = 'afterend',
     ) => {
+      let oldState = state
+      // if (state.rendered) {
+      //   removeListeners(state)
+      // }
+
       state = {
-        ...state,
+        ...oldState,
         ...renderState,
         slugs: {
-          ...state.slugs,
+          ...oldState.slugs,
           ...renderState.slugs,
         },
         events: {
-          ...state.events,
+          ...oldState.events,
           ...renderState.events,
         },
         elements: {
-          ...state.elements,
+          ...oldState.elements,
           ...renderState.elements,
         }
       }
@@ -275,6 +335,8 @@ export function setupDialog(
         el.insertAdjacentElement(position, dialog)
         state.rendered = dialog
       }
+
+      // addListeners(state)
     }
   }
 }

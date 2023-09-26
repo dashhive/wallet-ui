@@ -68,34 +68,25 @@ export async function deriveWalletData(
   addressIndex = 0,
   use = DashHd.RECEIVE
 ) {
-  let recoveryPhraseArr = phraseOrXkey?.split(' ')
+  let recoveryPhrase, seed, wallet, wpub, id, account
+  let xkey, xprv, xpub, xkeyId
+  let addressKey, addressKeyId, address
   let targetBitEntropy = 128;
   let secretSalt = ''; // "TREZOR";
-  let recoveryPhrase
-  let seed
-  let wallet
-  let wpub
-  let id
-  let account
-  // let use = DashHd.RECEIVE;
-  let xkey, xprv, xpub, xkeyId
-  let addressKey, addressKeyId
-  let address
-
-  if (!phraseOrXkey) {
-    recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
-  }
+  let recoveryPhraseArr = phraseOrXkey?.split(' ')
 
   if (recoveryPhraseArr?.length >= 12) {
     recoveryPhrase = phraseOrXkey;
   }
 
+  if (!phraseOrXkey) {
+    recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
+  }
+
   if (
-    ['xprv','xpub'].includes(
-      phraseOrXkey.substring(0,4)
+    ['xprv', 'xpub'].includes(
+      phraseOrXkey?.substring(0,4) || ''
     )
-    // phraseOrXkey.lastIndexOf('xprv', 0) === 0 ||
-    // phraseOrXkey.lastIndexOf('xpub', 0) === 0
   ) {
     // recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
     xkey = await DashHd.fromXKey(phraseOrXkey);

@@ -302,6 +302,7 @@ label {
   user-select: none;
   min-width: 100px;
   gap: 1rem;
+  justify-content: inherit;
 }
 label > input[type=checkbox],
 label + input[type=checkbox] {
@@ -325,6 +326,7 @@ label.switch {
   box-sizing: border-box;
   border: 0;
   cursor: pointer;
+  flex: none;
 }
 label.switch::after {
   content: '';
@@ -369,6 +371,9 @@ label:has(+ input[type=checkbox]) {
 }
 fieldset label:has(+ input[type=checkbox]) {
   justify-content: center;
+}
+fieldset label:has(+ input[type=checkbox] + .switch) {
+  justify-content: left;
 }
 label > input[type=checkbox][name=show_pass] {
   display: none;

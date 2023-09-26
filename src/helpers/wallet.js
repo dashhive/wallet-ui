@@ -1,5 +1,6 @@
 import {
   DashSight,
+  Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
 import {
@@ -8,6 +9,8 @@ import {
   batchAddressGenerate,
   // checkWalletFunds,
 } from './utils.js'
+
+const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
 
 // @ts-ignore
 let dashsight = DashSight.create({
@@ -68,10 +71,7 @@ export async function loadAlias(alias) {
   return $alias
 }
 
-export async function initWallet(
-  wallet,
-  accountIndex = 0,
-  addressIndex = 0,
+export async function initProfileWallets(
   profile = {},
 ) {
   let wallets = await loadWallets()
@@ -98,12 +98,6 @@ export async function initWallet(
 
   let alias = profile.preferred_username
 
-  // let acct = await deriveAccountData(
-  //   wallet.wallet,
-  // )
-
-  let { id, address, xpubId, recoveryPhrase } = wallet
-
   // if (!wallets[id]) {
   //   wallets[id] =
   // }
@@ -111,6 +105,65 @@ export async function initWallet(
   wallets = wallets
     .filter(w => w.alias === alias)
     .map(w => w.id)
+
+  return {
+    alias,
+    wallets,
+    profile,
+  }
+}
+
+export async function decryptWallet(
+  keystorePassword,
+  keystoreIV,
+  keystoreSalt,
+  ciphertext,
+  // wallet,
+  // accountIndex = 0,
+  // addressIndex = 0,
+  // overProfile = {},
+) {
+  // let {
+  //   alias,
+  //   wallets,
+  //   profile,
+  // } = await initProfileWallets(overProfile)
+
+  // let { id, address, xpubId, recoveryPhrase } = wallet
+
+  const cw = Cryptic.encryptString(keystorePassword, keystoreSalt);
+
+  // const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
+  // const encryptedPhrase = await cw.encrypt(recoveryPhrase, iv);
+
+  // console.log('initWallet Cryptic derived key', {
+  //   derivedKey,
+  //   encryptedPhrase,
+  // })
+
+  const decrypted = await cw.decrypt(ciphertext, keystoreIV);
+
+  return decrypted
+}
+
+export async function initWallet(
+  encryptionPassword,
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  overProfile = {},
+) {
+  let {
+    alias,
+    wallets,
+    profile,
+  } = await initProfileWallets(overProfile)
+
+  // let acct = await deriveAccountData(
+  //   wallet.wallet,
+  // )
+
+  let { id, address, xpubId, recoveryPhrase } = wallet
 
   console.log(
     'initWallet wallets',
@@ -156,6 +209,18 @@ export async function initWallet(
   //   addrs,
   //   addrFunds,
   // )
+  const cw = Cryptic.encryptString(encryptionPassword, STOREAGE_SALT);
+  const iv = Cryptic.bufferToHex(cw.getInitVector());
+
+  const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
+  const encryptedPhrase = await cw.encrypt(recoveryPhrase, iv);
+
+  console.log('initWallet Cryptic derived key', {
+    derivedKey,
+    encryptedPhrase,
+  })
+
+  // const decrypted = await cw.decrypt(encrypted, iv);
 
   let storeWallet = await store.wallets.setItem(
     `${id}`,
@@ -167,20 +232,22 @@ export async function initWallet(
       keystore: {
         crypto: {
             // "cipher": "aes-128-ctr",
-            // "cipherparams": {
-            //     "iv": "6087dab2f9fdbbfaddc31a909735c1e6"
-            // },
-            ciphertext: recoveryPhrase,
-            // "kdf": "pbkdf2",
-            // "kdfparams": {
-            //     "c": 262144,
-            //     "dklen": 32,
-            //     "prf": "hmac-sha256",
-            //     "salt": "ae3cd4e7013836a3df6bd7241b12db061dbe2c6785853cce422d148a624ce0bd"
-            // },
+            // "cipher": "aes-gcm",
+            "cipherparams": {
+              iv,
+            },
+            ciphertext: encryptedPhrase,
+            "kdf": "pbkdf2",
+            "kdfparams": {
+                // "c": 262144,
+                // "c": 1000,
+                // "dklen": 32,
+                // "prf": "hmac-sha256",
+                "salt": STOREAGE_SALT
+            },
             // "mac": "517ead924a9d0dc3124507e3393d175ce3ff7c1e96529c6c555ce9e51205e9b2"
         },
-        // "id": "3198bc9c-6672-5ab3-d995-4942343ae5b6",
+        "id": crypto.randomUUID(),
         // "version": 3
       }
     }
