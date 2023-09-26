@@ -24,6 +24,8 @@ A Graphical User Interface (GUI) for
 	 - [ ] Remove
  - [ ] Backup Wallet & Contacts
  - [ ] Encrypt wallet data in local storage
+	 - [x] Reocvery Phrase
+	 - [ ] Contact Data
 
 ### Stage 2
  - [ ] Transactions view
