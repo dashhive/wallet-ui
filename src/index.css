@@ -77,6 +77,7 @@ main header figure figcaption + div sub span {
 }
 main footer {
   text-align: center;
+  padding: 0 1rem;
 }
 
 
@@ -205,6 +206,9 @@ main > header + section button {
   }
   main section > article {
     flex: 0 1 31%;
+  }
+  main footer {
+    padding: 0;
   }
   header {
     flex-direction: row;
