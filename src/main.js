@@ -818,10 +818,21 @@ let sendOrRequest = setupDialog(
       ${state.footer(state)}
     `,
     events: {
-      handleClose: state => async event => {
+      handleClose: (
+        state,
+        resolve = res=>{},
+        reject = res=>{},
+      ) => async event => {
         event.preventDefault()
         event.stopPropagation()
-        console.log('SEND OR REQUEST CLOSE OVERRIDE!', state, event)
+
+        console.log('SEND OR REQUEST CLOSE OVERRIDE!', state, event, state.elements.dialog.returnValue)
+
+        if (state.elements.dialog.returnValue !== 'cancel') {
+          resolve(state.elements.dialog.returnValue)
+        } else {
+          reject()
+        }
       },
       handleSubmit: state => async event => {
         event.preventDefault()
@@ -833,7 +844,7 @@ let sendOrRequest = setupDialog(
 
         let fde = formDataEntries(event)
 
-        console.log('SEND OR REQUEST OVERRIDE!', state, event, fde)
+        console.log('SEND OR REQUEST handleSubmit!', state, event, fde)
 
         if (fde.intent === 'send' && !fde.to) {
           event.target.to.setCustomValidity(
@@ -843,7 +854,7 @@ let sendOrRequest = setupDialog(
           return;
         }
 
-        sendOrRequest.close()
+        sendOrRequest.close(fde.intent)
 
         console.log(
           'SEND OR REQUEST OVERRIDE DIALOG!',

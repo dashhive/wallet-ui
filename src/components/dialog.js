@@ -1,6 +1,8 @@
 import { lit as html } from '../helpers/lit.js'
 import { formDataEntries } from '../helpers/utils.js'
 
+let _handlers = []
+
 const initialState = {
   id: 'Dialog',
   name: 'Dialog',
@@ -14,6 +16,9 @@ const initialState = {
   rendered: null,
   responsive: true,
   delay: 500,
+  addListener () {},
+  addListeners () {},
+  removeAllListeners (targets) {},
   header: state => html`
     <header>
       <strong>${state.name}</strong>
@@ -104,12 +109,8 @@ const initialState = {
       reject = res=>{},
     ) => async event => {
       event.preventDefault()
-      // state.elements.dialog?.removeEventListener(
-      //   'close',
-      //   state.events.handleClose
-      // )
-      // @ts-ignore
-      // event?.target?.remove()
+      state.removeAllListeners()
+
       console.log(
         'handle dialog close',
         event,
@@ -118,12 +119,8 @@ const initialState = {
       )
 
       if (state.elements.dialog.returnValue !== 'cancel') {
-        // handle submit
-        // state.elements.dialog.close('submit')
         resolve(state.elements.dialog.returnValue)
       } else {
-        // handle cancel
-        // state.elements.dialog.close('cancel')
         reject()
       }
 
@@ -133,7 +130,6 @@ const initialState = {
     },
     handleSubmit: state => event => {
       event.preventDefault()
-      state.elements.form?.removeEventListener('submit', state.events.handleSubmit)
 
       let fde = formDataEntries(event)
 
@@ -212,87 +208,89 @@ export function setupDialog(
   form.method = 'dialog'
   form.innerHTML = state.content(state)
 
+  dialog.insertAdjacentElement(
+    'afterbegin',
+    form
+  )
+
+  function addListener(
+    node,
+    event,
+    handler,
+    capture = false
+  ) {
+    // if (!(event in _handlers)) {
+    //   _handlers[event] = []
+    // }
+    // here we track the events and their nodes (note that we cannot
+    // use node as Object keys, as they'd get coerced into a string
+    _handlers.push({ node, event, handler, capture })
+    node.addEventListener(event, handler, capture)
+  }
+
   function addListeners(
     resolve,
     reject,
   ) {
-    // dialog.addEventListener(
+    // addListener(
+    //   dialog,
     //   'cancel',
-    //   state.events.handleClose(state)
+    //   state.events.handleClose(state),
     // )
-    dialog.addEventListener(
+    addListener(
+      dialog,
       'close',
-      state.events.handleClose(state, resolve, reject)
+      state.events.handleClose(state, resolve, reject),
     )
-    dialog.addEventListener(
+    addListener(
+      dialog,
       'click',
-      state.events.handleClick(state)
+      state.events.handleClick(state),
     )
 
-    dialog.insertAdjacentElement(
-      'afterbegin',
-      form
-    )
-
-    form.addEventListener(
+    addListener(
+      form,
       'change',
-      state.events.handleChange(state)
+      state.events.handleChange(state),
     )
-    form.addEventListener(
+    addListener(
+      form,
       'reset',
-      state.events.handleReset(state)
+      state.events.handleReset(state),
     )
-    form.addEventListener(
+    addListener(
+      form,
       'submit',
-      state.events.handleSubmit(state)
+      state.events.handleSubmit(state),
     )
   }
 
-  function removeListeners(
-    resolve,
-    reject,
+  function removeAllListeners(
+    targets = [dialog,form],
   ) {
-    dialog.removeEventListener(
-      'close',
-      state.events.handleClose(state, resolve, reject)
-    )
-    dialog.removeEventListener(
-      'click',
-      state.events.handleClick(state)
-    )
-
-    form.removeEventListener(
-      'change',
-      state.events.handleChange(state)
-    )
-    form.removeEventListener(
-      'reset',
-      state.events.handleReset(state)
-    )
-    form.removeEventListener(
-      'submit',
-      state.events.handleSubmit(state)
-    )
+    _handlers = _handlers
+      .filter(({ node, event, handler, capture }) => {
+        if (targets.includes(node)) {
+          node.removeEventListener(event, handler, capture)
+          return false
+        }
+        return true
+      })
   }
 
-  // addListeners()
+  state.addListener = addListener
+  state.addListeners = addListeners
+  state.removeAllListeners = removeAllListeners
 
   return {
     element: dialog,
-    // TODO: Remove old event listeners for promises
-    // FIX: SEMI-Functional, needs more work
     show: () => new Promise((resolve, reject) => {
-      // if (state.rendered) {
-      //   removeListeners(state)
-      // }
-      removeListeners(resolve, reject)
+      removeAllListeners()
       addListeners(resolve, reject)
       dialog.show()
     }),
-    // TODO: Remove old event listeners for promises
-    // FIX: SEMI-Functional, needs more work
     showModal: () => new Promise((resolve, reject) => {
-      removeListeners(resolve, reject)
+      removeAllListeners()
       addListeners(resolve, reject)
       dialog.showModal()
     }),
@@ -302,9 +300,6 @@ export function setupDialog(
       position = 'afterend',
     ) => {
       let oldState = state
-      // if (state.rendered) {
-      //   removeListeners(state)
-      // }
 
       state = {
         ...oldState,
