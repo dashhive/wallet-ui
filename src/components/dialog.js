@@ -103,17 +103,17 @@ const initialState = {
       event.preventDefault()
       state.removeAllListeners()
 
-      console.log(
-        'handle dialog close',
-        event,
-        event.target === state.elements.dialog,
-        state.elements.dialog.returnValue
-      )
+      // console.log(
+      //   'handle dialog close',
+      //   event,
+      //   event.target === state.elements.dialog,
+      //   state.elements.dialog.returnValue
+      // )
 
       if (state.elements.dialog.returnValue !== 'cancel') {
         resolve(state.elements.dialog.returnValue)
       } else {
-        reject()
+        resolve('cancel')
       }
 
       setTimeout(t => {
@@ -127,29 +127,29 @@ const initialState = {
 
       state.elements.dialog.returnValue = String(fde.intent)
 
-      console.log(
-        'handleSubmit',
-        [event],
-      )
+      // console.log(
+      //   'handleSubmit',
+      //   [event],
+      // )
 
       state.elements.dialog.close(String(fde.intent))
     },
     handleReset: state => event => {
       event.preventDefault()
       state.elements.form?.removeEventListener('close', state.events.handleReset)
-      console.log(
-        'handleReset',
-        [event.target],
-      )
+      // console.log(
+      //   'handleReset',
+      //   [event.target],
+      // )
       state.elements.dialog.close('cancel')
     },
     handleClick: state => event => {
       if (event.target === state.elements.dialog) {
-        console.log(
-          'handle dialog backdrop click',
-          event,
-          event.target === state.elements.dialog
-        )
+        // console.log(
+        //   'handle dialog backdrop click',
+        //   event,
+        //   event.target === state.elements.dialog
+        // )
         state.elements.dialog.close('cancel')
       }
     }
@@ -176,8 +176,8 @@ export function setupDialog(
     }
   }
 
-  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
-  state.slugs.form = state.name?.toLowerCase().replace(' ', '_')
+  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replaceAll(' ', '_')
+  state.slugs.form = state.name?.toLowerCase().replaceAll(' ', '_')
 
   const dialog = document.createElement('dialog')
   const form = document.createElement('form')
