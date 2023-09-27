@@ -2,16 +2,17 @@ import { lit as html } from './helpers/lit.js'
 
 import {
   // checkWalletFunds,
-  batchAddressGenerate,
   deriveWalletData,
   formDataEntries,
   phraseToEl,
   setClipboard,
+  envoy,
   // getAddr,
 } from './helpers/utils.js'
 
 import {
   store,
+  batchAddressGenerate,
   decryptWallet,
   initWallet,
   // loadWallets,
@@ -159,9 +160,9 @@ let walletEncrypt = setupDialog(
         }
         console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
 
-        // setTimeout(t => {
-        //   event?.target?.remove()
-        // }, state.delay)
+        setTimeout(t => {
+          event?.target?.remove()
+        }, state.delay)
       },
       handleSubmit: state => async event => {
         event.preventDefault()
@@ -187,7 +188,7 @@ let walletEncrypt = setupDialog(
         let initialized
         // let wallet = await deriveWalletData()
         // let { wallet } = state
-        let wallet = state.wallet
+        wallet = state.wallet
 
         console.log(
           'walletEncrypt state.wallet',
@@ -198,8 +199,6 @@ let walletEncrypt = setupDialog(
 
         phrase = wallet.recoveryPhrase
         encryptionPassword = fde.pass
-        // selected_wallet = wallet.id
-        // selected_alias = `${fde.alias}`
 
         if (fde.remember) {
           sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
@@ -217,18 +216,20 @@ let walletEncrypt = setupDialog(
           )
           wallets = initialized.wallets
         }
+        // selected_wallet = wallet.id
+        // selected_alias = `${fde.alias}`
 
-        localStorage.selected_wallet = selected_wallet
-        localStorage.selected_alias = selected_alias
+        // localStorage.selected_wallet = selected_wallet
+        // localStorage.selected_alias = selected_alias
 
-        console.log('ENCRYPT wallet!', wallet)
+        console.log('ENCRYPT wallet!', wallet, selected_alias)
 
-        bodyNav.render({
+        bodyNav?.render({
           data: {
             alias: selected_alias
           },
         })
-        dashBalance.render({
+        dashBalance?.render({
           wallet,
         })
 
@@ -430,8 +431,8 @@ let walletGen = setupDialog(
 
         // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
 
-        let initialized
-        let wallet = await deriveWalletData()
+        // let initialized
+        wallet = await deriveWalletData()
 
         phrase = wallet.recoveryPhrase
         selected_wallet = wallet.id
@@ -450,14 +451,14 @@ let walletGen = setupDialog(
 
         console.log('GENERATE wallet!', wallet)
 
-        bodyNav.render({
-          data: {
-            alias: selected_alias
-          },
-        })
-        dashBalance.render({
-          wallet,
-        })
+        // bodyNav?.render({
+        //   data: {
+        //     alias: selected_alias
+        //   },
+        // })
+        // dashBalance?.render({
+        //   wallet,
+        // })
 
         walletBak.render(
           {
@@ -568,12 +569,12 @@ let walletImp = setupDialog(
     `,
     fields: html``,
     events: {
-      handleClose: state => async event => {
-        event.preventDefault()
-        event.stopPropagation()
-        console.log('IMPORT CLOSE OVERRIDE!', state, event)
-        walletImp.close()
-      },
+      // handleClose: state => async event => {
+      //   event.preventDefault()
+      //   event.stopPropagation()
+      //   console.log('IMPORT CLOSE OVERRIDE!', state, event)
+      //   walletImp.close()
+      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -601,7 +602,7 @@ let walletImp = setupDialog(
         phrase = `${fde.pass}`
 
         // let initialized
-        let wallet = await deriveWalletData(phrase)
+        wallet = await deriveWalletData(phrase)
 
         selected_alias = `${fde.alias}`
         selected_wallet = wallet.id
@@ -619,14 +620,16 @@ let walletImp = setupDialog(
 
         console.log('IMPORT wallet!', wallet)
 
-        bodyNav.render({
-          data: {
-            alias: selected_alias
-          },
-        })
-        dashBalance.render({
-          wallet,
-        })
+        // bodyNav.render({
+        //   data: {
+        //     alias: selected_alias
+        //   },
+        // })
+        // dashBalance.render({
+        //   wallet,
+        // })
+
+        walletImp.close()
 
         walletEncrypt.render(
           {
@@ -635,8 +638,6 @@ let walletImp = setupDialog(
           'afterend',
         )
         await walletEncrypt.showModal()
-
-        walletImp.close()
 
         console.log(
           'IMPORT OVERRIDE DIALOG!',
@@ -656,13 +657,13 @@ let onboard = setupDialog(
     //   dialog: document.querySelector('dialog'),
     // },
     events: {
-      handleClose: state => async event => {
-        event.preventDefault()
-        event.stopPropagation()
-        console.log('ONBOARDING CLOSE OVERRIDE!', state, event)
-        // walletGen.render()
-        // walletGen.showModal()
-      },
+      // handleClose: state => async event => {
+      //   event.preventDefault()
+      //   event.stopPropagation()
+      //   console.log('ONBOARDING CLOSE OVERRIDE!', state, event)
+      //   // walletGen.render()
+      //   // walletGen.showModal()
+      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -677,6 +678,8 @@ let onboard = setupDialog(
           walletImp.render()
           walletImp.showModal()
         }
+
+        // onboard.close()
 
         console.log(
           'ONBOARDING OVERRIDE DIALOG!',
@@ -874,6 +877,15 @@ async function main() {
   selected_wallet = localStorage?.selected_wallet || ''
   selected_alias = localStorage?.selected_alias || ''
 
+  bodyNav = await setupNav(
+    mainApp,
+    {
+      data: {
+        alias: selected_alias
+      },
+    }
+  )
+
   console.log(
     'selected wallets & alias',
     selected_wallet,
@@ -956,12 +968,14 @@ async function main() {
     ?.keystore?.crypto?.kdfparams?.salt || ''
 
   try {
-    phrase = await decryptWallet(
-      encryptionPassword,
-      ks_iv,
-      ks_salt,
-      ks_phrase
-    )
+    if (encryptionPassword) {
+      phrase = await decryptWallet(
+        encryptionPassword,
+        ks_iv,
+        ks_salt,
+        ks_phrase
+      )
+    }
   } catch(err) {
     console.error('[fail] decrypting recovery phrase', err)
   }
@@ -1091,45 +1105,96 @@ async function main() {
     }
   )
 
+  let walletFunds = envoy(
+    {
+      balance: 0
+    },
+    (state, oldState) => {
+      if (state.balance !== oldState.balance) {
+        console.warn(
+          'addrFunds change',
+          {
+            state,
+            oldState,
+            walletFunds: state.balance
+          }
+        )
+        dashBalance?.restate({
+          wallet,
+          walletFunds: {
+            balance: state.balance
+          }
+        })
+      }
+    }
+  )
+
   if (!phrase) {
-    onboard.show()
+    await onboard.show()
   } else {
     wallet = await deriveWalletData(phrase)
 
-    let accountIndex = wallets?.[selected_wallet]
-      ?.accountIndex || 0
-    // let addressIndex = wallets?.[selected_wallet]
-    //   ?.addressIndex || 0
-    let addressIndex = 0
-    let acctBatch = accountIndex + 5
-    let accts = {}
+    if (store.addresses.length() === 0) {
+      let accountIndex = wallets?.[selected_wallet]
+        ?.accountIndex || 0
+      // let addressIndex = wallets?.[selected_wallet]
+      //   ?.addressIndex || 0
+      let addressIndex = 0
+      let acctBatch = accountIndex + 5
+      let accts = {}
 
-    for (;accountIndex < acctBatch;accountIndex++) {
-      accts[`bat__${accountIndex}`] = await batchAddressGenerate(
-        wallet.wallet,
-        accountIndex,
-        addressIndex,
-        0,
-        3
-      )
-    }
-
-    let addrFunds = {}
-
-    for (let ac in accts) {
-      for (let a of accts[ac].addresses) {
-        checkWalletFunds(a, wallet)
-          .then(async (output) => {
-            addrFunds[a.address] = output
-          })
+      for (;accountIndex < acctBatch;accountIndex++) {
+        accts[`bat__${accountIndex}`] = await batchAddressGenerate(
+          wallet,
+          accountIndex,
+          addressIndex,
+          0,
+          20
+        )
       }
     }
 
-    console.log(
-      'onload batch addr gen funds',
-      accts,
-      addrFunds,
-    )
+    // let addrFunds = {}
+    // let addrFunds = envoy(
+    //   {
+    //   },
+    //   // (state, oldState) => {
+    //   //   walletFunds.balance = Object.values(state).reduce(
+    //   //     (p,c) => {
+    //   //       // console.log('stateReduce', p, c)
+    //   //       return (p || 0) + (c?.insight?.balance || 0)
+    //   //     },
+    //   //     0
+    //   //   )
+    //   //   console.warn(
+    //   //     'addrFunds change',
+    //   //     {
+    //   //       state,
+    //   //       oldState,
+    //   //       walletFunds,
+    //   //     }
+    //   //   )
+    //   // }
+    // )
+
+    // for (let ac in accts) {
+    //   for (let a of accts[ac].addresses) {
+    //     checkWalletFunds(a, wallet)
+    //       .then(async (output) => {
+    //         addrFunds[a.address] = output
+    //         walletFunds.balance = (
+    //           walletFunds.balance +
+    //           (output?.insight?.balance || 0)
+    //         )
+    //       })
+    //   }
+    // }
+
+    // console.log(
+    //   'onload batch addr gen funds',
+    //   accts,
+    //   addrFunds,
+    // )
 
     // if (!wallets?.[selected_wallet]) {
     //   await initWallet(wallet, 0, 0, {
@@ -1138,16 +1203,11 @@ async function main() {
     // }
   }
 
-  bodyNav = await setupNav(
-    mainApp,
-    {
-      data: {
-        alias: selected_alias
-      },
-    }
-  )
-
-  bodyNav.render()
+  bodyNav.render({
+    data: {
+      alias: selected_alias
+    },
+  })
   mainFtr.render()
 
   mainApp.insertAdjacentHTML('afterbegin', html`
@@ -1194,8 +1254,15 @@ async function main() {
           wallet,
         }
       )
+      // console.warn(
+      //   'LOAD ASYNC setupBalance',
+      //   dashBalance
+      // )
       dashBalance.render({
         wallet,
+        walletFunds: {
+          balance: walletFunds?.balance || 0
+        }
       })
     })
 
@@ -1208,8 +1275,11 @@ async function main() {
     .then(funds => {
       console.log('updateAllFunds', funds)
 
-      dashBalance?.render({
+      dashBalance?.restate({
         wallet,
+        walletFunds: {
+          balance: funds
+        }
       })
     })
 }

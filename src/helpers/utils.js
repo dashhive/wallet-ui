@@ -331,3 +331,18 @@ export function setClipboard(event) {
     }
   );
 }
+
+export function envoy(obj, ...listeners) {
+  return new Proxy(obj, {
+    set(obj, prop, value) {
+      listeners.forEach(
+        fn => fn(
+          {...obj, [prop]: value},
+          obj
+        )
+      );
+      obj[prop] = value;
+      return true;
+    }
+  })
+}

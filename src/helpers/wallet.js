@@ -1,14 +1,15 @@
 import {
+  DashHd,
   DashSight,
   Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
-import {
-  deriveAccountData,
-  deriveAddressData,
-  batchAddressGenerate,
-  // checkWalletFunds,
-} from './utils.js'
+// import {
+//   deriveAccountData,
+//   deriveAddressData,
+//   // batchAddressGenerate,
+//   // checkWalletFunds,
+// } from './utils.js'
 
 const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
 
@@ -176,7 +177,7 @@ export async function initWallet(
   }
 
   let addrs = await batchAddressGenerate(
-    wallet.wallet,
+    wallet,
     accountIndex,
     addressIndex,
   )
@@ -271,10 +272,10 @@ export async function initWallet(
 
   let contacts = '{}'
 
-  updateAllFunds(wallet)
-    .then(funds => {
-      console.log('initWallet updateAllFunds', funds)
-    })
+  // updateAllFunds(wallet)
+  //   .then(funds => {
+  //     console.log('initWallet updateAllFunds', funds)
+  //   })
 
   return {
     wallets,
@@ -336,40 +337,27 @@ export async function checkWalletFunds(addr, wallet = {}) {
 
 export async function updateAllFunds(wallet) {
   let funds = 0
-  let result = {}
-  let addrsLen = await store.addresses.length()
+  let addrKeys = await store.addresses.keys()
 
-  return await store.addresses.iterate((
-    value, address, iterationNumber
-  ) => {
+  for (const address of addrKeys) {
     let {
       walletId,
       accountIndex,
       addressIndex,
-    } = value
+    } = await store.addresses.getItem(address)
 
     if (walletId === wallet?.id) {
-      // result[address] = value
-      // funds += value?.insight?.balance || 0
-      checkWalletFunds({
+      let { insight } = await checkWalletFunds({
         address,
         accountIndex,
         addressIndex,
-      }, wallet).then(({ insight }) => {
-        funds += insight?.balance || 0
-      })
+      }, wallet)
+
+      funds += insight?.balance || 0
     }
+  }
 
-    if (iterationNumber === addrsLen) {
-      // let funds = Object.values(result)
-      //   .map(a => a?.insight?.balance || 0)
-      //   .reduce((total, current) => total + current)
-
-      console.log('update funds', result, funds);
-
-      return funds
-    }
-  })
+  return funds
 }
 
 export async function getTotalFunds(wallet) {
@@ -397,4 +385,54 @@ export async function getTotalFunds(wallet) {
       return funds
     }
   })
+}
+
+export async function batchAddressGenerate(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE,
+  batchSize = 20
+) {
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  let account = await wallet.wallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(use);
+
+  for (;addressIndex < batchLimit; addressIndex++) {
+    let key = await xkey.deriveAddress(addressIndex);
+    let address = await DashHd.toAddr(key.publicKey);
+
+    addresses.push({
+      address,
+      addressIndex,
+      accountIndex,
+    })
+
+    // let $addr = await
+    store.addresses.getItem(address)
+      .then(a => {
+        let $addr = a || {}
+        console.log(
+          'batchAddressGenerate wallet',
+          wallet
+        )
+
+        store.addresses.setItem(
+          address,
+          {
+            ...$addr,
+            walletId: wallet.id,
+            accountIndex,
+            addressIndex,
+          },
+        )
+      })
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: addressIndex,
+  }
 }
