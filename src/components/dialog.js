@@ -82,13 +82,6 @@ const initialState = {
   events: {
     handleChange: state => event => {
       event.preventDefault()
-      // console.log(
-      //   'handle dialog change',
-      //   event?.target?.validationMessage,
-      //   event?.target?.validity,
-      //   [event.target],
-      //   event?.target?.type
-      // )
       if (
         event?.target?.validity?.patternMismatch &&
         event?.target?.type !== 'checkbox'
@@ -97,7 +90,6 @@ const initialState = {
         if (label) {
           event.target.setCustomValidity(`Invalid ${label}`)
         }
-      // } else if (event?.target?.validity?.valid) {
       } else {
         event.target.setCustomValidity('')
       }
@@ -219,11 +211,6 @@ export function setupDialog(
     handler,
     capture = false
   ) {
-    // if (!(event in _handlers)) {
-    //   _handlers[event] = []
-    // }
-    // here we track the events and their nodes (note that we cannot
-    // use node as Object keys, as they'd get coerced into a string
     _handlers.push({ node, event, handler, capture })
     node.addEventListener(event, handler, capture)
   }
@@ -232,11 +219,6 @@ export function setupDialog(
     resolve,
     reject,
   ) {
-    // addListener(
-    //   dialog,
-    //   'cancel',
-    //   state.events.handleClose(state),
-    // )
     addListener(
       dialog,
       'close',
@@ -278,8 +260,6 @@ export function setupDialog(
       })
   }
 
-  state.addListener = addListener
-  state.addListeners = addListeners
   state.removeAllListeners = removeAllListeners
 
   return {
@@ -322,16 +302,12 @@ export function setupDialog(
       form.name = `${state.slugs.form}`
       form.innerHTML = state.content(state)
 
-      console.log('DIALOG RENDER STATE', state, renderState)
-
-      console.log('DIALOG RENDER', position, state.slugs.dialog)
+      // console.log('DIALOG RENDER', state, position, state.slugs.dialog)
 
       if (!state.rendered) {
         el.insertAdjacentElement(position, dialog)
         state.rendered = dialog
       }
-
-      // addListeners(state)
     }
   }
 }

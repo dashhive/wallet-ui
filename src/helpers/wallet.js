@@ -4,12 +4,6 @@ import {
   Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
-// import {
-//   deriveAccountData,
-//   deriveAddressData,
-//   // batchAddressGenerate,
-//   // checkWalletFunds,
-// } from './utils.js'
 
 const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
 
@@ -37,25 +31,6 @@ export async function loadWallets() {
     }
   })
 }
-
-// export async function loadAliases() {
-//   let result = {}
-//   let walletsLen = await store.aliases.length()
-
-//   return await store.aliases.iterate(async (
-//     value, key, iterationNumber
-//   ) => {
-//     let [walletId, alias] = key.split('__')
-//     console.log('main iteration', iterationNumber, [key, value]);
-
-//     result[alias] = value
-//     result[alias].wallet = await store.wallets.getItem(value.walletId)
-
-//     if (iterationNumber === walletsLen) {
-//       return result
-//     }
-//   })
-// }
 
 export async function loadAlias(alias) {
   let $alias = await store.aliases.getItem(alias)
@@ -99,9 +74,6 @@ export async function initProfileWallets(
 
   let alias = profile.preferred_username
 
-  // if (!wallets[id]) {
-  //   wallets[id] =
-  // }
   wallets = Object.values(wallets || {})
   wallets = wallets
     .filter(w => w.alias === alias)
@@ -119,32 +91,10 @@ export async function decryptWallet(
   keystoreIV,
   keystoreSalt,
   ciphertext,
-  // wallet,
-  // accountIndex = 0,
-  // addressIndex = 0,
-  // overProfile = {},
 ) {
-  // let {
-  //   alias,
-  //   wallets,
-  //   profile,
-  // } = await initProfileWallets(overProfile)
-
-  // let { id, address, xpubId, recoveryPhrase } = wallet
-
   const cw = Cryptic.encryptString(keystorePassword, keystoreSalt);
 
-  // const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
-  // const encryptedPhrase = await cw.encrypt(recoveryPhrase, iv);
-
-  // console.log('initWallet Cryptic derived key', {
-  //   derivedKey,
-  //   encryptedPhrase,
-  // })
-
-  const decrypted = await cw.decrypt(ciphertext, keystoreIV);
-
-  return decrypted
+  return await cw.decrypt(ciphertext, keystoreIV);
 }
 
 export async function initWallet(
@@ -160,17 +110,13 @@ export async function initWallet(
     profile,
   } = await initProfileWallets(overProfile)
 
-  // let acct = await deriveAccountData(
-  //   wallet.wallet,
+  let { id, recoveryPhrase } = wallet
+
+  // console.log(
+  //   'initWallet wallets',
+  //   wallets,
+  //   profile,
   // )
-
-  let { id, address, xpubId, recoveryPhrase } = wallet
-
-  console.log(
-    'initWallet wallets',
-    wallets,
-    profile,
-  )
 
   if (!wallets.includes(id)) {
     wallets.push(id)
@@ -182,20 +128,9 @@ export async function initWallet(
     addressIndex,
   )
 
-  // let addrFunds = {}
-
   for (let a of addrs.addresses) {
-    // checkWalletFunds(a)
-    //   .then(r => {
-    //     addrFunds[a] = r
-    //   })
-
     store.addresses.setItem(
       a.address,
-      // `receiveaddr__${address}`,
-      // `changeaddr__${address}`,
-      // `sendaddr__${address}`,
-      // `${wallet.id} ${accountIndex} ${addressIndex}`,
       {
         walletId: wallet.id,
         accountIndex: a.accountIndex,
@@ -205,23 +140,16 @@ export async function initWallet(
     )
   }
 
-  // console.log(
-  //   'initWallet batch addr gen',
-  //   addrs,
-  //   addrFunds,
-  // )
   const cw = Cryptic.encryptString(encryptionPassword, STOREAGE_SALT);
   const iv = Cryptic.bufferToHex(cw.getInitVector());
 
   const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
   const encryptedPhrase = await cw.encrypt(recoveryPhrase, iv);
 
-  console.log('initWallet Cryptic derived key', {
-    derivedKey,
-    encryptedPhrase,
-  })
-
-  // const decrypted = await cw.decrypt(encrypted, iv);
+  // console.log('initWallet Cryptic derived key', {
+  //   derivedKey,
+  //   encryptedPhrase,
+  // })
 
   let storeWallet = await store.wallets.setItem(
     `${id}`,
@@ -257,25 +185,18 @@ export async function initWallet(
   let storedAlias = await store.aliases.setItem(
     `${alias}`,
     {
-      // walletId: id,
       wallets,
       profile,
     }
   )
 
-  console.log(
-    'initWallet stored values',
-    storeWallet,
-    storedAlias,
-    // storedReceiveAddr,
-  )
+  // console.log(
+  //   'initWallet stored values',
+  //   storeWallet,
+  //   storedAlias,
+  // )
 
   let contacts = '{}'
-
-  // updateAllFunds(wallet)
-  //   .then(funds => {
-  //     console.log('initWallet updateAllFunds', funds)
-  //   })
 
   return {
     wallets,
@@ -293,24 +214,21 @@ export async function checkWalletFunds(addr, wallet = {}) {
   } = addr
   let updated_at = (new Date()).getTime()
   let $addr = await store.addresses.getItem(address) || {}
+
   $addr = {
     walletId: wallet.id,
     accountIndex,
     addressIndex,
     ...$addr,
   }
-  console.log('checkWalletFunds $addr', $addr)
+  // console.log('checkWalletFunds $addr', $addr)
   let walletFunds = $addr?.insight
-
-  // if (!$addr.walletId && wallet.id) {
-  //   $addr.walletId = wallet.id
-  // }
 
   if (
     !walletFunds?.updated_at ||
     updated_at - walletFunds?.updated_at > HOUR
   ) {
-    console.info('check insight api for addr', addr)
+    // console.info('check insight api for addr', addr)
 
     let insightRes = await dashsight.getInstantBalance(address)
 
@@ -323,14 +241,14 @@ export async function checkWalletFunds(addr, wallet = {}) {
         updated_at,
       }
 
-      await store.addresses.setItem(
+      store.addresses.setItem(
         address,
         $addr,
       )
     }
   }
 
-  console.info('check addr funds', addr, walletFunds)
+  // console.info('check addr funds', addr, walletFunds)
 
   return $addr
 }
@@ -368,20 +286,12 @@ export async function getTotalFunds(wallet) {
   return await store.addresses.iterate((
     value, key, iterationNumber
   ) => {
-    // console.log('total iteration', iterationNumber, addrsLen, [key, value]);
-
     if (value?.walletId === wallet?.id) {
       result[key] = value
       funds += value?.insight?.balance || 0
     }
 
     if (iterationNumber === addrsLen) {
-      // let funds = Object.values(result)
-      //   .map(a => a?.insight?.balance || 0)
-      //   .reduce((total, current) => total + current)
-
-      console.log('total funds', result, funds);
-
       return funds
     }
   })
@@ -410,14 +320,13 @@ export async function batchAddressGenerate(
       accountIndex,
     })
 
-    // let $addr = await
     store.addresses.getItem(address)
       .then(a => {
         let $addr = a || {}
-        console.log(
-          'batchAddressGenerate wallet',
-          wallet
-        )
+        // console.log(
+        //   'batchAddressGenerate wallet',
+        //   wallet
+        // )
 
         store.addresses.setItem(
           address,

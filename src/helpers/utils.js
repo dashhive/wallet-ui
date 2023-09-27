@@ -1,57 +1,48 @@
 import {
-  // Base58Check,
   DashHd,
   DashPhrase,
-  DashSight,
-  // DashKeys,
 } from '../imports.js'
 
-// @ts-ignore
-let dashsight = DashSight.create({
-  baseUrl: 'https://insight.dash.org',
-  // baseUrl: 'https://dashsight.dashincubator.dev',
-});
+// export async function walletSchema(
+//   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
+//   accountIndex = 0
+// ) {
+//   let wallets = {
+//     'jojobyte': {
+//       phrase,
+//       accountIndex,
+//     }
+//   }
+//   let contacts = {
+//     'bob': {
+//       name: 'Bob Jones',
+//       gravatarEmail: 'bob@jones.com',
+//       // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
+//       index: 1,
+//       txIndex: 0,
+//       xpubs: {
+//         'laptop': 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz'
+//       },
+//       xpubsArr: [
+//         {
+//           device: 'laptop',
+//           key: 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz',
+//         }
+//       ],
+//     }
+//   }
+//   // contactsArr: [
+//   //   {
+//   //     alias: 'bob',
+//   //     // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
+//   //     index: 1,
+//   //     txIndex: 0,
+//   //     xpub: ''
+//   //   }
+//   // ],
 
-export async function walletSchema(
-  phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
-  accountIndex = 0
-) {
-  let wallets = {
-    'jojobyte': {
-      phrase,
-      accountIndex,
-    }
-  }
-  let contacts = {
-    'bob': {
-      name: 'Bob Jones',
-      gravatarEmail: 'bob@jones.com',
-      // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
-      index: 1,
-      txIndex: 0,
-      xpubs: {
-        'laptop': 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz'
-      },
-      xpubsArr: [
-        {
-          device: 'laptop',
-          key: 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz',
-        }
-      ],
-    }
-  }
-  // contactsArr: [
-  //   {
-  //     alias: 'bob',
-  //     // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
-  //     index: 1,
-  //     txIndex: 0,
-  //     xpub: ''
-  //   }
-  // ],
-
-  return wallets
-}
+//   return wallets
+// }
 
 /**
  *
@@ -88,7 +79,6 @@ export async function deriveWalletData(
       phraseOrXkey?.substring(0,4) || ''
     )
   ) {
-    // recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
     xkey = await DashHd.fromXKey(phraseOrXkey);
   } else {
     seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
@@ -224,15 +214,6 @@ export async function batchAddressGenerate(
   }
 }
 
-export async function checkWalletFunds(addr) {
-  console.info('check wallet addr', addr)
-  let walletFunds = await dashsight.getInstantBalance(addr)
-
-  console.info('check wallet funds', walletFunds)
-
-  return walletFunds
-}
-
 export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   let words = phrase?.split(' ')
   return words?.map(
@@ -304,7 +285,6 @@ export function formDataEntries(event) {
 
 export function copyToClipboard(event) {
   event.preventDefault()
-  // let copyText = document.querySelector(sel);
   event.target.previousElementSibling.select();
   document.execCommand("copy");
 }
@@ -321,13 +301,11 @@ export function setClipboard(event) {
   const data = [new ClipboardItem({ [type]: blob })];
 
   navigator.clipboard.write(data).then(
-    (cv) => {
-      /* success */
+    cv => {
       console.log('setClipboard', cv)
     },
-    (ce) => {
-      console.error('setClipboard fail', ce)
-      /* failure */
+    ce => {
+      console.error('[fail] setClipboard', ce)
     }
   );
 }
