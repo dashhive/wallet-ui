@@ -13,7 +13,7 @@ import {
   updateAllFunds,
   decryptWallet,
   initWallet,
-  loadAlias,
+  loadWalletsForAlias,
   store,
 } from './helpers/wallet.js'
 
@@ -136,19 +136,19 @@ let walletEncrypt = setupDialog(
         reject = res=>{},
       ) => async event => {
         event.preventDefault()
-        console.log(
-          'handle dialog close',
-          event,
-          event.target === state.elements.dialog,
-          state.elements.dialog.returnValue
-        )
+        // console.log(
+        //   'handle dialog close',
+        //   event,
+        //   event.target === state.elements.dialog,
+        //   state.elements.dialog.returnValue
+        // )
 
         if (state.elements.dialog.returnValue !== 'cancel') {
           resolve(state.elements.dialog.returnValue)
         } else {
           reject()
         }
-        console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
+        // console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
 
         setTimeout(t => {
           event?.target?.remove()
@@ -161,7 +161,7 @@ let walletEncrypt = setupDialog(
         event.target.pass.setCustomValidity('')
         event.target.pass.reportValidity()
 
-        console.log('ENCRYPT OVERRIDE!', state, event)
+        // console.log('ENCRYPT OVERRIDE!', state, event)
 
         let fde = formDataEntries(event)
 
@@ -176,12 +176,12 @@ let walletEncrypt = setupDialog(
         let initialized
         wallet = state.wallet
 
-        console.log(
-          'walletEncrypt state.wallet',
-          wallet,
-          state,
-          fde
-        )
+        // console.log(
+        //   'walletEncrypt state.wallet',
+        //   wallet,
+        //   state,
+        //   fde
+        // )
 
         phrase = wallet.recoveryPhrase
         encryptionPassword = fde.pass
@@ -203,7 +203,7 @@ let walletEncrypt = setupDialog(
           wallets = initialized.wallets
         }
 
-        console.log('ENCRYPT wallet!', wallet, selected_alias)
+        // console.log('ENCRYPT wallet!', wallet, selected_alias)
 
         bodyNav?.render({
           data: {
@@ -214,13 +214,8 @@ let walletEncrypt = setupDialog(
           wallet,
         })
 
-        onboard.close()
+        onboard?.close()
         walletEncrypt.close()
-
-        console.log(
-          'ENCRYPT OVERRIDE DIALOG!',
-          [fde]
-        )
       },
     },
   }
@@ -287,7 +282,6 @@ let walletBak = setupDialog(
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
-        console.log('BACKUP OVERRIDE!', state, event)
 
         let { wallet } = state
 
@@ -302,11 +296,6 @@ let walletBak = setupDialog(
         await walletEncrypt.showModal()
 
         walletBak.close()
-
-        console.log(
-          'BACKUP OVERRIDE DIALOG!',
-          [fde]
-        )
       },
       handleClick: state => async event => {
         if (
@@ -377,7 +366,6 @@ let walletGen = setupDialog(
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
-        console.log('GENERATE OVERRIDE!', state, event)
 
         let fde = formDataEntries(event)
 
@@ -398,7 +386,7 @@ let walletGen = setupDialog(
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
 
-        console.log('GENERATE wallet!', wallet)
+        // console.log('GENERATE wallet!', wallet)
 
         walletBak.render(
           {
@@ -409,11 +397,6 @@ let walletGen = setupDialog(
         walletBak.showModal()
 
         walletGen.close()
-
-        console.log(
-          'GENERATE OVERRIDE DIALOG!',
-          [fde]
-        )
       },
     },
   }
@@ -503,11 +486,8 @@ let walletImp = setupDialog(
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
-        console.log('IMPORT OVERRIDE!', state, event)
 
         let fde = formDataEntries(event)
-
-        console.log('IMPORT FDE', fde)
 
         if (!fde.pass) {
           event.target.pass.setCustomValidity(
@@ -534,7 +514,7 @@ let walletImp = setupDialog(
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
 
-        console.log('IMPORT wallet!', wallet)
+        // console.log('IMPORT wallet!', wallet)
 
         walletImp.close()
 
@@ -545,11 +525,6 @@ let walletImp = setupDialog(
           'afterend',
         )
         await walletEncrypt.showModal()
-
-        console.log(
-          'IMPORT OVERRIDE DIALOG!',
-          [fde]
-        )
       },
     },
   }
@@ -564,7 +539,6 @@ let onboard = setupDialog(
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
-        console.log('ONBOARDING OVERRIDE!', state, event)
 
         let fde = formDataEntries(event)
 
@@ -575,11 +549,6 @@ let onboard = setupDialog(
           walletImp.render()
           walletImp.showModal()
         }
-
-        console.log(
-          'ONBOARDING OVERRIDE DIALOG!',
-          [fde.intent]
-        )
       },
     },
     header: () => ``,
@@ -707,14 +676,13 @@ let sendOrRequest = setupDialog(
         reject = res=>{},
       ) => async event => {
         event.preventDefault()
-        event.stopPropagation()
-
-        console.log('SEND OR REQUEST CLOSE OVERRIDE!', state, event, state.elements.dialog.returnValue)
+        // event.stopPropagation()
+        state.removeAllListeners()
 
         if (state.elements.dialog.returnValue !== 'cancel') {
           resolve(state.elements.dialog.returnValue)
         } else {
-          reject()
+          resolve('cancel')
         }
       },
       handleSubmit: state => async event => {
@@ -727,8 +695,6 @@ let sendOrRequest = setupDialog(
 
         let fde = formDataEntries(event)
 
-        console.log('SEND OR REQUEST handleSubmit!', state, event, fde)
-
         if (fde.intent === 'send' && !fde.to) {
           event.target.to.setCustomValidity(
             'You must specify a contact or address to send to'
@@ -738,11 +704,6 @@ let sendOrRequest = setupDialog(
         }
 
         sendOrRequest.close(fde.intent)
-
-        console.log(
-          'SEND OR REQUEST OVERRIDE DIALOG!',
-          [fde]
-        )
       },
     },
   }
@@ -768,19 +729,12 @@ async function main() {
     }
   )
 
-  let alias = await loadAlias(selected_alias)
-  wallets = alias?.$wallets
+  let aliasWallets = await loadWalletsForAlias(selected_alias)
+  wallets = aliasWallets?.$wallets
 
   console.log(
-    'selected wallets & alias',
-    selected_wallet,
-    selected_alias,
-  )
-
-  console.log(
-    'main load wallets & alias',
-    // wallets,
-    alias,
+    'load wallet alias',
+    aliasWallets
   )
 
   document.addEventListener('submit', async event => {
@@ -793,17 +747,9 @@ async function main() {
       event.preventDefault()
       event.stopPropagation()
 
-      // let fde = formDataEntries(event)
-
-      // console.log(
-      //   'global form submit',
-      //   formName,
-      //   form,
-      //   fde,
-      // )
-
       sendOrRequest.render()
       sendOrRequest.showModal()
+        // .catch(console.error)
     }
   })
   document.addEventListener('change', async event => {
@@ -849,7 +795,7 @@ async function main() {
         ks_phrase
       )
     } catch(err) {
-      console.error('[fail] decrypting recovery phrase', err)
+      console.error('[fail] unable to decrypt recovery phrase', err)
       sessionStorage.removeItem('encryptionPassword')
     }
   }
@@ -871,7 +817,6 @@ async function main() {
           handleSubmit: state => async event => {
             event.preventDefault()
             event.stopPropagation()
-            console.log('DECRYPT OVERRIDE!', state, event)
 
             let decryptedRecoveryPhrase
             let fde = formDataEntries(event)
@@ -892,7 +837,7 @@ async function main() {
                 ks_phrase
               )
             } catch(err) {
-              console.error('[fail] decrypting recovery phrase', err)
+              console.error('[fail] unable to decrypt recovery phrase', err)
               event.target.pass.setCustomValidity(
                 'Unable to decrypt recovery phrase. Did you type the correct encryption password?'
               )
@@ -914,8 +859,6 @@ async function main() {
       'afterend',
     )
     await walletEncrypt.showModal()
-  } else {
-    onboard.render()
   }
 
   let walletFunds = envoy(
@@ -943,6 +886,7 @@ async function main() {
   )
 
   if (!phrase) {
+    onboard.render()
     await onboard.show()
   } else {
     wallet = await deriveWalletData(phrase)
@@ -1029,14 +973,14 @@ async function main() {
       })
     })
 
-  console.log('init', {
-    phrase: phrase?.split(' ')?.length,
-    wallet,
-  })
+  // console.log('init', {
+  //   phrase: phrase?.split(' ')?.length,
+  //   wallet,
+  // })
 
   updateAllFunds(wallet)
     .then(funds => {
-      console.log('updateAllFunds', funds)
+      // console.log('updateAllFunds', funds)
 
       dashBalance?.restate({
         wallet,

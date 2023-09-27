@@ -22,7 +22,7 @@ export async function loadWallets() {
   return await store.wallets.iterate((
     value, key, iterationNumber
   ) => {
-    console.log('main iteration', iterationNumber, [key, value]);
+    // console.log('main iteration', iterationNumber, [key, value]);
 
     result[key] = value
 
@@ -32,7 +32,7 @@ export async function loadWallets() {
   })
 }
 
-export async function loadAlias(alias) {
+export async function loadWalletsForAlias(alias) {
   let $alias = await store.aliases.getItem(alias)
 
   if ($alias !== null) {

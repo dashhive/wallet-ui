@@ -1,5 +1,4 @@
 import { lit as html } from '../helpers/lit.js'
-// import { formDataEntries } from '../helpers/utils.js'
 
 const initialState = {
   id: 'Input',
@@ -144,10 +143,6 @@ export function setupInputAmount(
       // fieldset.name = `${state.slugs.fieldset}`
       fieldset.innerHTML = state.content(state)
 
-      console.log('AMOUNT RENDER STATE', state, renderState)
-
-      console.log('AMOUNT RENDER', position, state.slugs.fieldset)
-
       return fieldset.outerHTML
     },
     render: (
@@ -174,10 +169,6 @@ export function setupInputAmount(
       fieldset.id = state.slugs.fieldset
       // fieldset.name = `${state.slugs.fieldset}`
       fieldset.innerHTML = state.content(state)
-
-      console.log('AMOUNT RENDER STATE', state, renderState)
-
-      console.log('AMOUNT RENDER', position, state.slugs.fieldset)
 
       if (!state.rendered) {
         el.insertAdjacentElement(position, fieldset)
