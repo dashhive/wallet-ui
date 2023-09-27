@@ -1,24 +1,20 @@
 import { lit as html } from './helpers/lit.js'
 
 import {
-  // checkWalletFunds,
   deriveWalletData,
   formDataEntries,
-  phraseToEl,
   setClipboard,
+  phraseToEl,
   envoy,
-  // getAddr,
 } from './helpers/utils.js'
 
 import {
-  store,
   batchAddressGenerate,
+  updateAllFunds,
   decryptWallet,
   initWallet,
-  // loadWallets,
   loadAlias,
-  checkWalletFunds,
-  updateAllFunds,
+  store,
 } from './helpers/wallet.js'
 
 import setupNav from './components/nav.js'
@@ -27,32 +23,37 @@ import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 import setupInputAmount from './components/input-amount.js'
 
-let selected_wallet
-let selected_alias
-let phrase
-let wallet
-let wallets
-let encryptionPassword
-
-let phraseRegex = new RegExp(
+// form validation
+const phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
 )
-let aliasRegex = new RegExp(
+const aliasRegex = new RegExp(
   /^[a-zA-Z0-9]{1,}$/
 )
 
+// data/state
+let encryptionPassword
+let selected_wallet
+let selected_alias
+let wallets
+let wallet
+let phrase
+
+// element
 let bodyNav
 let dashBalance
-
 let mainApp = document.querySelector('main#app')
 
-
+// init components
 let mainFtr = await setupMainFooter(
   mainApp,
   {}
 )
-
 let svgSprite = await setupSVGSprite(
+  mainApp,
+  {}
+)
+let inputAmount = setupInputAmount(
   mainApp,
   {}
 )
@@ -100,7 +101,6 @@ let walletEncrypt = setupDialog(
           />
           <label title="Show/Hide Password">
             <input name="show_pass" type="checkbox" />
-            <!-- <i class="icon-eye-closed"></i> -->
             <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
               <use xlink:href="#icon-eye-open"></use>
             </svg>
@@ -136,12 +136,6 @@ let walletEncrypt = setupDialog(
         reject = res=>{},
       ) => async event => {
         event.preventDefault()
-        // state.elements.dialog?.removeEventListener(
-        //   'close',
-        //   state.events.handleClose
-        // )
-        // @ts-ignore
-        // event?.target?.remove()
         console.log(
           'handle dialog close',
           event,
@@ -150,12 +144,8 @@ let walletEncrypt = setupDialog(
         )
 
         if (state.elements.dialog.returnValue !== 'cancel') {
-          // handle submit
-          // state.elements.dialog.close('submit')
           resolve(state.elements.dialog.returnValue)
         } else {
-          // handle cancel
-          // state.elements.dialog.close('cancel')
           reject()
         }
         console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
@@ -183,11 +173,7 @@ let walletEncrypt = setupDialog(
           return;
         }
 
-        // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
-
         let initialized
-        // let wallet = await deriveWalletData()
-        // let { wallet } = state
         wallet = state.wallet
 
         console.log(
@@ -216,11 +202,6 @@ let walletEncrypt = setupDialog(
           )
           wallets = initialized.wallets
         }
-        // selected_wallet = wallet.id
-        // selected_alias = `${fde.alias}`
-
-        // localStorage.selected_wallet = selected_wallet
-        // localStorage.selected_alias = selected_alias
 
         console.log('ENCRYPT wallet!', wallet, selected_alias)
 
@@ -235,14 +216,6 @@ let walletEncrypt = setupDialog(
 
         onboard.close()
         walletEncrypt.close()
-
-        // if (fde?.intent === 'generate') {
-        //   walletGen.render()
-        //   walletGen.showModal()
-        // } else if (fde?.intent === 'import') {
-        //   walletImp.render()
-        //   walletImp.showModal()
-        // }
 
         console.log(
           'ENCRYPT OVERRIDE DIALOG!',
@@ -311,12 +284,6 @@ let walletBak = setupDialog(
     `,
     fields: html``,
     events: {
-      // handleClose: state => async event => {
-      //   event.preventDefault()
-      //   event.stopPropagation()
-      //   console.log('BACKUP CLOSE OVERRIDE!', state, event)
-      //   // walletBak.close()
-      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -407,13 +374,6 @@ let walletGen = setupDialog(
     `,
     fields: html``,
     events: {
-      handleClose: state => async event => {
-        event.preventDefault()
-        event.stopPropagation()
-        console.log('GENERATE CLOSE OVERRIDE!', state, event)
-        // walletGen.render()
-        // walletGen.showModal()
-      },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -429,36 +389,16 @@ let walletGen = setupDialog(
           return;
         }
 
-        // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
-
-        // let initialized
         wallet = await deriveWalletData()
 
         phrase = wallet.recoveryPhrase
         selected_wallet = wallet.id
         selected_alias = `${fde.alias}`
 
-        // ENCRYPT FIRST
-        // if (!wallets?.[selected_alias]) {
-        //   initialized = await initWallet(wallet, 0, 0, {
-        //     preferred_username: selected_alias,
-        //   })
-        //   wallets = initialized.wallets
-        // }
-
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
 
         console.log('GENERATE wallet!', wallet)
-
-        // bodyNav?.render({
-        //   data: {
-        //     alias: selected_alias
-        //   },
-        // })
-        // dashBalance?.render({
-        //   wallet,
-        // })
 
         walletBak.render(
           {
@@ -469,14 +409,6 @@ let walletGen = setupDialog(
         walletBak.showModal()
 
         walletGen.close()
-
-        // if (fde?.intent === 'generate') {
-        //   walletGen.render()
-        //   walletGen.showModal()
-        // } else if (fde?.intent === 'import') {
-        //   walletImp.render()
-        //   walletImp.showModal()
-        // }
 
         console.log(
           'GENERATE OVERRIDE DIALOG!',
@@ -529,7 +461,6 @@ let walletImp = setupDialog(
           />
           <label title="Show/Hide Phrase">
             <input name="show_pass" type="checkbox" />
-            <!-- <i class="icon-eye-closed"></i> -->
             <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
               <use xlink:href="#icon-eye-open"></use>
             </svg>
@@ -569,12 +500,6 @@ let walletImp = setupDialog(
     `,
     fields: html``,
     events: {
-      // handleClose: state => async event => {
-      //   event.preventDefault()
-      //   event.stopPropagation()
-      //   console.log('IMPORT CLOSE OVERRIDE!', state, event)
-      //   walletImp.close()
-      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -601,33 +526,15 @@ let walletImp = setupDialog(
 
         phrase = `${fde.pass}`
 
-        // let initialized
         wallet = await deriveWalletData(phrase)
 
         selected_alias = `${fde.alias}`
         selected_wallet = wallet.id
 
-        // ENCRYPT FIRST
-        // if (!wallets?.[selected_alias]) {
-        //   initialized = await initWallet(wallet, 0, 0, {
-        //     preferred_username: selected_alias,
-        //   })
-        //   wallets = initialized.wallets
-        // }
-
         localStorage.selected_wallet = selected_wallet
         localStorage.selected_alias = selected_alias
 
         console.log('IMPORT wallet!', wallet)
-
-        // bodyNav.render({
-        //   data: {
-        //     alias: selected_alias
-        //   },
-        // })
-        // dashBalance.render({
-        //   wallet,
-        // })
 
         walletImp.close()
 
@@ -653,17 +560,7 @@ let onboard = setupDialog(
   {
     name: 'Onboarding Flow',
     placement: 'fullscreen',
-    // elements: {
-    //   dialog: document.querySelector('dialog'),
-    // },
     events: {
-      // handleClose: state => async event => {
-      //   event.preventDefault()
-      //   event.stopPropagation()
-      //   console.log('ONBOARDING CLOSE OVERRIDE!', state, event)
-      //   // walletGen.render()
-      //   // walletGen.showModal()
-      // },
       handleSubmit: state => async event => {
         event.preventDefault()
         event.stopPropagation()
@@ -678,8 +575,6 @@ let onboard = setupDialog(
           walletImp.render()
           walletImp.showModal()
         }
-
-        // onboard.close()
 
         console.log(
           'ONBOARDING OVERRIDE DIALOG!',
@@ -738,21 +633,6 @@ let onboard = setupDialog(
         </article>
       </section>
     `
-  }
-)
-
-let inputAmount = setupInputAmount(
-  mainApp,
-  {
-    // name: 'Send or Request',
-    // sendTxt: 'Send',
-    // sendAlt: 'Send Dash',
-    // requestTxt: 'Request',
-    // requestAlt: 'Request Dash',
-    // cancelTxt: 'Cancel',
-    // cancelAlt: `Cancel Form`,
-    // closeTxt: html`<i class="icon-x"></i>`,
-    // closeAlt: `Close`,
   }
 )
 
@@ -870,12 +750,14 @@ let sendOrRequest = setupDialog(
 
 
 
-
-
 async function main() {
-  encryptionPassword = window.atob(sessionStorage.encryptionPassword || '')
+  encryptionPassword = window.atob(
+    sessionStorage.encryptionPassword || ''
+  )
   selected_wallet = localStorage?.selected_wallet || ''
   selected_alias = localStorage?.selected_alias || ''
+
+  svgSprite.render()
 
   bodyNav = await setupNav(
     mainApp,
@@ -886,22 +768,20 @@ async function main() {
     }
   )
 
+  let alias = await loadAlias(selected_alias)
+  wallets = alias?.$wallets
+
   console.log(
     'selected wallets & alias',
     selected_wallet,
     selected_alias,
   )
 
-  let alias = await loadAlias(selected_alias)
-  wallets = alias?.$wallets
-
   console.log(
     'main load wallets & alias',
     // wallets,
     alias,
   )
-
-  svgSprite.render()
 
   document.addEventListener('submit', async event => {
     let {
@@ -913,15 +793,14 @@ async function main() {
       event.preventDefault()
       event.stopPropagation()
 
-      let fde = formDataEntries(event)
+      // let fde = formDataEntries(event)
 
-      console.log(
-        'global form submit',
-        formName,
-        form,
-        fde,
-        // parentElement,
-      )
+      // console.log(
+      //   'global form submit',
+      //   formName,
+      //   form,
+      //   fde,
+      // )
 
       sendOrRequest.render()
       sendOrRequest.showModal()
@@ -930,19 +809,13 @@ async function main() {
   document.addEventListener('change', async event => {
     let {
       // @ts-ignore
-      name: fieldName,
-    // @ts-ignore
-      parentElement,
-      // @ts-ignore
-      form,
+      name: fieldName, parentElement, form,
     } = event?.target
-    // let output
 
-    console.log('form change',
-    {
-      fieldName,
-      form,
-    })
+    // console.log('form change', {
+    //   fieldName,
+    //   form,
+    // })
 
     if (
       fieldName === 'show_pass'
@@ -967,17 +840,18 @@ async function main() {
   let ks_salt = wallets?.[selected_wallet]
     ?.keystore?.crypto?.kdfparams?.salt || ''
 
-  try {
-    if (encryptionPassword) {
+  if (encryptionPassword) {
+    try {
       phrase = await decryptWallet(
         encryptionPassword,
         ks_iv,
         ks_salt,
         ks_phrase
       )
+    } catch(err) {
+      console.error('[fail] decrypting recovery phrase', err)
+      sessionStorage.removeItem('encryptionPassword')
     }
-  } catch(err) {
-    console.error('[fail] decrypting recovery phrase', err)
   }
 
   if (
@@ -999,6 +873,7 @@ async function main() {
             event.stopPropagation()
             console.log('DECRYPT OVERRIDE!', state, event)
 
+            let decryptedRecoveryPhrase
             let fde = formDataEntries(event)
 
             if (!fde.pass) {
@@ -1008,7 +883,6 @@ async function main() {
               event.target.reportValidity()
               return;
             }
-            let decryptedRecoveryPhrase
 
             try {
               decryptedRecoveryPhrase = await decryptWallet(
@@ -1026,17 +900,6 @@ async function main() {
               return;
             }
 
-            console.log(
-              'phrase && ks_iv && ks_salt',
-              {
-                ks_phrase,
-                ks_iv,
-                ks_salt,
-                decryptedRecoveryPhrase,
-                fde,
-              }
-            )
-
             phrase = decryptedRecoveryPhrase
             encryptionPassword = fde.pass
 
@@ -1044,49 +907,7 @@ async function main() {
               sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
             }
 
-            // let wallet = { recoveryPhrase: 'aaaa bbbb cccc dddd eeee ffff gggg hhhh iiii jjjj kkkk llll' }
-
-            // let initialized
-            // let wallet = await deriveWalletData()
-            // let { wallet } = state
-            // let wallet = state.wallet
-
-            // phrase = wallet.recoveryPhrase
-
-            // if (!wallets?.[selected_alias]) {
-            //   initialized = await initWallet(
-            //     fde.pass,
-            //     wallet,
-            //     0,
-            //     0,
-            //     {
-            //       preferred_username: selected_alias,
-            //     }
-            //   )
-            //   wallets = initialized.wallets
-            // }
-
-            // localStorage.selected_wallet = selected_wallet
-            // localStorage.selected_alias = selected_alias
-
-            // console.log('DECRYPT wallet!', wallet)
-
-            // bodyNav.render({
-            //   data: {
-            //     alias: selected_alias
-            //   },
-            // })
-            // dashBalance.render({
-            //   wallet,
-            // })
-
-            // onboard.close()
             walletEncrypt.close()
-
-            console.log(
-              'DECRYPT OVERRIDE DIALOG!',
-              [fde]
-            )
           },
         }
       },
@@ -1097,28 +918,20 @@ async function main() {
     onboard.render()
   }
 
-  console.log(
-    'DECRYPTION DONE',
-    {
-      phrase,
-      encryptionPassword,
-    }
-  )
-
   let walletFunds = envoy(
     {
       balance: 0
     },
     (state, oldState) => {
       if (state.balance !== oldState.balance) {
-        console.warn(
-          'addrFunds change',
-          {
-            state,
-            oldState,
-            walletFunds: state.balance
-          }
-        )
+        // console.warn(
+        //   'addrFunds change',
+        //   {
+        //     state,
+        //     oldState,
+        //     walletFunds: state.balance
+        //   }
+        // )
         dashBalance?.restate({
           wallet,
           walletFunds: {
@@ -1137,8 +950,6 @@ async function main() {
     if (store.addresses.length() === 0) {
       let accountIndex = wallets?.[selected_wallet]
         ?.accountIndex || 0
-      // let addressIndex = wallets?.[selected_wallet]
-      //   ?.addressIndex || 0
       let addressIndex = 0
       let acctBatch = accountIndex + 5
       let accts = {}
@@ -1153,54 +964,6 @@ async function main() {
         )
       }
     }
-
-    // let addrFunds = {}
-    // let addrFunds = envoy(
-    //   {
-    //   },
-    //   // (state, oldState) => {
-    //   //   walletFunds.balance = Object.values(state).reduce(
-    //   //     (p,c) => {
-    //   //       // console.log('stateReduce', p, c)
-    //   //       return (p || 0) + (c?.insight?.balance || 0)
-    //   //     },
-    //   //     0
-    //   //   )
-    //   //   console.warn(
-    //   //     'addrFunds change',
-    //   //     {
-    //   //       state,
-    //   //       oldState,
-    //   //       walletFunds,
-    //   //     }
-    //   //   )
-    //   // }
-    // )
-
-    // for (let ac in accts) {
-    //   for (let a of accts[ac].addresses) {
-    //     checkWalletFunds(a, wallet)
-    //       .then(async (output) => {
-    //         addrFunds[a.address] = output
-    //         walletFunds.balance = (
-    //           walletFunds.balance +
-    //           (output?.insight?.balance || 0)
-    //         )
-    //       })
-    //   }
-    // }
-
-    // console.log(
-    //   'onload batch addr gen funds',
-    //   accts,
-    //   addrFunds,
-    // )
-
-    // if (!wallets?.[selected_wallet]) {
-    //   await initWallet(wallet, 0, 0, {
-    //     preferred_username: selected_alias,
-    //   })
-    // }
   }
 
   bodyNav.render({

@@ -1,6 +1,6 @@
 import { lit as html } from '../helpers/lit.js'
 import { fixedDash, envoy, } from '../helpers/utils.js'
-import { getTotalFunds, } from '../helpers/wallet.js'
+import { updateAllFunds, } from '../helpers/wallet.js'
 
 const initialState = {
   id: 'Balance',
@@ -32,7 +32,7 @@ const initialState = {
       funds += state.walletFunds.balance
       balance = fixedDash(funds, state.fract)
 
-      console.log('balance fixedDash', balance, balance.length)
+      // console.log('balance fixedDash', balance, balance.length)
 
       let [fundsInt,fundsFract] = balance.split('.')
       state.maxlen -= fundsInt.length
@@ -45,8 +45,6 @@ const initialState = {
         fundsFraction.length,
         Math.max(0, state.maxlen)
       )
-
-      // console.log('balance funds', {fundsInt, fundsFraction, fundsRemainder})
 
       balance = html`${
         fundsInt
@@ -90,6 +88,17 @@ const initialState = {
         event,
         event.target === state.elements.balance
       )
+
+      if (state?.wallet) {
+        updateAllFunds(state?.wallet)
+          .then(balance => {
+            console.log(
+              'Update Balance',
+              balance,
+            )
+            state.walletFunds = { balance }
+          })
+      }
     },
     handleBalance: (newState, oldState) => {
       if (
@@ -100,7 +109,7 @@ const initialState = {
           'handle balance proxy change',
           {newState, oldState}
         )
-        // newState.render()
+
         newState.elements.figure.innerHTML = newState.content(newState)
       }
     }
@@ -131,7 +140,8 @@ export async function setupBalance(
     _state.events.handleBalance,
   )
 
-  state.slugs.figure = `${state.name}_${state.id}`.toLowerCase().replace(' ', '_')
+  state.slugs.figure = `${state.name}_${state.id}`
+    .toLowerCase().replace(' ', '_')
 
   const figure = document.createElement('figure')
 
@@ -140,8 +150,6 @@ export async function setupBalance(
   figure.id = state.slugs.figure
   figure.classList.add(state.placement || '')
   figure.innerHTML = state.content(state)
-
-  // console.log('state?.wallet', state?.wallet)
 
   figure.addEventListener(
     'click',
@@ -161,30 +169,12 @@ export async function setupBalance(
     figure.id = state.slugs.figure
     figure.innerHTML = state.content(state)
 
-    // if (state?.walletFunds) {}
-    // if (state?.wallet) {
-    //   getTotalFunds(state?.wallet)
-    //     .then(balance => {
-    //       console.log(
-    //         'BALANCE getTotalFunds',
-    //         state,
-    //         renderState,
-    //         balance,
-    //       )
-    //       state.walletFunds = { balance }
-    //       figure.innerHTML = state.content(state)
-    //     })
-    // }
-
-    console.log('BALANCE RENDER STATE', state, renderState)
-
-    console.log('BALANCE RENDER', position, state.slugs.figure)
-
     if (!state.rendered) {
       el.insertAdjacentElement(position, figure)
       state.rendered = figure
     }
   }
+
   state.render = render
 
   function restate (
@@ -192,17 +182,10 @@ export async function setupBalance(
   ) {
     Object.keys(renderState).forEach(
       prop => {
-        console.log(
-          'render update state',
-          prop,
-          state[prop],
-          renderState[prop],
-        )
         state[prop] = renderState[prop]
       }
     )
   }
-  state.restate = restate
 
   return {
     element: figure,
