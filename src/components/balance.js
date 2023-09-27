@@ -18,9 +18,7 @@ const initialState = {
     renderState = {},
     position = 'afterbegin',
   ) {},
-  restate(
-    renderState = {},
-  ) {},
+  restate(renderState = {}) {},
   header: state => html`
     <figcaption>${state.name} ${state.id}</figcaption>
   `,
