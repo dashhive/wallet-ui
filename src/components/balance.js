@@ -74,18 +74,18 @@ const initialState = {
   events: {
     handleChange: state => event => {
       event.preventDefault()
-      console.log(
-        'handle balance change',
-        [event.target],
-      )
+      // console.log(
+      //   'handle balance change',
+      //   [event.target],
+      // )
     },
     handleClick: state => event => {
       event.preventDefault()
-      console.log(
-        'handle balance click',
-        event,
-        event.target === state.elements.balance
-      )
+      // console.log(
+      //   'handle balance click',
+      //   event,
+      //   event.target === state.elements.balance
+      // )
 
       if (state?.wallet) {
         updateAllFunds(state?.wallet)
@@ -103,10 +103,10 @@ const initialState = {
         newState?.walletFunds?.balance !==
         oldState?.walletFunds?.balance
       ) {
-        console.log(
-          'handle balance proxy change',
-          {newState, oldState}
-        )
+        // console.log(
+        //   'handle balance update',
+        //   {newState, oldState}
+        // )
 
         newState.elements.figure.innerHTML = newState.content(newState)
       }
