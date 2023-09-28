@@ -19,6 +19,8 @@ import {
 
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
+import setupSendRequestBtns from './components/send-request-btns.js'
+import setupContactsList from './components/contacts-list.js'
 import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 import setupInputAmount from './components/input-amount.js'
@@ -46,6 +48,14 @@ let mainApp = document.querySelector('main#app')
 
 // init components
 let mainFtr = await setupMainFooter(
+  mainApp,
+  {}
+)
+let sendRequestBtn = await setupSendRequestBtns(
+  mainApp,
+  {}
+)
+let contactsList = await setupContactsList(
   mainApp,
   {}
 )
@@ -795,7 +805,10 @@ async function main() {
         ks_phrase
       )
     } catch(err) {
-      console.error('[fail] unable to decrypt recovery phrase', err)
+      console.error(
+        '[fail] unable to decrypt recovery phrase',
+        err
+      )
       sessionStorage.removeItem('encryptionPassword')
     }
   }
@@ -903,8 +916,6 @@ async function main() {
           wallet,
           accountIndex,
           addressIndex,
-          0,
-          20
         )
       }
     }
@@ -916,39 +927,12 @@ async function main() {
     },
   })
   mainFtr.render()
+  contactsList.render({
+    contacts: [
+    ]
+  })
+  sendRequestBtn.render()
 
-  mainApp.insertAdjacentHTML('afterbegin', html`
-    <form name="send_or_request" class="inline row">
-      <button
-        class="rounded outline"
-        type="submit"
-        name="intent"
-        value="send"
-        title="Send"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <use xlink:href="#icon-arrow-circle-up"></use>
-        </svg>
-        <span>
-          Send
-        </span>
-      </button>
-      <button
-        class="rounded outline"
-        type="submit"
-        name="intent"
-        value="request"
-        title="Request"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24">
-          <use xlink:href="#icon-arrow-circle-down"></use>
-        </svg>
-        <span>
-          Request
-        </span>
-      </button>
-    </form>
-  `)
   mainApp.insertAdjacentHTML('afterbegin', html`
     <header></header>
   `)

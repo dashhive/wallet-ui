@@ -387,3 +387,42 @@ th {
   padding: 0.25rem 0.75rem;
   border-radius: 6.25rem;
 }
+
+.contacts > div {
+  background-color: var(--nav-bg);
+}
+.contacts > div > article {
+  /* border-bottom: 0 solid transparent;
+  border-bottom-color: var(--bgc);
+  border-top: 1px solid var(--dark-800); */
+  border-bottom: 3px solid var(--bgc);
+}
+/* .contacts > div > article:last-child {
+  border-bottom: 0 solid transparent;
+} */
+
+.contacts > div > article .avatar {
+  background-color: var(--dark-500);
+  color: var(--dark-100);
+  text-transform: uppercase;
+}
+
+/* custom scrollbar */
+::-webkit-scrollbar {
+  width: 20px;
+}
+
+::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--dark-200);
+  border-radius: 20px;
+  border: 6px solid transparent;
+  background-clip: content-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: var(--dark-100);
+}

@@ -7,6 +7,7 @@
 @import url(./styles/dialog.css);
 @import url(./styles/form.css);
 @import url(./styles/nav.css);
+@import url(./styles/components.css);
 
 * { box-sizing: border-box; }
 
@@ -20,7 +21,10 @@ main {
   padding: 0;
   width: 100%;
   max-width: 40rem;
+  display: flex;
+  flex-direction: column;
   justify-self: center;
+  gap: 3rem;
 }
 
 main h1 { text-align: center; }
@@ -173,7 +177,7 @@ figure h4 {
   padding-bottom: 1rem;
 }
 
-main > header + form,
+/* main > header + form,
 main > header + section {
   display: flex;
   justify-content: space-between;
@@ -181,18 +185,21 @@ main > header + section {
   font-size: 1.25rem;
   overflow: hidden;
   column-gap: 0.5rem;
-}
+} */
 main > header + form button,
 main > header + section button {
   flex: 1 1 50%;
 }
 
 @media (min-width: 650px) {
+  main header {
+    padding: 0;
+  }
   main section {
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-top: 1rem;
+    /* margin-top: 1rem; */
   }
   main section > header {
     flex: 1 1 auto;

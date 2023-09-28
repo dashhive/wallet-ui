@@ -310,17 +310,46 @@ export function setClipboard(event) {
   );
 }
 
-export function envoy(obj, ...listeners) {
+export function envoy(obj, ...initListeners) {
+  let _listeners = [...initListeners]
   return new Proxy(obj, {
+    get(obj, prop, receiver) {
+      if (prop === '_listeners') {
+        return _listeners
+      }
+      return Reflect.get(obj, prop, receiver)
+    },
     set(obj, prop, value) {
-      listeners.forEach(
+      if (
+        prop === '_listeners' &&
+        Array.isArray(value)
+      ) {
+        _listeners = value
+      }
+
+      _listeners.forEach(
         fn => fn(
           {...obj, [prop]: value},
           obj
         )
-      );
-      obj[prop] = value;
-      return true;
+      )
+
+      obj[prop] = value
+
+      return true
     }
   })
+}
+
+export function restate(
+  state = {},
+  renderState = {},
+) {
+  Object.keys(renderState).forEach(
+    prop => {
+      state[prop] = renderState[prop]
+    }
+  )
+
+  return state
 }

@@ -54,7 +54,10 @@ export async function initProfileWallets(
 
   let initProfile = {
     preferred_username: '',
-    name: '',
+    name: '', // [given_name,middle_name,family_name].join(' ')
+    // given_name: '',
+    // family_name: '',
+    // middle_name: '',
     nickname: '',
     website: '',
     phone_number: '',
@@ -140,10 +143,15 @@ export async function initWallet(
     )
   }
 
-  const cw = Cryptic.encryptString(encryptionPassword, STOREAGE_SALT);
-  const iv = Cryptic.bufferToHex(cw.getInitVector());
+  const cw = Cryptic.encryptString(
+    encryptionPassword,
+    STOREAGE_SALT
+  );
+  const iv = Cryptic.bufferToHex(
+    cw.getInitVector()
+  );
 
-  const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
+  // const derivedKey = await cw.deriveKey(recoveryPhrase, iv);
   const encryptedPhrase = await cw.encrypt(recoveryPhrase, iv);
 
   // console.log('initWallet Cryptic derived key', {
@@ -151,7 +159,8 @@ export async function initWallet(
   //   encryptedPhrase,
   // })
 
-  let storeWallet = await store.wallets.setItem(
+  // let storeWallet = await
+  store.wallets.setItem(
     `${id}`,
     {
       id,
@@ -182,7 +191,8 @@ export async function initWallet(
     }
   )
 
-  let storedAlias = await store.aliases.setItem(
+  // let storedAlias = await
+  store.aliases.setItem(
     `${alias}`,
     {
       wallets,

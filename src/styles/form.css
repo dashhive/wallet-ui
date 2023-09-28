@@ -1,11 +1,10 @@
-
 main form {
   display: flex;
-  flex-direction: column;
-  margin: 0 auto 1rem;
   gap: .5rem;
-  justify-content: center;
-  flex: 1 1 auto;
+  padding: 0 2rem;
+  /* flex-direction: column; */
+  /* margin: 0 auto;
+  justify-content: center; */
 }
 
 form fieldset {
@@ -189,7 +188,7 @@ button {
   background-color: var(--brand-blue);
   border: 0 solid transparent;
   color: var(--fc);
-  padding: 0.8rem 1.2rem;
+  padding: 0.63rem 1rem;
   font-size: 1.1em;
   font-weight: 500;
   font-family: inherit;
@@ -434,6 +433,9 @@ form[name="network"] {
 
 
 @media (min-width: 650px) {
+  main form {
+    padding: 0;
+  }
   section > header > form {
     justify-content: end;
     align-self: center;

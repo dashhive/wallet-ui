@@ -9,7 +9,8 @@ body {
 }
 
 .nt {
-  grid-template-rows: minmax(0,var(--nav-bound)) auto;
+  /* grid-template-rows: minmax(0,var(--nav-bound)) auto; */
+  grid-template-rows: var(--nav-bound) auto;
   grid-template-areas:
     "nav"
     "main";
@@ -23,7 +24,7 @@ body {
 main {
   position: relative;
   grid-area: main;
-  overflow: auto;
+  /* overflow: auto; */
 }
 
 nav {
