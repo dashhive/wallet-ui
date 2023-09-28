@@ -5,13 +5,13 @@
    - [ ] Contacts
  - [x] On Load
    - [x] Wallets from new structure
-   - [ ] Update & cache balances
+   - [x] Update & cache balances
  - [ ] UI Components
    - [x] Wallet balance from DashSight.js
-   - [ ] Buttons
+   - [x] Buttons
      - [x] Send
      - [x] Request
-     - [ ] New Contact
+     - [x] New Contact
    - [ ] Dialogs
      - [x] Send
      - [x] Request
@@ -25,9 +25,10 @@
      - symbol=DASH${symbol}
    - [ ] Styled Drop Down List
    - [ ] Type Ahead Input Field
-   - [ ] Contacts List
-     - [ ] Contact Item
-       - [ ] Avatar
-       - [ ] Alias
+   - [x] Contacts List
+     - [x] Contact Item
+       - [x] Avatar
+       - [x] Alias
        - [ ] Send Btn
        - [ ] Request Btn
+     - [ ] Connect to Dialogs on Click
