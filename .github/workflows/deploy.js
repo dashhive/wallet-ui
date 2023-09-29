@@ -8,12 +8,12 @@ import { copyFile, readdir, mkdir } from 'node:fs/promises';
 import { basename } from 'node:path';
 
 try {
-  const files = await readdir('./pages');
+  const files = await readdir('./');
   for (const file of files) {
     if (file.endsWith('.html')) {
       const name = basename(file, '.html');
       await mkdir(`./${name}`, { recursive: true });
-      await copyFile(`./pages/${file}`, `./${name}/index.html`);
+      await copyFile(`./${file}`, `./${name}/index.html`);
       console.log(file, name, file.endsWith('.html'), name.includes('.html'));
     }
   }
