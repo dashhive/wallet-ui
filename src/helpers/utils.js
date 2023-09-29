@@ -341,15 +341,15 @@ export function envoy(obj, ...initListeners) {
   })
 }
 
-export function restate(
+export async function restate(
   state = {},
   renderState = {},
 ) {
-  Object.keys(renderState).forEach(
-    prop => {
-      state[prop] = renderState[prop]
-    }
-  )
+  let renderKeys = Object.keys(renderState)
+
+  for await (let prop of renderKeys) {
+    state[prop] = renderState[prop]
+  }
 
   return state
 }
