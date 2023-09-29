@@ -18,8 +18,10 @@ function getAvatar(profile) {
   //   ></div>`
   // }
 
-  return profile?.name?.
-    split(' ').map(n => n[0]).join('')
+  return html`<div class="avatar" >${
+    profile?.name?.
+      split(' ').map(n => n[0]).join('')
+  }</div>`
 }
 
 const initialState = {

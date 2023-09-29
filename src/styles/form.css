@@ -102,7 +102,7 @@ form fieldset > div > input[type="password"] + label {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
   padding: 0 1.2rem;
-  transition: color .1s ease-in-out;
+  transition: color var(--ease);
 }
 form fieldset > div > input:not(:focus):not(:placeholder-shown):invalid + label {
   border: 1px solid var(--inpbdi);
@@ -178,8 +178,6 @@ label:has(> input[type=checkbox][name=show_pass]:checked) .open-eye {
   display: flex;
 }
 
-
-
 button {
   display: flex;
   justify-content: center;
@@ -193,7 +191,10 @@ button {
   font-weight: 500;
   font-family: inherit;
   cursor: pointer;
-  transition: border-color 0.25s;
+  /* transition: border-color 0.25s; */
+  transition: color var(--ease),
+    border-color var(--ease),
+    background-color var(--ease);
 }
 
 button.outline {

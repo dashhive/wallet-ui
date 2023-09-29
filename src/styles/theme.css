@@ -75,6 +75,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  --ease: ease-in-out .1s;
 }
 
 * { box-sizing: border-box; }
@@ -396,10 +398,14 @@ th {
   border-bottom-color: var(--bgc);
   border-top: 1px solid var(--dark-800); */
   border-bottom: 3px solid var(--bgc);
+  transition: background-color var(--ease);
 }
 /* .contacts > div > article:last-child {
   border-bottom: 0 solid transparent;
 } */
+.contacts > div > article:hover {
+  background-color: var(--dark-600);
+}
 
 .contacts > div > article .avatar {
   background-color: var(--dark-500);
