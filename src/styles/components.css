@@ -7,6 +7,12 @@
   height: 30rem;
   border-radius: 1rem;
   overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+.contacts > div:has(> span) {
+  justify-content: center;
+  align-items: center;
 }
 .contacts > header {
   flex-direction: row;

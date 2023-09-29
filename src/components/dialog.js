@@ -22,9 +22,9 @@ const initialState = {
   header: state => html`
     <header>
       <strong>${state.name}</strong>
-      <button class="link" type="reset" value="close" title="${state.closeAlt}">
-        <span>${state.closeTxt}</span>
-      </button>
+      ${
+        state.closeTxt && html`<button class="link" type="reset" value="close" title="${state.closeAlt}"><span>${state.closeTxt}</span></button>`
+      }
     </header>
   `,
   content: state => html`
@@ -117,6 +117,7 @@ const initialState = {
       }
 
       setTimeout(t => {
+        state.rendered = null
         event?.target?.remove()
       }, state.delay)
     },

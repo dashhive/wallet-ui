@@ -15,13 +15,13 @@ form fieldset {
   min-width: 200px;
   /* width: 100%; */
   justify-content: left;
-  gap: .5rem;
+  gap: 1.5rem;
   padding: 0;
 }
 form fieldset:disabled {
   opacity: .3;
 }
-form:has(> fieldset > legend) {
+form:has(> fieldset legend) {
   margin-top: 2rem;
 }
 form fieldset:has(> legend) {
@@ -29,7 +29,7 @@ form fieldset:has(> legend) {
   padding: 1rem;
   margin-top: -.65rem;
 }
-form fieldset > legend {
+form fieldset legend {
   font-weight: 400;
   font-size: 1.3rem;
 }
@@ -41,44 +41,44 @@ form fieldset:last-of-type:has(> button) {
   flex-direction: row;
   justify-content: center;
 }
-form fieldset > div[data-prefix]::before {
+form fieldset div[data-prefix]::before {
   content: attr(data-prefix);
   position: absolute;
   display: flex;
   left: 2rem;
   color: var(--dark-500);
 }
-form fieldset > div[data-prefix]:has(> input:focus:not(:placeholder-shown))::before {
+form fieldset div[data-prefix]:has(> input:focus:not(:placeholder-shown))::before {
   color: var(--fc);
 }
-form fieldset > div[data-prefix] > input {
+form fieldset div[data-prefix] > input {
   padding-left: 2rem;
 }
-/* form fieldset > div[data-prefix] > input:focus:placeholder-shown {
+/* form fieldset div[data-prefix] > input:focus:placeholder-shown {
   padding-left: 2rem;
 }
-form fieldset > div[data-prefix] > input:focus:not(:placeholder-shown) {
+form fieldset div[data-prefix] > input:focus:not(:placeholder-shown) {
   padding-left: 2rem;
 } */
-form fieldset > div:has(input),
-form fieldset > div:has(input + button),
-form fieldset > div:has(input + label),
-form fieldset > div:has(label + input) {
+form fieldset div:has(input),
+form fieldset div:has(input + button),
+form fieldset div:has(input + label),
+form fieldset div:has(label + input) {
   /* background-color: var(--c); */
   display: flex;
   flex-direction: row;
   /* border-radius: 6.25rem; */
   align-items: center;
 }
-form fieldset > div > input {
+form fieldset div > input {
   flex: 1 1 auto;
   border-radius: 6.25rem;
   border: 1px solid var(--dark-600);
 }
-form fieldset > div > input:has(+ button),
-form fieldset > div > input:has(+ label),
-form fieldset > div > input[type="text"]:has(+ label),
-form fieldset > div > input[type="password"]:has(+ label) {
+form fieldset div > input:has(+ button),
+form fieldset div > input:has(+ label),
+form fieldset div > input[type="text"]:has(+ label),
+form fieldset div > input[type="password"]:has(+ label) {
   flex: 1 1 auto;
   /* border-top-left-radius: 6.25rem;
   border-bottom-left-radius: 6.25rem; */
@@ -87,10 +87,10 @@ form fieldset > div > input[type="password"]:has(+ label) {
   border: 1px solid var(--dark-600);
   border-right: 0 solid transparent;
 }
-form fieldset > div > input + button,
-form fieldset > div > input + label,
-form fieldset > div > input[type="text"] + label,
-form fieldset > div > input[type="password"] + label {
+form fieldset div > input + button,
+form fieldset div > input + label,
+form fieldset div > input[type="text"] + label,
+form fieldset div > input[type="password"] + label {
   border: 1px solid var(--dark-600);
   border-left: 0 solid transparent;
   flex: 1 1 auto;
@@ -104,14 +104,14 @@ form fieldset > div > input[type="password"] + label {
   padding: 0 1.2rem;
   transition: color var(--ease);
 }
-form fieldset > div > input:not(:focus):not(:placeholder-shown):invalid + label {
+form fieldset div > input:not(:focus):not(:placeholder-shown):invalid + label {
   border: 1px solid var(--inpbdi);
   border-left: 0 solid transparent;
 }
-form fieldset > div > input + button:not(:disabled):hover,
-form fieldset > div > input:not(:disabled) + label:hover,
-form fieldset > div > input[type="text"]:not(:disabled) + label:hover,
-form fieldset > div > input[type="password"]:not(:disabled) + label:hover {
+form fieldset div > input + button:not(:disabled):hover,
+form fieldset div > input:not(:disabled) + label:hover,
+form fieldset div > input[type="text"]:not(:disabled) + label:hover,
+form fieldset div > input[type="password"]:not(:disabled) + label:hover {
   background-color: var(--c);
   color: var(--fc);
 }
@@ -151,7 +151,7 @@ form .field:has(> div > label + input:focus) {
   border: 1px solid var(--dark-200);
 }
 
-/* form fieldset > div > input + button i {
+/* form fieldset div > input + button i {
   fill: currentColor;
   color: var(--fc);
 } */

@@ -272,6 +272,7 @@ a:hover {
 
 svg {
   fill: currentColor;
+  vertical-align: bottom;
 }
 
 svg path {
@@ -392,6 +393,9 @@ th {
 
 .contacts > div {
   background-color: var(--nav-bg);
+}
+.contacts > div > span {
+  color: var(--dark-400);
 }
 .contacts > div > article {
   /* border-bottom: 0 solid transparent;

@@ -12,7 +12,7 @@ import {
   batchAddressGenerate,
   updateAllFunds,
   decryptWallet,
-  initWallet,
+  // initWallet,
   loadWalletsForAlias,
   store,
 } from './helpers/wallet.js'
@@ -25,6 +25,9 @@ import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 import setupInputAmount from './components/input-amount.js'
 
+import walletEncryptRig from './rigs/wallet-encrypt.js'
+import addContactRig from './rigs/add-contact.js'
+
 // form validation
 const phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
@@ -33,18 +36,30 @@ const aliasRegex = new RegExp(
   /^[a-zA-Z0-9]{1,}$/
 )
 
-// data/state
-let encryptionPassword
-let selected_wallet
-let selected_alias
+// app/data state
 let wallets
 let wallet
-let phrase
+let appState = envoy(
+  {
+    phrase: null,
+    encryptionPassword: null,
+    selected_wallet: '',
+    selected_alias: '',
+  },
+  (state, oldState) => {
+    if (state.foo !== oldState.bar) {
+    }
+  }
+)
 
 // element
 let bodyNav
 let dashBalance
 let mainApp = document.querySelector('main#app')
+
+// rigs
+let walletEncrypt
+let addContact
 
 // init components
 let mainFtr = await setupMainFooter(
@@ -57,7 +72,27 @@ let sendRequestBtn = await setupSendRequestBtns(
 )
 let contactsList = await setupContactsList(
   mainApp,
-  {}
+  {
+    events: {
+      handleClick: state => event => {
+        event.preventDefault()
+        // console.warn(
+        //   'handle contacts click',
+        //   event.target,
+        //   state,
+        // )
+        if (event.target?.id === 'add_contact') {
+          addContact.render(
+            {
+              wallet,
+            },
+            'afterend',
+          )
+          addContact.showModal()
+        }
+      },
+    },
+  }
 )
 let svgSprite = await setupSVGSprite(
   mainApp,
@@ -68,186 +103,24 @@ let inputAmount = setupInputAmount(
   {}
 )
 
-let walletEncrypt = setupDialog(
-  mainApp,
-  {
-    name: 'Encrypt Wallet',
-    submitTxt: 'Encrypt',
-    submitAlt: 'Encrypt Wallet',
-    cancelTxt: 'Cancel',
-    cancelAlt: `Cancel Form`,
-    closeTxt: html`<i class="icon-x"></i>`,
-    closeAlt: `Close`,
-    footer: state => html`
-      <footer class="inline col">
-        <sup>Encrypt sensitive wallet data stored in the browser.</sup>
-        <button
-          class="rounded"
-          type="submit"
-          name="intent"
-          value="new_wallet"
-          title="${state.submitAlt}"
-        >
-          <span>${state.submitTxt}</span>
-        </button>
-      </footer>
-    `,
-    content: state => html`
-      ${state.header(state)}
-
-      <fieldset>
-        <label for="encryptionPassword">
-          Encryption Password
-        </label>
-        <div>
-          <input
-            type="password"
-            id="encryptionPassword"
-            name="pass"
-            placeholder="superS3cr3t"
-            minlength="1"
-            required
-            spellcheck="false"
-          />
-          <label title="Show/Hide Password">
-            <input name="show_pass" type="checkbox" />
-            <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
-              <use xlink:href="#icon-eye-open"></use>
-            </svg>
-            <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
-              <use xlink:href="#icon-eye-closed"></use>
-            </svg>
-          </label>
-        </div>
-        <div class="py-3 px-3">
-          <label for="rememberPass" class="jc-left">
-            <sub>
-              Remember password for browser session
-            </sub>
-          </label>
-          <input
-            id="rememberPass"
-            name="remember"
-            type="checkbox"
-          />
-          <label for="rememberPass" class="switch" title="Remember for session"></label>
-        </div>
-
-        <div class="error"></div>
-      </fieldset>
-
-      ${state.footer(state)}
-    `,
-    fields: html``,
-    events: {
-      handleClose: (
-        state,
-        resolve = res=>{},
-        reject = res=>{},
-      ) => async event => {
-        event.preventDefault()
-        // console.log(
-        //   'handle dialog close',
-        //   event,
-        //   event.target === state.elements.dialog,
-        //   state.elements.dialog.returnValue
-        // )
-
-        if (state.elements.dialog.returnValue !== 'cancel') {
-          resolve(state.elements.dialog.returnValue)
-        } else {
-          reject()
-        }
-        // console.log('ENCRYPT CLOSE OVERRIDE!', state, event)
-
-        setTimeout(t => {
-          event?.target?.remove()
-        }, state.delay)
-      },
-      handleSubmit: state => async event => {
-        event.preventDefault()
-        event.stopPropagation()
-
-        event.target.pass.setCustomValidity('')
-        event.target.pass.reportValidity()
-
-        // console.log('ENCRYPT OVERRIDE!', state, event)
-
-        let fde = formDataEntries(event)
-
-        if (!fde.pass) {
-          event.target.pass.setCustomValidity(
-            'An encryption password is required'
-          )
-          event.target.reportValidity()
-          return;
-        }
-
-        let initialized
-        wallet = state.wallet
-
-        // console.log(
-        //   'walletEncrypt state.wallet',
-        //   wallet,
-        //   state,
-        //   fde
-        // )
-
-        phrase = wallet.recoveryPhrase
-        encryptionPassword = fde.pass
-
-        if (fde.remember) {
-          sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
-        }
-
-        if (!wallets?.[selected_alias]) {
-          initialized = await initWallet(
-            fde.pass,
-            wallet,
-            0,
-            0,
-            {
-              preferred_username: selected_alias,
-            }
-          )
-          wallets = initialized.wallets
-        }
-
-        // console.log('ENCRYPT wallet!', wallet, selected_alias)
-
-        bodyNav?.render({
-          data: {
-            alias: selected_alias
-          },
-        })
-        dashBalance?.render({
-          wallet,
-        })
-
-        onboard?.close()
-        walletEncrypt.close()
-      },
-    },
-  }
-)
 
 let walletBak = setupDialog(
   mainApp,
   {
     name: 'New Wallet',
-    submitTxt: 'Done',
-    submitAlt: 'Done',
+    submitTxt: 'I backed up this Recovery Phrase',
+    submitAlt: 'Confirm Recovery Phrase backup',
     cancelTxt: 'Cancel',
     cancelAlt: `Cancel`,
-    closeTxt: html`<i class="icon-x"></i>`,
-    closeAlt: `Close`,
+    closeTxt: html``,
+    closeAlt: ``,
     footer: state => html`
       <footer class="inline col">
         <sub class="ta-left">
           <i class="icon-warning-circle"></i>
           IMPORTANT
         </sub>
-        <sup class="ta-left">Do not lose your recovery phrase. We recommend you write it down or print it out and keep it somewhere safe. THERE ARE NO BACKUPS</sup>
+        <sup class="ta-left">Do not lose this recovery phrase. We recommend you write it down or print it out and keep it somewhere safe. THERE ARE NO OTHER BACKUPS.</sup>
         <button
           class="rounded"
           type="submit"
@@ -263,26 +136,28 @@ let walletBak = setupDialog(
       ${state.header(state)}
 
       <fieldset>
-        <label for="phrase">
-          Recovery Phrase
-        </label>
+        <article>
+          <label for="phrase">
+            Recovery Phrase
+          </label>
 
-        <section>
-          <article>
-            <div
-              class="ta-left"
-              spellcheck="false"
-            >
-              ${phraseToEl(
-                state.wallet?.recoveryPhrase
-              )}
-            </div>
-            <button id="phrase" class="pill rounded copy" title="Copy Recovery Phrase">
-              <i class="icon-copy"></i>
-              Copy
-            </button>
-          </article>
-        </section>
+          <section>
+            <article>
+              <div
+                class="ta-left"
+                spellcheck="false"
+              >
+                ${phraseToEl(
+                  state.wallet?.recoveryPhrase
+                )}
+              </div>
+              <button id="phrase" class="pill rounded copy" title="Copy Recovery Phrase">
+                <i class="icon-copy"></i>
+                Copy
+              </button>
+            </article>
+          </section>
+        </article>
       </fieldset>
 
       ${state.footer(state)}
@@ -297,6 +172,8 @@ let walletBak = setupDialog(
 
         let fde = formDataEntries(event)
 
+        walletBak.close()
+
         walletEncrypt.render(
           {
             wallet,
@@ -304,8 +181,6 @@ let walletBak = setupDialog(
           'afterend',
         )
         await walletEncrypt.showModal()
-
-        walletBak.close()
       },
       handleClick: state => async event => {
         if (
@@ -349,24 +224,26 @@ let walletGen = setupDialog(
       ${state.header(state)}
 
       <fieldset>
-        <label for="${state.slugs.form}_alias">
-          Alias
-        </label>
-        <div
-          data-prefix="@"
-        >
-          <input
-            type="text"
-            id="${state.slugs.form}_alias"
-            name="alias"
-            placeholder="your_alias"
-            pattern="${aliasRegex.source}"
-            required
-            spellcheck="false"
-          />
-        </div>
+        <article>
+          <label for="${state.slugs.form}_alias">
+            Alias
+          </label>
+          <div
+            data-prefix="@"
+          >
+            <input
+              type="text"
+              id="${state.slugs.form}_alias"
+              name="alias"
+              placeholder="your_alias"
+              pattern="${aliasRegex.source}"
+              required
+              spellcheck="false"
+            />
+          </div>
 
-        <div class="error"></div>
+          <div class="error"></div>
+        </article>
       </fieldset>
 
       ${state.footer(state)}
@@ -389,12 +266,12 @@ let walletGen = setupDialog(
 
         wallet = await deriveWalletData()
 
-        phrase = wallet.recoveryPhrase
-        selected_wallet = wallet.id
-        selected_alias = `${fde.alias}`
+        appState.phrase = wallet.recoveryPhrase
+        appState.selected_wallet = wallet.id
+        appState.selected_alias = `${fde.alias}`
 
-        localStorage.selected_wallet = selected_wallet
-        localStorage.selected_alias = selected_alias
+        localStorage.selected_wallet = appState.selected_wallet
+        localStorage.selected_alias = appState.selected_alias
 
         // console.log('GENERATE wallet!', wallet)
 
@@ -439,54 +316,55 @@ let walletImp = setupDialog(
       ${state.header(state)}
 
       <fieldset>
-        <label for="phrase">
-          Recovery Phrase
-        </label>
-        <div>
-          <input
-            type="password"
-            id="phrase"
-            name="pass"
-            placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
-            pattern="${phraseRegex.source}"
-            required
-            spellcheck="false"
-          />
-          <label title="Show/Hide Phrase">
-            <input name="show_pass" type="checkbox" />
-            <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
-              <use xlink:href="#icon-eye-open"></use>
-            </svg>
-            <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
-              <use xlink:href="#icon-eye-closed"></use>
-            </svg>
+        <article>
+          <label for="phrase">
+            Recovery Phrase
           </label>
-        </div>
-        <p>Import an existing wallet by pasting a 12 word recovery phrase.</p>
+          <div>
+            <input
+              type="password"
+              id="phrase"
+              name="pass"
+              placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
+              pattern="${phraseRegex.source}"
+              required
+              spellcheck="false"
+            />
+            <label title="Show/Hide Phrase">
+              <input name="show_pass" type="checkbox" />
+              <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
+                <use xlink:href="#icon-eye-open"></use>
+              </svg>
+              <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
+                <use xlink:href="#icon-eye-closed"></use>
+              </svg>
+            </label>
+          </div>
+          <p>Import an existing wallet by pasting a 12 word recovery phrase.</p>
 
-        <div class="error"></div>
-      </fieldset>
+          <div class="error"></div>
+        </article>
+        <article>
+          <label for="${state.slugs.form}_alias">
+            Alias
+          </label>
+          <div
+            data-prefix="@"
+          >
+            <input
+              type="text"
+              id="${state.slugs.form}_alias"
+              name="alias"
+              placeholder="your_alias"
+              pattern="${aliasRegex.source}"
+              required
+              spellcheck="false"
+            />
+          </div>
+          <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>
 
-      <fieldset>
-        <label for="${state.slugs.form}_alias">
-          Alias
-        </label>
-        <div
-          data-prefix="@"
-        >
-          <input
-            type="text"
-            id="${state.slugs.form}_alias"
-            name="alias"
-            placeholder="your_alias"
-            pattern="${aliasRegex.source}"
-            required
-            spellcheck="false"
-          />
-        </div>
-        <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>
-
-        <div class="error"></div>
+          <div class="error"></div>
+        </article>
       </fieldset>
 
       ${state.footer(state)}
@@ -514,15 +392,15 @@ let walletImp = setupDialog(
           return;
         }
 
-        phrase = `${fde.pass}`
+        appState.phrase = `${fde.pass}`
 
-        wallet = await deriveWalletData(phrase)
+        wallet = await deriveWalletData(appState.phrase)
 
-        selected_alias = `${fde.alias}`
-        selected_wallet = wallet.id
+        appState.selected_alias = `${fde.alias}`
+        appState.selected_wallet = wallet.id
 
-        localStorage.selected_wallet = selected_wallet
-        localStorage.selected_alias = selected_alias
+        localStorage.selected_wallet = appState.selected_wallet
+        localStorage.selected_alias = appState.selected_alias
 
         // console.log('IMPORT wallet!', wallet)
 
@@ -659,22 +537,24 @@ let sendOrRequest = setupDialog(
       ${state.header(state)}
 
       <fieldset>
-        <label for="to">
-          To
-        </label>
-        <div>
-          <input
-            type="text"
-            id="${state.slugs.form}_to"
-            name="to"
-            placeholder="enter @alias or dash address"
-            spellcheck="false"
-          />
-        </div>
+        <article>
+          <label for="to">
+            To
+          </label>
+          <div>
+            <input
+              type="text"
+              id="${state.slugs.form}_to"
+              name="to"
+              placeholder="enter @alias or dash address"
+              spellcheck="false"
+            />
+          </div>
 
-        ${inputAmount.renderAsHTML()}
+          ${inputAmount.renderAsHTML()}
 
-        <div class="error"></div>
+          <div class="error"></div>
+        </article>
       </fieldset>
 
       ${state.footer(state)}
@@ -722,11 +602,23 @@ let sendOrRequest = setupDialog(
 
 
 async function main() {
-  encryptionPassword = window.atob(
+  appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
   )
-  selected_wallet = localStorage?.selected_wallet || ''
-  selected_alias = localStorage?.selected_alias || ''
+  appState.selected_wallet = localStorage?.selected_wallet || ''
+  appState.selected_alias = localStorage?.selected_alias || ''
+
+  walletEncrypt = walletEncryptRig({
+    mainApp, setupDialog, appState,
+    wallet, wallets,
+    bodyNav, dashBalance, onboard,
+  })
+
+  addContact = addContactRig({
+    mainApp, setupDialog, appState,
+    wallet, wallets,
+    bodyNav, dashBalance, onboard,
+  })
 
   svgSprite.render()
 
@@ -734,12 +626,12 @@ async function main() {
     mainApp,
     {
       data: {
-        alias: selected_alias
+        alias: appState.selected_alias
       },
     }
   )
 
-  let aliasWallets = await loadWalletsForAlias(selected_alias)
+  let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
   wallets = aliasWallets?.$wallets
 
   console.log(
@@ -789,17 +681,17 @@ async function main() {
     }
   })
 
-  let ks_phrase = wallets?.[selected_wallet]
+  let ks_phrase = wallets?.[appState.selected_wallet]
     ?.keystore?.crypto?.ciphertext || ''
-  let ks_iv = wallets?.[selected_wallet]
+  let ks_iv = wallets?.[appState.selected_wallet]
     ?.keystore?.crypto?.cipherparams?.iv || ''
-  let ks_salt = wallets?.[selected_wallet]
+  let ks_salt = wallets?.[appState.selected_wallet]
     ?.keystore?.crypto?.kdfparams?.salt || ''
 
-  if (encryptionPassword) {
+  if (appState.encryptionPassword) {
     try {
-      phrase = await decryptWallet(
-        encryptionPassword,
+      appState.phrase = await decryptWallet(
+        appState.encryptionPassword,
         ks_iv,
         ks_salt,
         ks_phrase
@@ -814,7 +706,7 @@ async function main() {
   }
 
   if (
-    !phrase &&
+    !appState.phrase &&
     ks_phrase && ks_iv && ks_salt
   ) {
     sessionStorage.removeItem('encryptionPassword')
@@ -858,11 +750,11 @@ async function main() {
               return;
             }
 
-            phrase = decryptedRecoveryPhrase
-            encryptionPassword = fde.pass
+            appState.phrase = decryptedRecoveryPhrase
+            appState.encryptionPassword = fde.pass
 
             if (fde.remember) {
-              sessionStorage.encryptionPassword = window.btoa(String(encryptionPassword))
+              sessionStorage.encryptionPassword = window.btoa(String(appState.encryptionPassword))
             }
 
             walletEncrypt.close()
@@ -898,14 +790,14 @@ async function main() {
     }
   )
 
-  if (!phrase) {
+  if (!appState.phrase) {
     onboard.render()
     await onboard.show()
   } else {
-    wallet = await deriveWalletData(phrase)
+    wallet = await deriveWalletData(appState.phrase)
 
     if (store.addresses.length() === 0) {
-      let accountIndex = wallets?.[selected_wallet]
+      let accountIndex = wallets?.[appState.selected_wallet]
         ?.accountIndex || 0
       let addressIndex = 0
       let acctBatch = accountIndex + 5
@@ -923,7 +815,7 @@ async function main() {
 
   bodyNav.render({
     data: {
-      alias: selected_alias
+      alias: appState.selected_alias
     },
   })
   mainFtr.render()

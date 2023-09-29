@@ -3,26 +3,23 @@ import { envoy, restate, } from '../helpers/utils.js'
 // import { updateAllFunds, } from '../helpers/wallet.js'
 
 function getAvatar(profile) {
+  let initials = profile?.name?.
+    split(' ').map(n => n[0]).join('') || ''
+  let avStr = `<div class="avatar" style="`
+
   if (profile.picture) {
-    return html`<div
-      class="avatar"
-      style="background-image:url(${profile.picture});"
-    ></div>`
+    avStr += `color:transparent;background-image:url(${profile.picture});`
   }
 
   // Gravatar
   // if (profile.email) {
-  //   return html`<div
-  //     class="avatar"
-  //     style="background-image:url(${profile.email});"
-  //   ></div>`
+  //   avStr += `color:transparent;background-image:url(${profile.email});`
   // }
 
-  return html`<div class="avatar" >${
-    profile?.name?.
-      split(' ').map(n => n[0]).join('')
-  }</div>`
+  return html`${avStr}">${initials}</div>`
 }
+
+let _handlers = []
 
 const initialState = {
   id: 'Contacts',
@@ -42,7 +39,7 @@ const initialState = {
     <header>
       <h6>Contacts (${state.contacts.length})</h6>
       <button
-        id="phrase"
+        id="add_contact"
         class="pill rounded copy"
         title="Add a Contact"
       >
@@ -56,7 +53,12 @@ const initialState = {
 
     <div>
       ${
-        state.contacts.map(c => state.item(c)).join('')
+        state.contacts.length > 0 ?
+        state.contacts.map(c => state.item(c)).join('') : ''
+      }
+      ${
+        state.contacts.length === 0 ?
+        html`<span class="center">No Contacts found</span>` : ''
       }
     </div>
 
@@ -77,13 +79,13 @@ const initialState = {
   elements: {
   },
   events: {
-    handleChange: state => event => {
-      event.preventDefault()
-      // console.log(
-      //   'handle balance change',
-      //   [event.target],
-      // )
-    },
+    // handleChange: state => event => {
+    //   event.preventDefault()
+    //   // console.log(
+    //   //   'handle balance change',
+    //   //   [event.target],
+    //   // )
+    // },
     handleClick: state => event => {
       event.preventDefault()
       console.log(
@@ -133,14 +135,43 @@ export async function setupContactsList(
   section.classList.add(state.placement || '')
   section.innerHTML = state.content(state)
 
-  section.addEventListener(
-    'click',
-    state.events.handleClick(state)
-  )
-  section.addEventListener(
-    'change',
-    state.events.handleChange(state)
-  )
+  function addListener(
+    node,
+    event,
+    handler,
+    capture = false
+  ) {
+    _handlers.push({ node, event, handler, capture })
+    node.addEventListener(event, handler, capture)
+  }
+
+  function addListeners() {
+    // addListener(
+    //   section,
+    //   'close',
+    //   state.events.handleChange(state)
+    // )
+    addListener(
+      section,
+      'click',
+      state.events.handleClick(state),
+    )
+  }
+
+  function removeAllListeners(
+    targets = [section],
+  ) {
+    _handlers = _handlers
+      .filter(({ node, event, handler, capture }) => {
+        if (targets.includes(node)) {
+          node.removeEventListener(event, handler, capture)
+          return false
+        }
+        return true
+      })
+  }
+
+  state.removeAllListeners = removeAllListeners
 
   function render (
     renderState = {},
@@ -150,6 +181,9 @@ export async function setupContactsList(
 
     section.id = state.slugs.section
     section.innerHTML = state.content(state)
+
+    removeAllListeners()
+    addListeners()
 
     if (!state.rendered) {
       el.insertAdjacentElement(position, section)
