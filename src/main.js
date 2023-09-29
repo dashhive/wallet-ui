@@ -819,7 +819,7 @@ async function main() {
     },
   })
   mainFtr.render()
-  contactsList.render({
+  await contactsList.render({
     contacts: [
     ]
   })

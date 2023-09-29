@@ -7,7 +7,7 @@ function getAvatar(profile) {
     split(' ').map(n => n[0]).join('') || ''
   let avStr = `<div class="avatar" style="`
 
-  if (profile.picture) {
+  if (profile?.picture) {
     avStr += `color:transparent;background-image:url(${profile.picture});`
   }
 
@@ -173,11 +173,11 @@ export async function setupContactsList(
 
   state.removeAllListeners = removeAllListeners
 
-  function render (
+  async function render (
     renderState = {},
     position = 'afterbegin',
   ) {
-    restate(state, renderState)
+    await restate(state, renderState)
 
     section.id = state.slugs.section
     section.innerHTML = state.content(state)
