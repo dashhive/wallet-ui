@@ -4,45 +4,75 @@ process.removeAllListeners('warning');
 process.on('SIGTERM', () => process.exit());
 process.on('SIGINT', () => process.exit());
 
-import { readFile, writeFile, readdir, cp, rm, } from 'node:fs/promises';
-import { join, } from 'node:path';
+import {
+  readFile, writeFile, readdir,
+  cp, rm,
+} from 'node:fs/promises';
+import { join, extname, } from 'node:path';
 
 const SRC = 'src/'
 const DIST = './dist/'
 
-const walk = async (dirPath, filterFiles = f => f) => Promise.all(
+const walk = async (
+  dirPath,
+  filterFiles = f => f
+) => Promise.all(
   await readdir(
     dirPath,
     { withFileTypes: true }
   )
-  .then((entries) => entries.filter(filterFiles).map((entry) => {
-    const childPath = join(dirPath, entry.name)
-    return entry.isDirectory() ? walk(childPath) : childPath
-  })),
+  .then(entries => entries.filter(filterFiles)
+    .map((entry) => {
+      const childPath = join(dirPath, entry.name)
+      return entry.isDirectory() ? walk(childPath) : childPath
+    })
+  ),
 )
 
 const fixOrCopy = async (
   sourceFile,
-  targetFile
+  targetFile,
+  exts = ['html'],
+  replacer = {
+    html: [
+      [
+        '<base href="/src/" />',
+        '<base href="/" />'
+      ],
+      [
+        '../node_modules/',
+        'node_modules/'
+      ],
+      [
+        '../public/',
+        'public/'
+      ]
+    ],
+  }
 ) => {
   targetFile = targetFile || join(DIST, sourceFile)
-  if (sourceFile.endsWith('.html')) {
-    console.log('fixOrCopy', sourceFile, targetFile, sourceFile.endsWith('.html'))
+  let ext = extname(sourceFile).substring(1)
+  await cp(sourceFile, targetFile, { recursive: true, });
+
+  if (exts.includes(ext)) {
+    console.log('fixOrCopy', sourceFile, targetFile, ext, replacer[ext])
+
     let data = await readFile(sourceFile, 'utf-8');
 
-    var fixBase = data.replace(
-      '<base href="/src/" />',
-      '<base href="/" />'
-    );
+    for (let rpl of replacer[ext]) {
+      data = data.replaceAll(...rpl);
+    }
 
     await writeFile(
       targetFile,
-      fixBase,
+      data,
       'utf-8'
     );
-  } else {
-    await cp(sourceFile, targetFile, { recursive: true, });
   }
+}
+
+let filterDirs = file => {
+  return !file?.name?.includes('.git') && !file?.name?.includes('dist/')
 }
 
 try {
@@ -50,23 +80,52 @@ try {
 
   let allFiles = await walk(
     './',
-    file => !file?.name?.includes('.git')
-      // && !file?.name?.includes('node_modules/'),
+    filterDirs,
   )
   allFiles = allFiles.flat(Number.POSITIVE_INFINITY)
 
   allFiles.forEach(e => {
-    let fixDir = e?.split(SRC)
+    let fixDir = e?.startsWith(SRC)
+    let splitDir = e?.split(SRC)
 
     // console.log('fixDir', fixDir, dirname(e), basename(e))
 
-    if (fixDir.length > 1) {
-      fixOrCopy(e, join(DIST, fixDir[1]))
-      return fixDir[1]
+    if (fixDir) {
+      fixOrCopy(
+        e,
+        join(DIST, splitDir[1]),
+        ['html','js'],
+        {
+          html: [
+            [
+              '<base href="/src/" />',
+              '<base href="/" />'
+            ],
+            [
+              '../node_modules/',
+              './node_modules/'
+            ],
+            [
+              '../public/',
+              './public/'
+            ],
+          ],
+          js: [
+            [
+              '../node_modules/',
+              './node_modules/'
+            ],
+            [
+              '../public/',
+              './public/'
+            ],
+          ],
+        }
+      )
+      return splitDir[1]
     }
 
     fixOrCopy(e, join(DIST, e))
-
     return e
   })
 
