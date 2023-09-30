@@ -41,11 +41,11 @@ const fixOrCopy = async (
       ],
       [
         '../node_modules/',
-        'node_modules/'
+        '../node_modules/'
       ],
       [
         '../public/',
-        'public/'
+        '../public/'
       ]
     ],
   }
@@ -99,7 +99,7 @@ try {
           html: [
             [
               '<base href="/src/" />',
-              '<base href="/" />'
+              '<base href="/wallet-ui/" />'
             ],
             [
               '../node_modules/',
