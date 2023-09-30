@@ -94,7 +94,7 @@ try {
       fixOrCopy(
         e,
         join(DIST, splitDir[1]),
-        ['html','js'],
+        ['html','js','json'],
         {
           html: [
             [
@@ -115,6 +115,12 @@ try {
               '../node_modules/',
               './node_modules/'
             ],
+            [
+              '../public/',
+              './public/'
+            ],
+          ],
+          json: [
             [
               '../public/',
               './public/'
