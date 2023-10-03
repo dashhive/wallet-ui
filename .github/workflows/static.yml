@@ -35,6 +35,7 @@ jobs:
           RM_FEAT: "feat/"
         run: |
           export BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
+          echo "$BRANCH"
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - name: Deploy via rsync
         uses: bnnanet/github-actions-rsync@master
