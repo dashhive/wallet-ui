@@ -57,7 +57,8 @@ const fixOrCopy = async (
   await cp(sourceFile, targetFile, { recursive: true, });
 
   if (exts.includes(ext)) {
-    console.log('fixOrCopy', sourceFile, targetFile, ext, replacer[ext])
+    console.log('fix', sourceFile, targetFile, ext)
+    // console.log('fixOrCopy replacer', replacer[ext])
 
     let data = await readFile(sourceFile, 'utf-8');
 
