@@ -27,29 +27,19 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run deploy
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+      - env:
+          RM_FEAT: "feat/"
+        run: |
+          export BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
+          echo "::set-env name=BRANCH::$BRANCH"
+      - name: Deploy via rsync
+        uses: bnnanet/github-actions-rsync@master
         with:
-          path: './dist/'
-      - shell: bash
+          RSYNC_OPTIONS: -avzr --delete --exclude node_modules --exclude '.git*'
+          RSYNC_SOURCE: ./dist/
+          RSYNC_TARGET: ~/branch/$BRANCH
         env:
-          SSH_CONFIG: ${{ secrets.SSH_CONFIG }}
-          SSH_IDENTITY: ${{ secrets.SSH_IDENTITY }}
-          SSH_IDENTITY_FILE: ${{ secrets.SSH_IDENTITY_FILE }}
-        run: |
-          mkdir ~/.ssh/
-          touch ~/.ssh/config
-          touch ~/.ssh/known_hosts
-          echo "$SSH_CONFIG" >> ~/.ssh/config
-          echo "$SSH_IDENTITY" >> "$SSH_IDENTITY_FILE"
-          chmod 700 "~/.ssh/"
-          chmod 600 "~/.ssh/known_hosts"
-          chmod 600 "$SSH_IDENTITY_FILE"
-      - name: Adding Known Hosts
-        run: ssh-keyscan -H ${{ secrets.SSH_HOSTNAME }} >> ~/.ssh/known_hosts
-      - name: Deploy with rsync
-        env:
-          RMFEAT: "feat/"
-        run: |
-          BRANCH=${GITHUB_REF_NAME//$RMFEAT/}
-          rsync -avhPz ./dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOSTNAME }}:~/branch/${BRANCH}
+          SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
+          SSH_USERNAME: ${{secrets.SSH_USERNAME}}
+          SSH_HOSTNAME: ${{secrets.SSH_HOSTNAME}}
+          SSH_CONFIG: ${{secrets.SSH_CONFIG}}
