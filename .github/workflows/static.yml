@@ -48,4 +48,4 @@ jobs:
           RMFEAT: "feat/"
         run: |
           BRANCH=${GHREF//$RMFEAT/}
-          rsync -avhPz ./dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOSTNAME }}:~/branches/${BRANCH}
+          rsync -avhPz ./dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOSTNAME }}:~/branch/${BRANCH}
