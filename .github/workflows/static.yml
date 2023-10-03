@@ -27,17 +27,19 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npm run deploy
-      - env:
+      - name: Get clean branch name
+        id: clean_branch
+        env:
           RM_FEAT: "feat/"
         run: |
-          export BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
-          echo "::set-env name=BRANCH::$BRANCH"
+          BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - name: Deploy via rsync
         uses: bnnanet/github-actions-rsync@master
         with:
           RSYNC_OPTIONS: -avzr --delete --exclude node_modules --exclude '.git*'
           RSYNC_SOURCE: ./dist/
-          RSYNC_TARGET: ~/branch/$BRANCH
+          RSYNC_TARGET: ~/branch/${{ steps.clean_branch.outputs.branch }}
         env:
           SSH_PRIVATE_KEY: ${{secrets.SSH_PRIVATE_KEY}}
           SSH_USERNAME: ${{secrets.SSH_USERNAME}}
