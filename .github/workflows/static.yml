@@ -44,8 +44,7 @@ jobs:
         run: ssh-keyscan -H ${{ secrets.SSH_HOSTNAME }} >> ~/.ssh/known_hosts
       - name: Deploy with rsync
         env:
-          GHREF: ${{ GITHUB_REF_NAME }}
           RMFEAT: "feat/"
         run: |
-          BRANCH=${GHREF//$RMFEAT/}
+          BRANCH=${GITHUB_REF_NAME//$RMFEAT/}
           rsync -avhPz ./dist/ ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOSTNAME }}:~/branch/${BRANCH}
