@@ -4,6 +4,8 @@ process.removeAllListeners('warning');
 process.on('SIGTERM', () => process.exit());
 process.on('SIGINT', () => process.exit());
 
+const { BASE_HREF = '' } = process.env
+
 import {
   readFile, writeFile, readdir,
   cp, rm,
@@ -37,7 +39,7 @@ const fixOrCopy = async (
     html: [
       [
         '<base href="/src/" />',
-        '<base href="/wallet-ui/" />'
+        `<base href="/${BASE_HREF}" />`
       ],
       [
         '../node_modules/',
@@ -99,7 +101,7 @@ try {
           html: [
             [
               '<base href="/src/" />',
-              '<base href="/wallet-ui/" />'
+              `<base href="/${BASE_HREF}" />`
             ],
             [
               '../node_modules/',
