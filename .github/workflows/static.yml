@@ -37,9 +37,16 @@ jobs:
           SSH_IDENTITY: ${{ secrets.SSH_IDENTITY }}
           SSH_IDENTITY_FILE: ${{ secrets.SSH_IDENTITY_FILE }}
         run: |
+          mkdir ~/.ssh/
           touch ~/.ssh/config
-          echo $SSH_CONFIG >> ~/.ssh/config
-          echo $SSH_IDENTITY >> $SSH_IDENTITY_FILE
+          touch ~/.ssh/known_hosts
+          echo "$SSH_CONFIG" >> ~/.ssh/config
+          echo "$SSH_IDENTITY" >> "$SSH_IDENTITY_FILE"
+          chmod 700 "~/.ssh/"
+          chmod 600 "~/.ssh/known_hosts"
+          chmod 600 "$SSH_IDENTITY_FILE"
+          eval $(ssh-agent)
+          ssh-add "$SSH_IDENTITY_FILE"
       - name: Adding Known Hosts
         run: ssh-keyscan -H ${{ secrets.SSH_HOSTNAME }} >> ~/.ssh/known_hosts
       - name: Deploy with rsync
