@@ -12,6 +12,8 @@ concurrency:
 
 jobs:
   deploy:
+    # outputs:
+    #   branch: ${{ steps.clean_branch.outputs.branch }}
     environment:
       name: wallet
       url: ${{ vars.WEBSITE }}
@@ -32,7 +34,7 @@ jobs:
         env:
           RM_FEAT: "feat/"
         run: |
-          BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
+          export BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - name: Deploy via rsync
         uses: bnnanet/github-actions-rsync@master
