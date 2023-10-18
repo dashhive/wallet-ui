@@ -43,7 +43,9 @@ const initialState = {
         class="pill rounded copy"
         title="Add a Contact"
       >
-        <i class="icon-plus-circle"></i>
+        <svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
+          <use xlink:href="#icon-plus-circle"></use>
+        </svg>
         New Contact
       </button>
     </header>
@@ -58,7 +60,7 @@ const initialState = {
       }
       ${
         state.contacts.length === 0 ?
-        html`<span class="center">No Contacts found</span>` : ''
+        html`<span class="flex flex-fill center">No Contacts found</span>` : ''
       }
     </div>
 

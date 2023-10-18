@@ -1,8 +1,18 @@
 import {
   localforage,
-  // CrypticStorage,
 } from '../imports.js'
-import Config from '../manifest.json' assert { type: 'json' }
+
+let Config = {
+  name: 'incubator',
+  description: 'dash wallet'
+}
+
+const manifest = await fetch(
+  '/src/manifest.webmanifest'
+)
+if (manifest.ok) {
+  Config = await manifest.json()
+}
 
 export const localForageBaseCfg = {
   name: Config.name,

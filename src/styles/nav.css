@@ -104,7 +104,6 @@ nav a svg {
 }
 
 nav .alias {
-  color: var(--dark-200, #80929C);
   font-size: 1rem;
   font-weight: 400;
   line-height: 1;

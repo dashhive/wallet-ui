@@ -46,6 +46,9 @@
   --bgc: var(--d);
   --fc: var(--l);
 
+  --emphasize: var(--l);
+  --de-emphasize: var(--dark-600);
+
   --nav-bg: var(--dark-900);
   --nav-abg: var(--c);
   --nav-a: var(--a);
@@ -92,10 +95,15 @@
     --bgc: var(--l);
     --fc: var(--d);
 
+    --emphasize: var(--dark-600);
+    --de-emphasize: var(--dark-200);
+
     --linkbg: var(--lf);
     --linkfg: var(--lite);
     --linkbgh: var(--f);
     --linkfgh: var(--lite);
+
+    --nav-bg: var(--light-200);
 
     --btnbg: var(--l);
     --btnfg: var(--di);
@@ -116,6 +124,10 @@
     --gridbg: var(--lf);
     --gridshd: var(--lf);
   }
+
+  /* .brand svg {
+    filter: brightness(0.5);
+  } */
 
   .it {
     color-scheme: dark;
@@ -289,6 +301,10 @@ nav a.active {
   background-color: var(--nav-abg);
 }
 
+nav .alias {
+  color: var(--emphasize);
+}
+
 table {
   border: 1px solid var(--tblbrd);
 }
@@ -415,6 +431,20 @@ th {
   background-color: var(--dark-500);
   color: var(--dark-100);
   text-transform: uppercase;
+}
+
+
+main header figure figcaption:has(+ div) {
+  color: var(--dark-200);
+}
+main header figure figcaption + div {
+  color: var(--emphasize);
+}
+main header figure figcaption + div sub {
+  color: var(--de-emphasize);
+}
+main header figure figcaption + div sub span {
+  color: var(--emphasize);
 }
 
 /* custom scrollbar */

@@ -30,7 +30,9 @@ export let addContactRig = (function (globals) {
       submitAlt: 'Add Contact',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
-      closeTxt: html`<i class="icon-x"></i>`,
+      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
+      <use xlink:href="#icon-x"></use>
+    </svg>`,
       closeAlt: `Close`,
       footer: state => html`
         <footer class="inline col">

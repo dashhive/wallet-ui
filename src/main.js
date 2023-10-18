@@ -81,7 +81,10 @@ let contactsList = await setupContactsList(
         //   event.target,
         //   state,
         // )
-        if (event.target?.id === 'add_contact') {
+        if (
+          event.target?.id === 'add_contact' ||
+          event.target?.parentNode?.id === 'add_contact'
+        ) {
           addContact.render(
             {
               wallet,
@@ -204,7 +207,9 @@ let walletGen = setupDialog(
     submitAlt: 'Next Form',
     cancelTxt: 'Cancel',
     cancelAlt: `Cancel Form`,
-    closeTxt: html`<i class="icon-x"></i>`,
+    closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
+    <use xlink:href="#icon-x"></use>
+  </svg>`,
     closeAlt: `Close`,
     footer: state => html`
       <footer class="inline col">
@@ -297,7 +302,9 @@ let walletImp = setupDialog(
     submitAlt: 'Import Existing Wallet',
     cancelTxt: 'Cancel',
     cancelAlt: `Cancel Wallet Import`,
-    closeTxt: html`<i class="icon-x"></i>`,
+    closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
+    <use xlink:href="#icon-x"></use>
+  </svg>`,
     closeAlt: `Close`,
     footer: state => html`
       <footer class="inline">
@@ -320,7 +327,7 @@ let walletImp = setupDialog(
           <label for="phrase">
             Recovery Phrase
           </label>
-          <div>
+          <div class="password">
             <input
               type="password"
               id="phrase"
@@ -503,7 +510,9 @@ let sendOrRequest = setupDialog(
     requestAlt: 'Request Dash',
     cancelTxt: 'Cancel',
     cancelAlt: `Cancel Form`,
-    closeTxt: html`<i class="icon-x"></i>`,
+    closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
+    <use xlink:href="#icon-x"></use>
+  </svg>`,
     closeAlt: `Close`,
     footer: state => html`
       <footer class="inline row">

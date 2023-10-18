@@ -54,13 +54,11 @@ main header figure {
   margin: 0;
 }
 main header figure figcaption:has(+ div) {
-  color: var(--dark-200, #80929C);
   font-size: .75rem;
   font-weight: 500;
   line-height: 1;
 }
 main header figure figcaption + div {
-  color: var(--f);
   display: flex;
   font-size: 3.75rem;
   font-weight: 800;
@@ -74,10 +72,6 @@ main header figure figcaption + div svg {
 main header figure figcaption + div sub {
   align-self: self-end;
   font-size: 2.75rem;
-  color: var(--dark-600);
-}
-main header figure figcaption + div sub span {
-  color: var(--f);
 }
 main footer {
   text-align: center;
@@ -102,14 +96,16 @@ figure h4 {
 }
 
 
+.flex {
+  display: flex;
+}
+.flex-fill {
+  flex: 1 1 auto;
+}
 .row {
   flex-direction: row;
 }
 .col {
-  flex-direction: column;
-}
-.msg {
-  display: flex;
   flex-direction: column;
 }
 .jc-left {
@@ -120,14 +116,22 @@ figure h4 {
 }
 .center {
   align-content: center;
+  align-items: center;
+  justify-content: center;
   justify-items: center;
   text-align: center;
 }
+
 .tag {
   display: inline-block;
   border: 1px solid var(--dark-500);
   margin: 0 .1rem .4rem 0;
   padding: .25rem;
+}
+
+.msg {
+  display: flex;
+  flex-direction: column;
 }
 
 .ta-left {
@@ -157,6 +161,32 @@ figure h4 {
 }
 .px-3 {
   padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+.pl-0 {
+  padding-left: 0;
+}
+.pl-1 {
+  padding-left: .25rem;
+}
+.pl-2 {
+  padding-left: .75rem;
+}
+.pl-3 {
+  padding-left: 1rem;
+}
+
+.pr-0 {
+  padding-right: 0;
+}
+.pr-1 {
+  padding-right: .25rem;
+}
+.pr-2 {
+  padding-right: .75rem;
+}
+.pr-3 {
   padding-right: 1rem;
 }
 

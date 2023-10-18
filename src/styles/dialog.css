@@ -26,6 +26,7 @@ dialog .brand {
   top: 1.5rem;
   font-size: 0.75rem;
   text-decoration: none;
+  outline: 0 solid transparent;
 }
 dialog .brand svg {
   max-width: initial;

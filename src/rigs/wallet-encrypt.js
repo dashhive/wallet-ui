@@ -48,7 +48,7 @@ export let walletEncryptRig = (function (globals) {
             <label for="encryptionPassword">
               Encryption Password
             </label>
-            <div>
+            <div class="password">
               <input
                 type="password"
                 id="encryptionPassword"
@@ -70,7 +70,7 @@ export let walletEncryptRig = (function (globals) {
             </div>
           </article>
           <article>
-            <div class="py-3 px-3">
+            <div class="switch py-3 pr-3">
               <label for="rememberPass" class="jc-left">
                 <sub>
                   Remember password for browser session
