@@ -122,6 +122,10 @@ try {
               '../public/',
               './public/'
             ],
+            [
+              '/src/manifest.webmanifest',
+              '/manifest.webmanifest',
+            ],
           ],
           json: [
             [
