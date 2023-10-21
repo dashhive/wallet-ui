@@ -47,7 +47,7 @@ dialog[open] {
   pointer-events: inherit;
 }
 dialog[open]::backdrop {
-  opacity: .9;
+  opacity: .7;
   z-index: 9;
   pointer-events: inherit;
 }
@@ -118,15 +118,17 @@ dialog > form > footer {
 dialog > form > footer {
   column-gap: .25rem;
 }
-dialog > form > footer sub {
+dialog > form sub {
   font-size: .75rem;
   font-weight: 500;
   color: var(--dark-100);
 }
-dialog > form > footer sup {
+dialog > form sup {
   font-size: .875rem;
   font-weight: 400;
   color: var(--dark-200);
+}
+dialog > form > footer sup {
   margin-bottom: 1.25rem;
 }
 dialog > form > footer button {
@@ -223,10 +225,10 @@ dialog.responsive fieldset:first-child {
   text-align: left;
 }
 dialog.responsive form > fieldset > input,
-dialog.responsive fieldset:last-child {
+dialog.responsive fieldset:last-of-type:not(:first-of-type) {
   flex: 0 1 auto;
 }
-dialog.responsive fieldset:last-child {
+dialog.responsive fieldset:last-of-type:not(:first-of-type) {
   padding: 0;
 }
 dialog.responsive fieldset section {
@@ -403,7 +405,7 @@ dialog.fullscreen form section > article > div > button {
     margin-bottom: 1rem;
   }
   dialog.responsive form > fieldset:first-child > input,
-  dialog.responsive fieldset:last-child {
+  dialog.responsive fieldset:last-of-type:not(:first-of-type) {
     flex: none;
   }
   /* dialog.responsive button[type="submit"] {
