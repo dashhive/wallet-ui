@@ -95,6 +95,16 @@ const initialState = {
       }
       event.target.reportValidity()
     },
+    handleRender: (
+      state,
+      // resolve = res=>{},
+      // reject = res=>{},
+    ) => {
+      console.log(
+        'handle dialog render',
+        event,
+      )
+    },
     handleClose: (
       state,
       resolve = res=>{},
@@ -177,8 +187,12 @@ export function setupDialog(
     }
   }
 
-  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase().replaceAll(' ', '_')
-  state.slugs.form = state.name?.toLowerCase().replaceAll(' ', '_')
+  state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase()
+    .replaceAll(/[^a-zA-Z _]/g, '')
+    .replaceAll(' ', '_')
+  state.slugs.form = state.name?.toLowerCase()
+    .replaceAll(/[^a-zA-Z ]/g, '')
+    .replaceAll(' ', '_')
 
   const dialog = document.createElement('dialog')
   const form = document.createElement('form')
@@ -309,6 +323,8 @@ export function setupDialog(
         el.insertAdjacentElement(position, dialog)
         state.rendered = dialog
       }
+
+      state.events.handleRender(state)
     }
   }
 }

@@ -27,6 +27,8 @@ import setupInputAmount from './components/input-amount.js'
 
 import walletEncryptRig from './rigs/wallet-encrypt.js'
 import addContactRig from './rigs/add-contact.js'
+import shareProfileRig from './rigs/profile.js'
+import scanContactRig from './rigs/scan.js'
 
 // form validation
 const phraseRegex = new RegExp(
@@ -60,6 +62,8 @@ let mainApp = document.querySelector('main#app')
 // rigs
 let walletEncrypt
 let addContact
+let shareProfile
+let scanContact
 
 // init components
 let mainFtr = await setupMainFooter(
@@ -558,6 +562,19 @@ let sendOrRequest = setupDialog(
               placeholder="enter @alias or dash address"
               spellcheck="false"
             />
+            <button
+              class="rounded outline"
+              type="submit"
+              name="intent"
+              value="scan_new_contact"
+              title="${state.scanAlt}"
+            >
+              <span>
+                <svg class="qr-code" width="24" height="24" viewBox="0 0 24 24">
+                  <use xlink:href="#icon-qr-code"></use>
+                </svg>
+              </span>
+            </button>
           </div>
 
           ${inputAmount.renderAsHTML()}
@@ -594,6 +611,29 @@ let sendOrRequest = setupDialog(
 
         let fde = formDataEntries(event)
 
+        if (fde?.intent === 'scan_new_contact') {
+          scanContact.render(
+            {
+              wallet,
+            },
+            'afterend',
+          )
+
+          let showScan = await scanContact.showModal()
+          console.log(
+            'showScan',
+            showScan,
+            // scanContact,
+            // scanContact?.element?.returnValue
+          )
+          let [, addr] = showScan?.split('dash://')
+          if (addr) {
+            // event.target.addr.value = addr
+            event.target.to.value = showScan
+          }
+          return;
+        }
+
         if (fde.intent === 'send' && !fde.to) {
           event.target.to.setCustomValidity(
             'You must specify a contact or address to send to'
@@ -623,10 +663,23 @@ async function main() {
     bodyNav, dashBalance, onboard,
   })
 
+  shareProfile = shareProfileRig({
+    mainApp, setupDialog, appState,
+    wallet, wallets,
+    bodyNav, dashBalance, onboard,
+  })
+
+  scanContact = scanContactRig({
+    mainApp, setupDialog, appState,
+    wallet, wallets,
+    bodyNav, dashBalance, onboard,
+  })
+
   addContact = addContactRig({
     mainApp, setupDialog, appState,
     wallet, wallets,
     bodyNav, dashBalance, onboard,
+    scanContact,
   })
 
   svgSprite.render()
@@ -642,6 +695,9 @@ async function main() {
 
   let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
   wallets = aliasWallets?.$wallets
+
+  let accountIndex = wallets?.[appState.selected_wallet]
+    ?.accountIndex || 0
 
   console.log(
     'load wallet alias',
@@ -806,8 +862,6 @@ async function main() {
     wallet = await deriveWalletData(appState.phrase)
 
     if (store.addresses.length() === 0) {
-      let accountIndex = wallets?.[appState.selected_wallet]
-        ?.accountIndex || 0
       let addressIndex = 0
       let acctBatch = accountIndex + 5
       let accts = {}
@@ -833,6 +887,50 @@ async function main() {
     ]
   })
   sendRequestBtn.render()
+
+  bodyNav.element.querySelector('& > a.alias')
+    .addEventListener('click', async event => {
+      event.preventDefault()
+      event.stopPropagation()
+
+      let shareAccount
+
+      if (appState.phrase) {
+        console.log(
+          'share qr current wallet',
+          accountIndex,
+          wallet?.xkeyId,
+          wallet,
+        )
+
+        accountIndex += 1
+
+        shareAccount = await deriveWalletData(
+          appState.phrase,
+          accountIndex
+        )
+
+        console.log(
+          'share qr derived wallet',
+          accountIndex,
+          shareAccount?.xkeyId,
+          shareAccount,
+        )
+
+        // appState.selected_alias = `${fde.alias}`
+        // appState.selected_wallet = wallet.id
+      }
+
+      shareProfile.render(
+        {
+          wallet: shareAccount,
+        },
+        'afterend',
+      )
+
+      shareProfile.showModal()
+    })
+
 
   mainApp.insertAdjacentHTML('afterbegin', html`
     <header></header>

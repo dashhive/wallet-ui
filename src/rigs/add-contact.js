@@ -1,14 +1,10 @@
 import { lit as html } from '../helpers/lit.js'
-// import {
-//   formDataEntries,
-// } from '../helpers/utils.js'
-// import {
-//   initWallet,
-// } from '../helpers/wallet.js'
-// import setupDialog from '../components/dialog.js'
+import {
+  formDataEntries,
+} from '../helpers/utils.js'
 
 const aliasRegex = new RegExp(
-  /^[a-zA-Z0-9]{1,}$/
+  /^[a-zA-Z0-9_\-\.]{1,}$/
 )
 
 export let addContactRig = (function (globals) {
@@ -17,6 +13,7 @@ export let addContactRig = (function (globals) {
   let {
     setupDialog, mainApp, wallet, wallets,
     appState, bodyNav, dashBalance, onboard,
+    scanContact,
   } = globals;
 
   let addContact = setupDialog(
@@ -28,6 +25,7 @@ export let addContactRig = (function (globals) {
         <use xlink:href="#icon-plus-circle"></use>
       </svg> Add Contact`,
       submitAlt: 'Add Contact',
+      scanAlt: 'Scan Contact QR Code',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
@@ -61,6 +59,18 @@ export let addContactRig = (function (globals) {
                 name="addr"
                 placeholder="Contact Addr"
               />
+              <button
+                class="rounded outline"
+                name="intent"
+                value="scan_new_contact"
+                title="${state.scanAlt}"
+              >
+                <span>
+                  <svg class="qr-code" width="24" height="24" viewBox="0 0 24 24">
+                    <use xlink:href="#icon-qr-code"></use>
+                  </svg>
+                </span>
+              </button>
             </div>
             <p>Paste a Dash Address, Xpriv/Xpub, or Link</p>
 
@@ -96,7 +106,6 @@ export let addContactRig = (function (globals) {
                 name="alias"
                 placeholder="your_alias"
                 pattern="${aliasRegex.source}"
-                required
                 spellcheck="false"
               />
             </div>
@@ -114,20 +123,45 @@ export let addContactRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          event.target.pass.setCustomValidity('')
-          event.target.pass.reportValidity()
+          // event.target.alias.setCustomValidity('')
+          // event.target.alias.reportValidity()
 
-          // console.log('ENCRYPT OVERRIDE!', state, event)
+          console.log('ADD CONTACT!', state, event)
 
-          // let fde = formDataEntries(event)
+          let fde = formDataEntries(event)
 
-          // if (!fde.pass) {
-          //   event.target.pass.setCustomValidity(
-          //     'An encryption password is required'
-          //   )
-          //   event.target.reportValidity()
-          //   return;
-          // }
+          console.log('scanContact', scanContact)
+
+          if (fde?.intent === 'scan_new_contact') {
+            scanContact.render(
+              {
+                wallet,
+              },
+              'afterend',
+            )
+
+            let showScan = await scanContact.showModal()
+            console.log(
+              'showScan',
+              showScan,
+              // scanContact,
+              // scanContact?.element?.returnValue
+            )
+            let [, addr] = showScan?.split('dash://')
+            if (addr) {
+              // event.target.addr.value = addr
+              event.target.addr.value = showScan
+            }
+            return;
+          }
+
+          if (!String(fde.alias)?.trim()) {
+            event.target.alias.setCustomValidity(
+              'An alias is required'
+            )
+            event.target.reportValidity()
+            return;
+          }
 
           // let initialized
           // wallet = state.wallet

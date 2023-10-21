@@ -6,12 +6,12 @@ const initialState = {
   },
   rendered: null,
   content: state => html`
-    <a class="brand" href="#home">
+    <a class="brand" href="/#home">
       <svg viewBox="0 0 101 32">
         <use xlink:href="#icon-logo"></use>
       </svg>
     </a>
-    <a class="alias" href="#me">@${state.data?.alias}</a>
+    <a class="alias" href="/#me">@${state.data?.alias}</a>
   `,
   elements: {
     nav: document.createElement('nav'),
