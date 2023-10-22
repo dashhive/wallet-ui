@@ -23,6 +23,7 @@ let qrWidth = 2 + 33 + 2;
  * @param {QrOpts} opts
  */
 export function create(data, opts) {
+  // @ts-ignore
   return new QRCode({
     ...opts,
     content: data,

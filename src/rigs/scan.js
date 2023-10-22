@@ -51,6 +51,7 @@ export let scanContactRig = (function (globals) {
       fields: html``,
       events: {
         handleRender: state => {
+          // @ts-ignore
           state.qrCodeScanner = new Html5Qrcode(
             `${state.slugs.form}_reader`,
             {
