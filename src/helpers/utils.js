@@ -59,7 +59,7 @@ export async function deriveWalletData(
   addressIndex = 0,
   use = DashHd.RECEIVE
 ) {
-  let recoveryPhrase, seed, wallet, wpub, id, account
+  let recoveryPhrase, seed, derivedWallet, wpub, id, account
   let xkey, xprv, xpub, xkeyId
   let addressKey, addressKeyId, address
   let targetBitEntropy = 128;
@@ -82,10 +82,10 @@ export async function deriveWalletData(
     xkey = await DashHd.fromXKey(phraseOrXkey);
   } else {
     seed = await DashPhrase.toSeed(recoveryPhrase, secretSalt);
-    wallet = await DashHd.fromSeed(seed);
-    wpub = await DashHd.toXPub(wallet);
-    id = await DashHd.toId(wallet);
-    account = await wallet.deriveAccount(accountIndex);
+    derivedWallet = await DashHd.fromSeed(seed);
+    wpub = await DashHd.toXPub(derivedWallet);
+    id = await DashHd.toId(derivedWallet);
+    account = await derivedWallet.deriveAccount(accountIndex);
     xkey = await account.deriveXKey(use);
     xprv = await DashHd.toXPrv(xkey);
   }
@@ -106,8 +106,8 @@ export async function deriveWalletData(
     xpub,
     seed,
     wpub,
-    wallet,
     account,
+    derivedWallet,
     recoveryPhrase,
   }
 }

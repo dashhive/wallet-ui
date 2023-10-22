@@ -317,7 +317,7 @@ export async function batchAddressGenerate(
   let batchLimit = addressIndex + batchSize
   let addresses = []
 
-  let account = await wallet.wallet.deriveAccount(accountIndex);
+  let account = await wallet.derivedWallet.deriveAccount(accountIndex);
   let xkey = await account.deriveXKey(use);
 
   for (;addressIndex < batchLimit; addressIndex++) {

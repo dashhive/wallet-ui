@@ -31,7 +31,7 @@
  *  xpub: string;
  *  seed: Uint8Array;
  *  wpub: string;
- *  wallet: HDWallet;
+ *  derivedWallet: HDWallet;
  *  account: HDAccount;
  *  recoveryPhrase: string;
  * }} SeedWallet
