@@ -40,7 +40,7 @@ const initialState = {
       <h6>Contacts (${state.contacts.length})</h6>
       <button
         id="add_contact"
-        class="pill rounded copy"
+        class="pill rounded"
         title="Add a Contact"
       >
         <svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
@@ -55,8 +55,9 @@ const initialState = {
 
     <div>
       ${
-        state.contacts.length > 0 ?
-        state.contacts.map(c => state.item(c)).join('') : ''
+        state.contacts.length > 0
+          ? state.contacts.map(c => state.item(c)).join('')
+          : ''
       }
       ${
         state.contacts.length === 0 ?

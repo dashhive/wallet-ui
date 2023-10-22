@@ -156,23 +156,6 @@ form fieldset div > input[type="password"]:not(:disabled) + label:hover {
   flex: 1 1 50%;
 } */
 
-form fieldset.profile {
-  flex-direction: row-reverse;
-  align-items: center;
-  flex: none;
-}
-form fieldset.profile aside {
-  /* width: 15rem; */
-  display: flex;
-  flex: 1 1 auto;
-}
-dialog.responsive fieldset.profile section {
-}
-dialog.responsive fieldset.profile section article {
-  flex-direction: column;
-  align-items: stretch;
-}
-
 form .field {
   display: flex;
   flex-direction: column;
@@ -213,6 +196,33 @@ form .field:has(> div > label + input:focus) {
 /* form fieldset:last-of-type:has(> [type=reset]) {
   justify-content: space-between;
 } */
+
+form fieldset.share {
+  flex-direction: row-reverse;
+  align-items: center;
+  flex: none;
+}
+form fieldset.share aside {
+  max-width: 13rem;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  align-self: stretch;
+  align-items: center;
+  text-align: center;
+  padding-left: 2rem;
+  padding-right: 1rem;
+  border-left: 1px solid var(--dark-600);
+  gap: 1rem;
+}
+form fieldset.share aside label {
+  display: block;
+  width: 100%;
+  padding: 0;
+  color: inherit;
+}
+
 
 
 .password label {

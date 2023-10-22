@@ -15,6 +15,8 @@
   --light-100: #a2ccf6;
   --light-200: #afe0ff;
   --light-300: #c7e9ff;
+  --light-500: #004470;
+  --light-600: #003e66;
 
   --grayscale-gray-400: #9DA6A6;
 
@@ -33,6 +35,7 @@
   --lt: #eeea;
   --lf: #dfdfdf;
   --f: #fff;
+  --f4: #f4f4f4;
 
   --info: #0bf;
   --note: #888;
@@ -84,7 +87,7 @@
 
 * { box-sizing: border-box; }
 
-@media (prefers-color-scheme: light) {
+/* @media (prefers-color-scheme: light) {
   :root:not(.it),
   ::backdrop {
     color-scheme: light;
@@ -103,7 +106,9 @@
     --linkbgh: var(--f);
     --linkfgh: var(--lite);
 
-    --nav-bg: var(--light-200);
+    --nav-bg: var(--light-600);
+    --nav-abg: var(--dark-100);
+    --nav-a: var(--dark-100);
 
     --btnbg: var(--l);
     --btnfg: var(--di);
@@ -117,17 +122,13 @@
     --inpfg: var(--fc);
     --inpbdi: var(--dang);
 
-    --mdlbg: var(--l);
+    --mdlbg: var(--f4);
     --mdlfg: var(--di);
     --mdlbd: var(--lt);
 
     --gridbg: var(--lf);
     --gridshd: var(--lf);
   }
-
-  /* .brand svg {
-    filter: brightness(0.5);
-  } */
 
   .it {
     color-scheme: dark;
@@ -158,9 +159,6 @@
     --gridbg: var(--oc);
     --gridshd: var(--mc);
   }
-  /* html:not(.it),img,svg,video,html:not(.it) dialog {
-    filter: invert(95%) hue-rotate(180deg);
-  } */
   progress:indeterminate {
     background: linear-gradient(
       90deg,
@@ -171,15 +169,13 @@
   }
   nav a.theme::before {
     content: '☀';
-    /* 🌣 ☀ ☼ ☀️ 🌞 */
     transform: rotateZ(0deg);
   }
   html:not(.it) nav a.theme::before {
     content: '☽';
-    /* 🌛 🌜 🌒 */
     transform: rotateZ(45deg);
   }
-}
+} */
 @media (prefers-color-scheme: dark) {
   :root:not(.it),
   ::backdrop {
@@ -241,9 +237,6 @@
     --gridbg: var(--lf);
     --gridshd: var(--lf);
   }
-  /* html.it,img,svg,video,html.it dialog {
-    filter: invert(95%) hue-rotate(180deg);
-  } */
   progress:indeterminate {
     background: linear-gradient(
       90deg,
@@ -302,7 +295,7 @@ nav a.active {
 }
 
 nav .alias {
-  color: var(--emphasize);
+  color: var(--nav-a);
 }
 
 table {

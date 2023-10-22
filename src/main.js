@@ -30,6 +30,11 @@ import addContactRig from './rigs/add-contact.js'
 import shareProfileRig from './rigs/profile.js'
 import scanContactRig from './rigs/scan.js'
 
+// Example Dash URI's
+
+// let testDashReqUri = `dash:XYZdashAddressZYX?amount=0.50000000&label=test&message=give me monies`
+// let testDashExtUri = `web+dash://?xpub=xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz&sub=01H5KG2NGES5RVMA85YB3M6G0G&nickname=Prime%208&profile=https://imgur.com/gallery/y6sSvCr.json&picture=https://i.imgur.com/y6sSvCr.jpeg&scope=sub,nickname,profile,xpub&redirect_uri=https://`
+
 // form validation
 const phraseRegex = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
@@ -47,6 +52,7 @@ let appState = envoy(
     encryptionPassword: null,
     selected_wallet: '',
     selected_alias: '',
+    contacts: [],
   },
   (state, oldState) => {
     if (state.foo !== oldState.bar) {
@@ -78,7 +84,7 @@ let contactsList = await setupContactsList(
   mainApp,
   {
     events: {
-      handleClick: state => event => {
+      handleClick: state => async event => {
         event.preventDefault()
         // console.warn(
         //   'handle contacts click',
@@ -89,9 +95,71 @@ let contactsList = await setupContactsList(
           event.target?.id === 'add_contact' ||
           event.target?.parentNode?.id === 'add_contact'
         ) {
+          let selectedWallet = wallets?.[appState.selected_wallet]
+          let accountIndex = selectedWallet
+            ?.accountIndex || 0
+
+          let shareAccount
+          let newContact
+
+          if (appState.phrase) {
+            console.log(
+              'share qr current wallet',
+              accountIndex,
+              selectedWallet?.xkeyId,
+              selectedWallet,
+            )
+
+            accountIndex += 1
+
+            let upWallet = await store.wallets.setItem(
+              appState.selected_wallet,
+              {
+                ...selectedWallet,
+                accountIndex,
+              }
+            )
+            wallets[appState.selected_wallet] = upWallet
+
+            shareAccount = await deriveWalletData(
+              appState.phrase,
+              accountIndex
+            )
+
+            console.log(
+              'share qr derived wallet',
+              accountIndex,
+              // shareAccount?.xkeyId,
+              shareAccount,
+              // wallet,
+            )
+
+            newContact = await store.contacts.setItem(
+              // shareAccount.id,
+              shareAccount.xkeyId,
+              {
+                request: {
+                  accountIndex,
+                  xprv: shareAccount.xprv,
+                  xpub: shareAccount.xpub,
+                  id: shareAccount.id,
+                  xkeyId: shareAccount.xkeyId,
+                  addressKeyId: shareAccount.addressKeyId,
+                  address: shareAccount.address,
+                },
+              }
+            )
+
+            console.log(
+              'share qr new contact',
+              newContact,
+            )
+          }
+
           addContact.render(
             {
-              wallet,
+              wallet: shareAccount,
+              contact: newContact,
             },
             'afterend',
           )
@@ -679,7 +747,7 @@ async function main() {
     mainApp, setupDialog, appState,
     wallet, wallets,
     bodyNav, dashBalance, onboard,
-    scanContact,
+    scanContact, store,
   })
 
   svgSprite.render()
@@ -882,9 +950,31 @@ async function main() {
     },
   })
   mainFtr.render()
+  // await store.contacts.setItem()
+
+  let conLen = await store.contacts.length()
+  store.contacts.iterate(function(
+    value, key, iterationNumber
+  ) {
+    appState.contacts.push(value)
+
+    // console.log('store.contacts.iterate', iterationNumber, conLen, key, value)
+
+    if (iterationNumber === conLen) {
+      return appState.contacts
+    }
+  }).then(function(result) {
+      // console.log(
+      //   'Iteration has completed, last iterated pair:'
+      // );
+      // console.log(result);
+      contactsList.render(appState)
+  }).catch(function(err) {
+      // This code runs if there were any errors
+      console.log(err);
+  });
   await contactsList.render({
-    contacts: [
-    ]
+    contacts: appState.contacts
   })
   sendRequestBtn.render()
 
@@ -916,9 +1006,6 @@ async function main() {
           shareAccount?.xkeyId,
           shareAccount,
         )
-
-        // appState.selected_alias = `${fde.alias}`
-        // appState.selected_wallet = wallet.id
       }
 
       shareProfile.render(

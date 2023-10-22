@@ -72,7 +72,11 @@ dialog.center {
   justify-items: center;
   text-align: center;
   border-radius: 1rem;
-  max-width: 100% !important;
+  max-width: 100%;
+}
+dialog.wide {
+  border-radius: 1rem;
+  max-width: 100%;
 }
 
 dialog.responsive {
@@ -135,7 +139,7 @@ dialog > form > footer button {
   padding: .75rem 1rem;
 }
 dialog > form > header {
-  border-bottom: 1px solid var(--dark-600, #252C33);
+  border-bottom: 1px solid var(--dark-600);
 }
 dialog header button[type="reset"]:last-child {
   padding: 0 .5rem;
@@ -371,6 +375,18 @@ dialog.fullscreen form section > article > div > button {
   width: 100%;
 }
 
+
+dialog.responsive fieldset.share section {
+  flex: 1 1 auto;
+}
+dialog.responsive fieldset.share section article {
+  flex-direction: column;
+  align-items: stretch;
+}
+dialog.responsive fieldset.share {
+  min-width: 44rem;
+}
+
 @media (min-width: 650px) {
   /* dialog.responsive {
     position: fixed;
@@ -467,6 +483,9 @@ dialog.fullscreen form section > article > div > button {
 
   dialog.center {
     max-width: 34rem !important;
+  }
+  dialog.wide {
+    max-width: 100% !important;
   }
 
   dialog > form > fieldset {

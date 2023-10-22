@@ -12,27 +12,6 @@ export let shareProfileRig = (function (globals) {
     setupDialog, mainApp, wallet, wallets,
     appState, bodyNav, dashBalance, onboard,
   } = globals;
-  // store.addresses.key(1).then(function(keyName) {
-  //     // Name of the key.
-  //     console.log('first key', keyName);
-  //     let dashSvg = qrSvg(
-  //       `dash://${keyName}`,
-  //       {
-  //         background: '#fff0',
-  //         color: 'currentColor',
-  //         indent: 1,
-  //         padding: 1,
-  //         size: 'mini',
-  //         container: 'svg-viewbox',
-  //         join: true,
-  //       }
-  //     )
-  //     // console.log('first key qr code', dashSvg);
-  //     mainApp.insertAdjacentHTML('beforeend', dashSvg)
-  // }).catch(function(err) {
-  //     // This code runs if there were any errors
-  //     console.error('failed to load first key', err);
-  // });
 
   let shareProfile = setupDialog(
     mainApp,
@@ -46,6 +25,7 @@ export let shareProfileRig = (function (globals) {
       submitAlt: 'QR Code',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
+      placement: 'wide',
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
       <use xlink:href="#icon-x"></use>
     </svg>`,
@@ -66,7 +46,7 @@ export let shareProfileRig = (function (globals) {
       content: state => html`
         ${state.header(state)}
 
-        <fieldset class="profile">
+        <fieldset class="share">
           <aside>
             ${qrSvg(
               `web+dash://${state.wallet?.address || ''}`,
