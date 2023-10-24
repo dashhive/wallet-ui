@@ -47,12 +47,12 @@ export async function loadWalletsForAlias(alias) {
   return $alias
 }
 
-export async function initProfileWallets(
-  profile = {},
+export async function initWalletsInfo(
+  info = {},
 ) {
   let wallets = await loadWallets()
 
-  let initProfile = {
+  let initInfo = {
     preferred_username: '',
     name: '', // [given_name,middle_name,family_name].join(' ')
     // given_name: '',
@@ -70,12 +70,12 @@ export async function initProfileWallets(
     updated_at: (new Date()).toISOString(),
   }
 
-  profile = {
-    ...initProfile,
-    ...profile,
+  info = {
+    ...initInfo,
+    ...info,
   }
 
-  let alias = profile.preferred_username
+  let alias = info.preferred_username
 
   wallets = Object.values(wallets || {})
   wallets = wallets
@@ -85,7 +85,7 @@ export async function initProfileWallets(
   return {
     alias,
     wallets,
-    profile,
+    info,
   }
 }
 
@@ -105,20 +105,20 @@ export async function initWallet(
   wallet,
   accountIndex = 0,
   addressIndex = 0,
-  overProfile = {},
+  infoOverride = {},
 ) {
   let {
     alias,
     wallets,
-    profile,
-  } = await initProfileWallets(overProfile)
+    info,
+  } = await initWalletsInfo(infoOverride)
 
   let { id, recoveryPhrase } = wallet
 
   // console.log(
   //   'initWallet wallets',
   //   wallets,
-  //   profile,
+  //   info,
   // )
 
   if (!wallets.includes(id)) {
@@ -196,7 +196,7 @@ export async function initWallet(
     `${alias}`,
     {
       wallets,
-      profile,
+      info,
     }
   )
 

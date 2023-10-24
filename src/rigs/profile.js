@@ -1,22 +1,30 @@
 import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
+// import { qrSvg } from '../helpers/qr.js'
+import {
+  formDataEntries,
+  // setClipboard,
+  // sortContactsByAlias,
+  // sortContactsByName,
+  // parseAddressField,
+} from '../helpers/utils.js'
 
 const aliasRegex = new RegExp(
   /^[a-zA-Z0-9]{1,}$/
 )
 
-export let shareProfileRig = (function (globals) {
+export let editProfileRig = (function (globals) {
   'use strict';
 
   let {
     setupDialog, mainApp, wallet, wallets,
     appState, bodyNav, dashBalance, onboard,
+    store, aliasWallets,
   } = globals;
 
-  let shareProfile = setupDialog(
+  let editProfile = setupDialog(
     mainApp,
     {
-      name: 'Edit & Share Profile',
+      name: 'Edit Profile',
       address: '',
       submitTxt: html`
       <svg class="user" width="26" height="26" viewBox="0 0 24 24">
@@ -46,86 +54,129 @@ export let shareProfileRig = (function (globals) {
       content: state => html`
         ${state.header(state)}
 
-        <fieldset class="share">
-          <aside>
-            ${qrSvg(
-              `web+dash://${state.wallet?.address || ''}`,
-              {
-                background: '#0000',
-                color: 'currentColor',
-                indent: 1,
-                padding: 1,
-                size: 'mini',
-                container: 'svg-viewbox',
-                join: true,
-              }
-            )}
-          </aside>
+        <fieldset>
+          <article>
+            <label for="profileName">
+              Your Name
+            </label>
+            <div>
+              <input
+                id="profileName"
+                name="profileName"
+                placeholder="John Doe"
+                value="${
+                  aliasWallets?.info?.name || ''
+                }"
+              />
+            </div>
+            <p>Optional</p>
 
-          <section>
-            <article>
-              <label for="contactName">
-                Contact Name
-              </label>
-              <div>
-                <input
-                  id="contactName"
-                  name="name"
-                  placeholder="Contact Name"
-                />
-              </div>
-              <p>Optional</p>
+            <div class="error"></div>
+          </article>
 
-              <div class="error"></div>
-            </article>
+          <article>
+            <label for="${state.slugs.form}_alias">
+              Alias
+            </label>
+            <div
+              data-prefix="@"
+            >
+              <input
+                type="text"
+                id="${state.slugs.form}_alias"
+                name="profileAlias"
+                value="${appState.selected_alias}"
+                placeholder="your_alias"
+                pattern="${aliasRegex.source}"
+                required
+                spellcheck="false"
+              />
+            </div>
+            <p>Alias others can call you (similar to a @username)</p>
 
-            <article>
-              <label for="${state.slugs.form}_alias">
-                Alias
-              </label>
-              <div
-                data-prefix="@"
-              >
-                <input
-                  type="text"
-                  id="${state.slugs.form}_alias"
-                  name="alias"
-                  value="${appState.selected_alias}"
-                  placeholder="your_alias"
-                  pattern="${aliasRegex.source}"
-                  required
-                  spellcheck="false"
-                />
-              </div>
-              <p>Alias for the contact (similar to a @username)</p>
-
-              <div class="error"></div>
-            </article>
-          </section>
+            <div class="error"></div>
+          </article>
         </fieldset>
 
         ${state.footer(state)}
       `,
       fields: html``,
       events: {
+        handleRender: state => {
+          console.log(
+            'edit profile render',
+            aliasWallets,
+          )
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
 
-          // event.target.pass.setCustomValidity('')
-          // event.target.pass.reportValidity()
+          console.log('Edit Profile!', state, event)
 
-          // console.log('ENCRYPT OVERRIDE!', state, event)
+          let fde = formDataEntries(event)
 
-          // let fde = formDataEntries(event)
-
-          // if (!fde.pass) {
-          //   event.target.pass.setCustomValidity(
-          //     'An encryption password is required'
+          // if (!String(fde.profileName)?.trim()) {
+          //   event.target.profileName.setCustomValidity(
+          //     'Name must be Alphanumeric'
           //   )
           //   event.target.reportValidity()
           //   return;
           // }
+
+          if (!String(fde.profileAlias)?.trim()) {
+            event.target.profileAlias.setCustomValidity(
+              'An alias is required'
+            )
+            event.target.reportValidity()
+            return;
+          }
+
+          let storedAlias = await store.aliases.getItem(
+            appState.selected_alias,
+          )
+          let removedAlias
+
+          if (appState.selected_alias !== fde.profileAlias) {
+            removedAlias = await store.aliases.removeItem(
+              appState.selected_alias,
+            )
+            appState.selected_alias = fde.profileAlias
+            localStorage.selected_alias = fde.profileAlias
+          }
+
+          let updatedAlias = await store.aliases.setItem(
+            // state.wallet.id,
+            appState.selected_alias,
+            {
+              ...storedAlias,
+              info: {
+                ...(storedAlias.info || {}),
+                name: String(fde.profileName),
+                preferred_username: String(fde.profileAlias),
+              },
+            }
+          )
+
+          let storedWallet = await store.wallets.getItem(
+            appState.selected_wallet,
+          )
+
+          let updatedWallet = await store.wallets.setItem(
+            // state.wallet.id,
+            appState.selected_wallet,
+            {
+              ...storedWallet,
+              alias: String(fde.profileAlias),
+            }
+          )
+          bodyNav.render({
+            data: {
+              alias: appState.selected_alias
+            },
+          })
+
+          console.log('Edit Profile Updated!', removedAlias, updatedAlias, updatedWallet)
 
           // let initialized
           // wallet = state.wallet
@@ -143,16 +194,16 @@ export let shareProfileRig = (function (globals) {
           //   wallets = initialized.wallets
           // }
 
-          shareProfile.close()
+          editProfile.close()
         },
       },
     }
   )
 
   // @ts-ignore
-  globals.shareProfile = shareProfile;
+  globals.editProfile = editProfile;
 
-  return shareProfile
+  return editProfile
 })
 
-export default shareProfileRig
+export default editProfileRig

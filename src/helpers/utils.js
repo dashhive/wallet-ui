@@ -98,6 +98,8 @@ export async function deriveWalletData(
 
   return {
     id,
+    accountIndex,
+    addressIndex,
     addressKeyId,
     address,
     xkeyId,
@@ -355,8 +357,8 @@ export async function restate(
 }
 
 export function sortContactsByAlias(a, b) {
-  const aliasA = a.profile?.preferred_username?.toUpperCase() || 'zzz';
-  const aliasB = b.profile?.preferred_username?.toUpperCase() || 'zzz';
+  const aliasA = a.info?.preferred_username?.toUpperCase() || 'zzz';
+  const aliasB = b.info?.preferred_username?.toUpperCase() || 'zzz';
 
   if (aliasA < aliasB) {
     return -1;
@@ -368,8 +370,8 @@ export function sortContactsByAlias(a, b) {
 }
 
 export function sortContactsByName(a, b) {
-  const nameA = a.profile?.name?.toUpperCase();
-  const nameB = b.profile?.name?.toUpperCase();
+  const nameA = a.info?.name?.toUpperCase();
+  const nameB = b.info?.name?.toUpperCase();
 
   if (nameA < nameB) {
     return -1;
@@ -378,4 +380,84 @@ export function sortContactsByName(a, b) {
     return 1;
   }
   return 0;
+}
+
+export function parseDashURI(uri) {
+  let result = {}
+  let parsedUri = new URL(uri)
+
+  console.log(
+    'parseDashURI',
+    parsedUri
+  )
+
+  let { searchParams, pathname } = parsedUri
+  let addr = pathname.replaceAll('//', '')
+
+  if (addr) {
+    result.address = addr
+  }
+
+  // let xkeyOrAddr = xprv || xpub || addr
+
+  if (searchParams?.size > 0) {
+    let {
+      xprv, xpub, name, preferred_username, sub, scope
+    } = Object.fromEntries(
+      searchParams?.entries()
+    )
+
+    if (xprv) {
+      result.xprv = xprv
+    }
+    if (xpub) {
+      result.xpub = xpub
+    }
+
+    if (name) {
+      result.name = name
+    }
+    if (preferred_username) {
+      result.preferred_username = preferred_username
+    }
+
+    if (sub) {
+      result.sub = sub
+    }
+    if (scope) {
+      result.scope = scope
+    }
+  }
+
+  return result
+}
+
+export function parseAddressField(uri) {
+  let result = {}
+
+  if (uri.includes(':')) {
+    let [protocol, params] = uri.split(':')
+    if (protocol.includes('dash')) {
+      result = parseDashURI(uri)
+    }
+  } else if (
+    'xprv' === uri?.substring(0,4)
+  ) {
+    result.xprv = uri
+  } else if (
+    'xpub' === uri?.substring(0,4)
+  ) {
+    result.xpub = uri
+  } else {
+    result.address = uri
+  }
+
+  // ^((?:web\+)?dash:)(?:\/{0,2})?(.+)$
+  // (?:web\+dash:)?(?:\/{0,2})?(.+)
+  // ^(?:(web\+)?dash:)(?:\/{0,2})?(.+)$
+  // if (uri.match(/^((web\+)?dash:)(\/\/)?(.+)/ig)) {
+  //   result = parseDashURI(uri)
+  // }
+
+  return result
 }

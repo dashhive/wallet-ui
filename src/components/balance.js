@@ -96,6 +96,7 @@ const initialState = {
             )
             state.walletFunds = { balance }
           })
+          .catch(err => console.error('catch updateAllFunds', err, state?.wallet))
       }
     },
     handleBalance: (newState, oldState) => {

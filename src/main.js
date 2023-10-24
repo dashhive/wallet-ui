@@ -29,7 +29,7 @@ import setupInputAmount from './components/input-amount.js'
 
 import walletEncryptRig from './rigs/wallet-encrypt.js'
 import addContactRig from './rigs/add-contact.js'
-import shareProfileRig from './rigs/profile.js'
+import editProfileRig from './rigs/profile.js'
 import scanContactRig from './rigs/scan.js'
 
 // Example Dash URI's
@@ -70,7 +70,7 @@ let mainApp = document.querySelector('main#app')
 // rigs
 let walletEncrypt
 let addContact
-let shareProfile
+let editProfile
 let scanContact
 
 // init components
@@ -732,6 +732,7 @@ let sendOrRequest = setupDialog(
 
 async function loadContacts(callback) {
   let conLen = await store.contacts.length()
+
   return await store.contacts.iterate(function(
     v, key, iterationNumber
   ) {
@@ -750,7 +751,10 @@ async function loadContacts(callback) {
 
   //   contactsList.render(appState)
   // })
-  .catch(err => console.error('loadContacts', err));
+  .catch(err => {
+    console.error('loadContacts', err)
+    return null
+  });
 }
 
 
@@ -761,15 +765,30 @@ async function main() {
   appState.selected_wallet = localStorage?.selected_wallet || ''
   appState.selected_alias = localStorage?.selected_alias || ''
 
+  let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
+  wallets = aliasWallets?.$wallets
+
+  let accountIndex = wallets?.[appState.selected_wallet]
+    ?.accountIndex || 0
+
+  bodyNav = await setupNav(
+    mainApp,
+    {
+      data: {
+        alias: appState.selected_alias
+      },
+    }
+  )
+
   walletEncrypt = walletEncryptRig({
     mainApp, setupDialog, appState,
     wallet, wallets,
     bodyNav, dashBalance, onboard,
   })
 
-  shareProfile = shareProfileRig({
+  editProfile = editProfileRig({
     mainApp, setupDialog, appState,
-    wallet, wallets,
+    wallet, wallets, store, aliasWallets,
     bodyNav, dashBalance, onboard,
   })
 
@@ -781,27 +800,12 @@ async function main() {
 
   addContact = addContactRig({
     mainApp, setupDialog, appState,
-    wallet, wallets,
+    wallet, wallets, aliasWallets,
     bodyNav, dashBalance, onboard,
     scanContact, contactsList, store,
   })
 
   svgSprite.render()
-
-  bodyNav = await setupNav(
-    mainApp,
-    {
-      data: {
-        alias: appState.selected_alias
-      },
-    }
-  )
-
-  let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
-  wallets = aliasWallets?.$wallets
-
-  let accountIndex = wallets?.[appState.selected_wallet]
-    ?.accountIndex || 0
 
   console.log(
     'load wallet alias',
@@ -1029,14 +1033,14 @@ async function main() {
         )
       }
 
-      shareProfile.render(
+      editProfile.render(
         {
           wallet: shareAccount,
         },
         'afterend',
       )
 
-      shareProfile.showModal()
+      editProfile.showModal()
     })
 
 
@@ -1080,6 +1084,7 @@ async function main() {
         }
       })
     })
+    .catch(err => console.error('catch updateAllFunds', err, wallet))
 }
 
 main()
