@@ -1,10 +1,12 @@
 import { lit as html } from '../helpers/lit.js'
 import { qrSvg } from '../helpers/qr.js'
 import {
+  deriveWalletData,
   formDataEntries,
   setClipboard,
   sortContactsByAlias,
   // sortContactsByName,
+  parseAddressField,
 } from '../helpers/utils.js'
 
 const aliasRegex = new RegExp(
@@ -17,7 +19,7 @@ export let addContactRig = (function (globals) {
   let {
     setupDialog, mainApp, wallet, wallets,
     appState, bodyNav, dashBalance, onboard,
-    scanContact, contactsList, store,
+    scanContact, contactsList, store, aliasWallets,
   } = globals;
 
   let addContact = setupDialog(
@@ -51,12 +53,16 @@ export let addContactRig = (function (globals) {
       content: state => {
         let shareParams = new URLSearchParams([
           ["xpub", state.wallet?.xpub || ''],
-          ["sub", state.wallet?.xkeyId || ''],
+          [
+            'name',
+            aliasWallets?.info?.name || ''
+          ],
           [
             'preferred_username',
             appState.selected_alias || ''
           ],
-          ['scope', 'sub,preferred_username,xpub']
+          ["sub", state.wallet?.xkeyId || ''],
+          ['scope', 'sub,name,preferred_username,xpub']
         ]);
         let shareURI = new URL(`web+dash://?${shareParams}`)
 
@@ -159,6 +165,92 @@ export let addContactRig = (function (globals) {
       `},
       fields: html``,
       events: {
+        handleInput: state => async event => {
+          event.preventDefault()
+          if (
+            event?.target?.validity?.patternMismatch &&
+            event?.target?.type !== 'checkbox'
+          ) {
+            let label = event.target?.previousElementSibling?.textContent?.trim()
+            if (label) {
+              event.target.setCustomValidity(`Invalid ${label}`)
+            }
+          } else {
+            event.target.setCustomValidity('')
+          }
+          event.target.reportValidity()
+
+          if (event.target?.name === 'contactAddr') {
+            if (event.target?.value) {
+              let parsedAddr = parseAddressField(event.target.value)
+              let {
+                address,
+                xpub,
+                xprv,
+                name,
+                preferred_username,
+              } = parsedAddr
+
+              let xkey = xprv || xpub
+
+              let xkeyOrAddr = xkey || address
+
+              let info = {
+                name,
+                preferred_username,
+              }
+
+              let {
+                xkeyId,
+                addressKeyId,
+                addressIndex,
+                address: addr,
+              } = await deriveWalletData(
+                xkey,
+              )
+
+              console.log(
+                'add contact handleChange parsedAddr',
+                event.target.value,
+                parsedAddr,
+                xkey,
+                // xkeyData,
+              )
+
+              let newContact = await store.contacts.setItem(
+                // state.wallet.id,
+                state.wallet.xkeyId,
+                {
+                  ...state.contact,
+                  info: {
+                    ...(state.contact.info || {}),
+                    ...info,
+                  },
+                  wallets: {
+                    ...(state.contact.wallets || {}),
+                    [xkeyId]: {
+                      addressIndex,
+                      addressKeyId,
+                      address: address || addr,
+                      xprv,
+                      xpub,
+                    },
+                  },
+                }
+              )
+
+              if (xkeyOrAddr) {
+                event.target.form.contactAddr.value = xkeyOrAddr
+              }
+              if (name) {
+                event.target.form.contactName.value = name
+              }
+              if (preferred_username) {
+                event.target.form.contactAlias.value = preferred_username
+              }
+            }
+          }
+        },
         handleChange: state => async event => {
           event.preventDefault()
           if (
@@ -186,15 +278,15 @@ export let addContactRig = (function (globals) {
               state.wallet.xkeyId,
               {
                 ...state.contact,
-                profile: {
-                  ...(state.contact.profile || {}),
+                info: {
+                  ...(state.contact.info || {}),
                   preferred_username: event.target?.value,
                 },
               }
             )
 
             let contactExists = appState.contacts.findIndex(
-              c => c.profile?.preferred_username === newContact.profile?.preferred_username
+              c => c.info?.preferred_username === newContact.info?.preferred_username
             )
             if (contactExists > -1) {
               appState.contacts[contactExists] = newContact
@@ -303,14 +395,39 @@ export let addContactRig = (function (globals) {
           let storedContact = await store.contacts.getItem(
             state.wallet.xkeyId,
           )
+          let parsedAddr = parseAddressField(String(fde.contactAddr))
+          let {
+            address,
+            xpub,
+            xprv,
+            // name,
+            // preferred_username,
+          } = parsedAddr
+
+          let xkey = xprv || xpub
+
+          // let xkeyOrAddr = xkey || address
+
+          // let info = {
+          //   name,
+          //   preferred_username,
+          // }
+
+          let xkeyData = await deriveWalletData(
+            xkey,
+          )
+          console.log(
+            'xkeyData',
+            xkeyData
+          )
 
           let pairedContact = await store.contacts.setItem(
             // state.wallet.id,
             state.wallet.xkeyId,
             {
               ...storedContact,
-              profile: {
-                ...(storedContact.profile || {}),
+              info: {
+                ...(storedContact.info || {}),
                 name: event.target.contactName.value,
                 preferred_username: event.target.contactAlias.value,
               },
@@ -319,7 +436,7 @@ export let addContactRig = (function (globals) {
           )
 
           let contactExists = appState.contacts.findIndex(
-            c => c.profile?.preferred_username === pairedContact.profile?.preferred_username
+            c => c.info?.preferred_username === pairedContact.info?.preferred_username
           )
           if (contactExists > -1) {
             appState.contacts[contactExists] = pairedContact

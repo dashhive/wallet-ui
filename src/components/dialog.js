@@ -80,6 +80,21 @@ const initialState = {
   elements: {
   },
   events: {
+    handleInput: state => event => {
+      event.preventDefault()
+      if (
+        event?.target?.validity?.patternMismatch &&
+        event?.target?.type !== 'checkbox'
+      ) {
+        let label = event.target?.previousElementSibling?.textContent?.trim()
+        if (label) {
+          event.target.setCustomValidity(`Invalid ${label}`)
+        }
+      } else {
+        event.target.setCustomValidity('')
+      }
+      event.target.reportValidity()
+    },
     handleChange: state => event => {
       event.preventDefault()
       if (
@@ -249,6 +264,11 @@ export function setupDialog(
       form,
       'change',
       state.events.handleChange(state),
+    )
+    addListener(
+      form,
+      'input',
+      state.events.handleInput(state),
     )
     addListener(
       form,

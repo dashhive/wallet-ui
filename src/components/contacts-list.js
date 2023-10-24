@@ -2,18 +2,18 @@ import { lit as html } from '../helpers/lit.js'
 import { envoy, restate, } from '../helpers/utils.js'
 // import { updateAllFunds, } from '../helpers/wallet.js'
 
-function getAvatar(profile) {
-  let initials = profile?.name?.
+function getAvatar(info) {
+  let initials = info?.name?.
     split(' ').map(n => n[0]).join('') || ''
   let avStr = `<div class="avatar" style="`
 
-  if (profile?.picture) {
-    avStr += `color:transparent;background-image:url(${profile.picture});`
+  if (info?.picture) {
+    avStr += `color:transparent;background-image:url(${info.picture});`
   }
 
   // Gravatar
-  // if (profile.email) {
-  //   avStr += `color:transparent;background-image:url(${profile.email});`
+  // if (info.email) {
+  //   avStr += `color:transparent;background-image:url(${info.email});`
   // }
 
   return html`${avStr}">${initials}</div>`
@@ -68,8 +68,8 @@ const initialState = {
     ${state.footer(state)}
   `,
   item: c => {
-    let user = c.profile?.preferred_username
-    let name = c.profile?.name
+    let user = c.info?.preferred_username
+    let name = c.info?.name
 
     let itemAlias = user
       ? `@${user}`
@@ -80,7 +80,7 @@ const initialState = {
 
     return html`
       <article>
-        ${getAvatar(c.profile)}
+        ${getAvatar(c.info)}
         <address>
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
