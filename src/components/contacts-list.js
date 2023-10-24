@@ -67,15 +67,27 @@ const initialState = {
 
     ${state.footer(state)}
   `,
-  item: c => html`
-    <article>
-      ${getAvatar(c.profile)}
-      <address>
-        <h4>@${c.profile?.preferred_username}</h4>
-        <h5>${c.profile?.name}</h5>
-      </address>
-    </article>
-  `,
+  item: c => {
+    let user = c.profile?.preferred_username
+    let name = c.profile?.name
+
+    let itemAlias = user
+      ? `@${user}`
+      : 'Finish pairing with contact'
+    let itemName = name
+      ? `${name}`
+      : ''
+
+    return html`
+      <article>
+        ${getAvatar(c.profile)}
+        <address>
+          <h4>${itemAlias}</h4>
+          <h5>${itemName}</h5>
+        </address>
+      </article>
+    `
+  },
   footer: state => html``,
   slugs: {
   },

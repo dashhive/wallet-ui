@@ -353,3 +353,29 @@ export async function restate(
 
   return state
 }
+
+export function sortContactsByAlias(a, b) {
+  const aliasA = a.profile?.preferred_username?.toUpperCase() || 'zzz';
+  const aliasB = b.profile?.preferred_username?.toUpperCase() || 'zzz';
+
+  if (aliasA < aliasB) {
+    return -1;
+  }
+  if (aliasA > aliasB) {
+    return 1;
+  }
+  return 0;
+}
+
+export function sortContactsByName(a, b) {
+  const nameA = a.profile?.name?.toUpperCase();
+  const nameB = b.profile?.name?.toUpperCase();
+
+  if (nameA < nameB) {
+    return -1;
+  }
+  if (nameA > nameB) {
+    return 1;
+  }
+  return 0;
+}

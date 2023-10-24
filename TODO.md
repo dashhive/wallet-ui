@@ -19,7 +19,7 @@
        - [ ] Share
        - [ ] Scan
      - [ ] Add a Contact
-     - [ ] Send / Request to Contact
+     - [ ] Send & Request Funds to / from Contact
    - [ ] Fiat balance from:
      - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
      - symbol=DASH${symbol}

@@ -3,6 +3,8 @@ import { qrSvg } from '../helpers/qr.js'
 import {
   formDataEntries,
   setClipboard,
+  sortContactsByAlias,
+  // sortContactsByName,
 } from '../helpers/utils.js'
 
 const aliasRegex = new RegExp(
@@ -15,7 +17,7 @@ export let addContactRig = (function (globals) {
   let {
     setupDialog, mainApp, wallet, wallets,
     appState, bodyNav, dashBalance, onboard,
-    scanContact, store,
+    scanContact, contactsList, store,
   } = globals;
 
   let addContact = setupDialog(
@@ -190,6 +192,19 @@ export let addContactRig = (function (globals) {
                 },
               }
             )
+
+            let contactExists = appState.contacts.findIndex(
+              c => c.profile?.preferred_username === newContact.profile?.preferred_username
+            )
+            if (contactExists > -1) {
+              appState.contacts[contactExists] = newContact
+            } else {
+              appState.contacts.push(newContact)
+            }
+
+            contactsList.render(
+              appState.contacts.sort(sortContactsByAlias)
+            )
             // console.log(
             //   '+contact handleChange newContact',
             //   newContact
@@ -302,6 +317,19 @@ export let addContactRig = (function (globals) {
               uri: event.target.contactAddr.value,
             }
           )
+
+          let contactExists = appState.contacts.findIndex(
+            c => c.profile?.preferred_username === pairedContact.profile?.preferred_username
+          )
+          if (contactExists > -1) {
+            appState.contacts[contactExists] = pairedContact
+          } else {
+            appState.contacts.push(pairedContact)
+          }
+
+          appState.contacts.sort(sortContactsByAlias);
+
+          contactsList.render(appState.contacts)
 
           console.log('pairedContact', pairedContact)
 

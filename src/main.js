@@ -6,6 +6,8 @@ import {
   setClipboard,
   phraseToEl,
   envoy,
+  sortContactsByAlias,
+  // sortContactsByName,
 } from './helpers/utils.js'
 
 import {
@@ -95,6 +97,8 @@ let contactsList = await setupContactsList(
           event.target?.id === 'add_contact' ||
           event.target?.parentNode?.id === 'add_contact'
         ) {
+          let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
+          wallets = aliasWallets?.$wallets
           let selectedWallet = wallets?.[appState.selected_wallet]
           let accountIndex = selectedWallet
             ?.accountIndex || 0
@@ -112,14 +116,16 @@ let contactsList = await setupContactsList(
 
             accountIndex += 1
 
-            let upWallet = await store.wallets.setItem(
-              appState.selected_wallet,
-              {
-                ...selectedWallet,
-                accountIndex,
-              }
-            )
-            wallets[appState.selected_wallet] = upWallet
+            if (selectedWallet) {
+              let upWallet = await store.wallets.setItem(
+                appState.selected_wallet,
+                {
+                  ...selectedWallet,
+                  accountIndex,
+                }
+              )
+              wallets[appState.selected_wallet] = upWallet
+            }
 
             shareAccount = await deriveWalletData(
               appState.phrase,
@@ -149,6 +155,14 @@ let contactsList = await setupContactsList(
                 },
               }
             )
+
+            appState.contacts.push(newContact)
+
+            contactsList.render(
+              appState.contacts.sort(sortContactsByAlias)
+            )
+
+            // loadContacts(res => contactsList.render(res))
 
             console.log(
               'share qr new contact',
@@ -619,9 +633,9 @@ let sendOrRequest = setupDialog(
 
       <fieldset>
         <article>
-          <label for="to">
+          <!-- <label for="to">
             To
-          </label>
+          </label> -->
           <div>
             <input
               type="text"
@@ -716,6 +730,28 @@ let sendOrRequest = setupDialog(
   }
 )
 
+async function loadContacts(callback) {
+  let conLen = await store.contacts.length()
+  store.contacts.iterate(function(
+    v, key, iterationNumber
+  ) {
+    appState.contacts.push(v)
+
+    if (iterationNumber === conLen) {
+      return appState.contacts
+    }
+  })
+  .then(callback)
+  // .then(function(result) {
+  //   // console.log(
+  //   //   'Iteration has completed, last iterated pair:'
+  //   // );
+  //   // console.log(result);
+
+  //   contactsList.render(appState)
+  // })
+  .catch(err => console.error('loadContacts', err));
+}
 
 
 async function main() {
@@ -747,7 +783,7 @@ async function main() {
     mainApp, setupDialog, appState,
     wallet, wallets,
     bodyNav, dashBalance, onboard,
-    scanContact, store,
+    scanContact, contactsList, store,
   })
 
   svgSprite.render()
@@ -952,27 +988,12 @@ async function main() {
   mainFtr.render()
   // await store.contacts.setItem()
 
-  let conLen = await store.contacts.length()
-  store.contacts.iterate(function(
-    value, key, iterationNumber
-  ) {
-    appState.contacts.push(value)
+  loadContacts(
+    res => contactsList.render(
+      res.sort(sortContactsByAlias)
+    )
+  )
 
-    // console.log('store.contacts.iterate', iterationNumber, conLen, key, value)
-
-    if (iterationNumber === conLen) {
-      return appState.contacts
-    }
-  }).then(function(result) {
-      // console.log(
-      //   'Iteration has completed, last iterated pair:'
-      // );
-      // console.log(result);
-      contactsList.render(appState)
-  }).catch(function(err) {
-      // This code runs if there were any errors
-      console.log(err);
-  });
   await contactsList.render({
     contacts: appState.contacts
   })
