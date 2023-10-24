@@ -732,7 +732,7 @@ let sendOrRequest = setupDialog(
 
 async function loadContacts(callback) {
   let conLen = await store.contacts.length()
-  store.contacts.iterate(function(
+  return await store.contacts.iterate(function(
     v, key, iterationNumber
   ) {
     appState.contacts.push(v)
@@ -988,9 +988,9 @@ async function main() {
   mainFtr.render()
   // await store.contacts.setItem()
 
-  loadContacts(
+  await loadContacts(
     res => contactsList.render(
-      res.sort(sortContactsByAlias)
+      res?.sort(sortContactsByAlias)
     )
   )
 
