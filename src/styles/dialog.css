@@ -378,6 +378,9 @@ dialog.fullscreen form section > article > div > button {
 
 dialog.responsive fieldset.share section {
   flex: 1 1 auto;
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
 }
 dialog.responsive fieldset.share section article {
   flex-direction: column;
