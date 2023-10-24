@@ -1,5 +1,5 @@
 /**
- * @typedef {import("./node_modules/crypticstorage/crypticstorage.js")} CrypticStorage
+ * @typedef {import("./node_modules/crypticstorage/storage.js")} CrypticStorage
  * @typedef {import("dashhd").HDWallet} HDWallet
  * @typedef {import("dashhd").HDXKey} HDXKey
  * @typedef {import("dashhd").HDAccount} HDAccount
@@ -23,6 +23,8 @@
  *
  * @typedef {{
  *  id: string;
+ *  accountIndex: number;
+ *  addressIndex: number;
  *  addressKeyId: string;
  *  address: string;
  *  xkeyId: string;
