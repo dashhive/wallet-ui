@@ -154,24 +154,24 @@ export let walletEncryptRig = (function (globals) {
             sessionStorage.encryptionPassword = window.btoa(String(appState.encryptionPassword))
           }
 
-          if (!wallets?.[appState.selected_alias]) {
+          if (!wallets?.[appState.selectedAlias]) {
             initialized = await initWallet(
               fde.pass,
               wallet,
               0,
               0,
               {
-                preferred_username: appState.selected_alias,
+                preferred_username: appState.selectedAlias,
               }
             )
             wallets = initialized.wallets
           }
 
-          // console.log('ENCRYPT wallet!', wallet, appState.selected_alias)
+          // console.log('ENCRYPT wallet!', wallet, appState.selectedAlias)
 
           bodyNav?.render({
             data: {
-              alias: appState.selected_alias
+              alias: appState.selectedAlias
             },
           })
           dashBalance?.render({

@@ -3,6 +3,8 @@ import {
   DashPhrase,
 } from '../imports.js'
 
+import { DUFFS } from './constants.js'
+
 // export async function walletSchema(
 //   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
 //   accountIndex = 0
@@ -223,8 +225,6 @@ export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   )?.join(' ')
 }
 
-export const DUFFS = 100000000;
-
 /**
  * @param {Number} duffs - ex: 00000000
  * @param {Number} [fix] - value for toFixed - ex: 8
@@ -312,6 +312,38 @@ export function setClipboard(event) {
   );
 }
 
+/**
+ * Creates a `Proxy` wrapped object with optional listeners
+ * that react to changes
+ *
+ * @example
+ *    let fooHistory = []
+ *
+ *    let kung = envoy(
+ *      { foo: 'bar' },
+ *      function firstListener(state, oldState) {
+ *        if (state.foo !== oldState.foo) {
+ *          localStorage.foo = state.foo
+ *        },
+ *      },
+ *      async function secondListener(state, oldState) {
+ *        if (state.foo !== oldState.foo) {
+ *          fooHistory.push(oldState.foo)
+ *        }
+ *      }
+ *    )
+ *    kung.foo = 'baz'
+ *    console.log(localStorage.foo) // 'baz'
+ *    kung.foo = 'boo'
+ *    console.log(fooHistory) // ['bar','baz']
+ *
+ * @param {Object} obj
+ * @param {...(
+ *  state: any, oldState: any, prop: string | symbol
+ * ) => void | Promise<void>?} [initListeners]
+ *
+ * @returns {obj}
+ */
 export function envoy(obj, ...initListeners) {
   let _listeners = [...initListeners]
   return new Proxy(obj, {
@@ -332,7 +364,8 @@ export function envoy(obj, ...initListeners) {
       _listeners.forEach(
         fn => fn(
           {...obj, [prop]: value},
-          obj
+          obj,
+          prop
         )
       )
 
@@ -460,4 +493,199 @@ export function parseAddressField(uri) {
   // }
 
   return result
+}
+
+export function isEmpty(value) {
+  if (value === null) {
+    return true
+  }
+  // if (typeof value === 'boolean' && value === false) {
+  //   return true
+  // }
+  if (typeof value === 'string' && value?.length === 0) {
+    return true
+  }
+  if (typeof value === 'object' && Object.keys(value)?.length === 0) {
+    return true
+  }
+  if (Array.isArray(value) && value.length === 0) {
+    return true
+  }
+  return false;
+}
+
+export function generateShareURI(state, protocol = 'web+dash') {
+  let claims = [
+    ["xpub", state.wallet?.xpub || ''],
+    ["sub", state.wallet?.xkeyId || ''],
+  ]
+
+  if (state.userInfo) {
+    let filteredInfo = Array.from(Object.entries(state.userInfo))
+      .filter(p => {
+        let [key, val] = p
+        if (
+          ![
+            'updated_at',
+            'email_verified',
+            'phone_number_verified',
+          ].includes(key) &&
+          !isEmpty(val)
+        ) {
+          return true
+        }
+      })
+
+    claims = [
+      ...claims,
+      ...filteredInfo,
+    ]
+  }
+
+  let scope = claims.map(p => p[0]).join(',')
+
+  console.log('Generate QR claims', claims, scope)
+
+  return new URL(
+    `${protocol}://?${
+      new URLSearchParams([
+        ...claims,
+        ['scope', scope]
+      ])
+    }`
+  )
+}
+
+export async function loadStore(store, callback) {
+  // let storeLen = await store.length()
+  let result = []
+
+  return await store.iterate((v, k, i) => {
+    result.push(v)
+
+    // if (i === storeLen) {
+    //   return result
+    // }
+  })
+  .then(() => callback(result))
+  .catch(err => {
+    console.error('loadStore', err)
+    return null
+  });
+}
+
+export async function loadStoreObject(store, callback) {
+  // let storeLen = await store.length()
+  let result = {}
+
+  return await store.iterate((v, k, i) => {
+    result[k] = v
+
+    // if (i === storeLen) {
+    //   return result
+    // }
+  })
+  .then(() => callback(result))
+  .catch(err => {
+    console.error('loadStoreObject', err)
+    return null
+  });
+}
+
+/**
+ * promise debounce changes
+ *
+ * https://www.freecodecamp.org/news/javascript-debounce-example/
+ *
+ * @example
+ *    const change = debounce((a) => console.log('Saving data', a));
+ *    change('b');change('c');change('d');
+ *    'Saving data d'
+ *
+ * @param {(...args) => void} callback
+ * @param {number} [delay]
+*
+* @returns {Promise<any>}
+*/
+export async function debouncePromise(callback, delay = 300) {
+  let timer
+
+  return await new Promise(resolve => async (...args) => {
+    clearTimeout(timer)
+
+    timer = setTimeout(() => {
+      resolve(callback.apply(this, args))
+    }, delay)
+  })
+
+  // return async (...args) => {
+  //   clearTimeout(timer)
+
+  //   timer = resolve => setTimeout(() => {
+  //     resolve(callback.apply(this, args))
+  //   }, delay)
+
+  //   return await new Promise(timer)
+  // }
+}
+
+/**
+ * debounce changes
+ *
+ * https://www.freecodecamp.org/news/javascript-debounce-example/
+ *
+ * @example
+ *    const change = debounce((a) => console.log('Saving data', a));
+ *    change('b');change('c');change('d');
+ *    'Saving data d'
+ *
+ * @param {(...args) => void} callback
+ * @param {number} [delay]
+*
+* @returns {(...args) => void}
+*/
+export function debounce(callback, delay = 300) {
+  let timer
+
+  return (...args) => {
+    clearTimeout(timer)
+
+    timer = setTimeout(() => {
+      return callback.apply(this, args)
+    }, delay)
+
+    return timer
+  }
+}
+
+/**
+ * debounce that immediately triggers and black holes any extra
+ * executions within the time delay
+ *
+ * https://www.freecodecamp.org/news/javascript-debounce-example/
+ *
+ * @example
+ *    const dry = nobounce((a) => console.log('Saving data', a));
+ *    dry('b');dry('c');dry('d');
+ *    'Saving data b'
+ *
+ * @param {(...args) => void} callback
+ * @param {number} [delay]
+*
+* @returns {(...args) => void}
+*/
+export function nobounce(callback, delay = 300) {
+  let timer
+
+  return (...args) => {
+    if (!timer) {
+      callback.apply(this, args)
+    }
+
+    clearTimeout(timer)
+
+    timer = setTimeout(() => {
+      timer = undefined
+    }, delay)
+  }
 }

@@ -15,10 +15,14 @@
    - [ ] Dialogs
      - [x] Send
      - [x] Request
-     - [ ] QR Code
-       - [ ] Share
-       - [ ] Scan
-     - [ ] Add a Contact
+     - [x] QR Code
+       - [x] Share
+       - [x] Scan
+     - [x] Add a Contact
+       - [x] Share QR Code not getting up to date name for Profile
+       - [x] Changing alias field removes wallet from localForage contact
+       - [x] `Finish pairing` contact in contacts list after save.
+         - should just be named contact
      - [ ] Send & Request Funds to / from Contact
    - [ ] Fiat balance from:
      - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=

@@ -1,5 +1,9 @@
 import { lit as html } from '../helpers/lit.js'
-import { envoy, restate, } from '../helpers/utils.js'
+import {
+  envoy,
+  restate,
+  sortContactsByAlias,
+} from '../helpers/utils.js'
 // import { updateAllFunds, } from '../helpers/wallet.js'
 
 function getAvatar(info) {
@@ -68,7 +72,7 @@ const initialState = {
     ${state.footer(state)}
   `,
   item: c => {
-    let user = c.info?.preferred_username
+    let user = c.alias || c.info?.preferred_username
     let name = c.info?.name
 
     let itemAlias = user
@@ -110,16 +114,16 @@ const initialState = {
       )
     },
     handleContactsChange: (newState, oldState) => {
-      console.log(
-        'handle contacts update',
-        {newState, oldState}
-      )
-      // if (
-      //   newState?.walletFunds?.balance !==
-      //   oldState?.walletFunds?.balance
-      // ) {
-      //   newState.elements.figure.innerHTML = newState.content(newState)
-      // }
+      if (newState.contacts !== oldState.contacts) {
+        console.log(
+          'handle contacts update',
+          {newState, oldState}
+        )
+
+        newState.render?.({
+          contacts: newState.contacts?.sort(sortContactsByAlias),
+        })
+      }
     }
   },
 }
@@ -132,6 +136,10 @@ let state = envoy(
 export async function setupContactsList(
   el, setupState = {}
 ) {
+  console.log(
+    'setupContactsList state.contacts',
+    state.contacts
+  )
   restate(state, setupState)
   // if (setupState?.events?.handleContactsChange) {
   //   state._listeners = [
@@ -188,7 +196,7 @@ export async function setupContactsList(
 
   state.removeAllListeners = removeAllListeners
 
-  async function render (
+  async function render(
     renderState = {},
     position = 'afterbegin',
   ) {
@@ -211,7 +219,7 @@ export async function setupContactsList(
   return {
     element: section,
     render,
-    restate,
+    restate: async newState => await restate(state, newState),
   }
 }
 

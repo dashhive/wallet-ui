@@ -4,8 +4,7 @@ import {
   Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
-
-const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
+import { STOREAGE_SALT, OIDC_CLAIMS } from './constants.js'
 
 // @ts-ignore
 let dashsight = DashSight.create({
@@ -34,10 +33,9 @@ export async function loadWallets() {
 
 export async function loadWalletsForAlias(alias) {
   let $alias = await store.aliases.getItem(alias)
+  $alias.$wallets = {}
 
-  if ($alias !== null) {
-    $alias.$wallets = {}
-
+  if ($alias?.wallets) {
     for (let w of $alias.wallets) {
       let wallet = await store.wallets.getItem(w)
       $alias.$wallets[w] = wallet
@@ -52,26 +50,8 @@ export async function initWalletsInfo(
 ) {
   let wallets = await loadWallets()
 
-  let initInfo = {
-    preferred_username: '',
-    name: '', // [given_name,middle_name,family_name].join(' ')
-    // given_name: '',
-    // family_name: '',
-    // middle_name: '',
-    nickname: '',
-    website: '',
-    phone_number: '',
-    address: '',
-    email: '', // gravatar?
-    // profile: 'https://imgur.com/gallery/y6sSvCr.json',
-    // picture: 'https://i.imgur.com/y6sSvCr.jpeg', // url to avatar img
-    sub: '',
-    xpub: '',
-    updated_at: (new Date()).toISOString(),
-  }
-
   info = {
-    ...initInfo,
+    ...OIDC_CLAIMS,
     ...info,
   }
 

@@ -8,17 +8,17 @@ import {
   // parseAddressField,
 } from '../helpers/utils.js'
 
-const aliasRegex = new RegExp(
-  /^[a-zA-Z0-9]{1,}$/
-)
+import {
+  ALIAS_REGEX,
+} from '../helpers/constants.js'
 
 export let editProfileRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, mainApp, wallet, wallets,
-    appState, bodyNav, dashBalance, onboard,
-    store, aliasWallets,
+    setupDialog, mainApp,
+    appState, bodyNav,
+    store, userInfo, //addContact,
   } = globals;
 
   let editProfile = setupDialog(
@@ -65,7 +65,7 @@ export let editProfileRig = (function (globals) {
                 name="profileName"
                 placeholder="John Doe"
                 value="${
-                  aliasWallets?.info?.name || ''
+                  state.userInfo?.name || ''
                 }"
               />
             </div>
@@ -85,9 +85,9 @@ export let editProfileRig = (function (globals) {
                 type="text"
                 id="${state.slugs.form}_alias"
                 name="profileAlias"
-                value="${appState.selected_alias}"
+                value="${appState.selectedAlias}"
                 placeholder="your_alias"
-                pattern="${aliasRegex.source}"
+                pattern="${ALIAS_REGEX.source}"
                 required
                 spellcheck="false"
               />
@@ -105,7 +105,7 @@ export let editProfileRig = (function (globals) {
         handleRender: state => {
           console.log(
             'edit profile render',
-            aliasWallets,
+            state.userInfo,
           )
         },
         handleSubmit: state => async event => {
@@ -133,21 +133,21 @@ export let editProfileRig = (function (globals) {
           }
 
           let storedAlias = await store.aliases.getItem(
-            appState.selected_alias,
+            appState.selectedAlias,
           )
           let removedAlias
 
-          if (appState.selected_alias !== fde.profileAlias) {
+          if (appState.selectedAlias !== fde.profileAlias) {
             removedAlias = await store.aliases.removeItem(
-              appState.selected_alias,
+              appState.selectedAlias,
             )
-            appState.selected_alias = fde.profileAlias
-            localStorage.selected_alias = fde.profileAlias
+            appState.selectedAlias = fde.profileAlias
+            localStorage.selectedAlias = fde.profileAlias
           }
 
           let updatedAlias = await store.aliases.setItem(
             // state.wallet.id,
-            appState.selected_alias,
+            appState.selectedAlias,
             {
               ...storedAlias,
               info: {
@@ -158,13 +158,16 @@ export let editProfileRig = (function (globals) {
             }
           )
 
+          state.userInfo.name = String(fde.profileName)
+          state.userInfo.preferred_username = String(fde.profileAlias)
+
           let storedWallet = await store.wallets.getItem(
-            appState.selected_wallet,
+            appState.selectedWallet,
           )
 
           let updatedWallet = await store.wallets.setItem(
             // state.wallet.id,
-            appState.selected_wallet,
+            appState.selectedWallet,
             {
               ...storedWallet,
               alias: String(fde.profileAlias),
@@ -172,23 +175,34 @@ export let editProfileRig = (function (globals) {
           )
           bodyNav.render({
             data: {
-              alias: appState.selected_alias
+              alias: appState.selectedAlias
             },
           })
 
-          console.log('Edit Profile Updated!', removedAlias, updatedAlias, updatedWallet)
+          // addContact.render(
+          //   {
+          //     wallet: state.wallet,
+          //     // contact: newContact,
+          //   },
+          //   'afterend',
+          // )
+
+          console.log(
+            'Edit Profile Updated!',
+            removedAlias, updatedAlias, updatedWallet
+          )
 
           // let initialized
           // wallet = state.wallet
 
-          // if (!wallets?.[appState.selected_alias]) {
+          // if (!wallets?.[appState.selectedAlias]) {
           //   initialized = await initWallet(
           //     appState.encryptionPassword,
           //     wallet,
           //     0,
           //     0,
           //     {
-          //       preferred_username: appState.selected_alias,
+          //       preferred_username: appState.selectedAlias,
           //     }
           //   )
           //   wallets = initialized.wallets

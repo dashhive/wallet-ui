@@ -7,27 +7,84 @@ import {
   sortContactsByAlias,
   // sortContactsByName,
   parseAddressField,
+  generateShareURI,
+  loadStore,
+  debounce,
+  nobounce,
 } from '../helpers/utils.js'
 
-const aliasRegex = new RegExp(
-  /^[a-zA-Z0-9_\-\.]{1,}$/
-)
+import {
+  OIDC_CLAIMS,
+  ALIAS_REGEX,
+} from '../helpers/constants.js'
 
 export let addContactRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, mainApp, wallet, wallets,
-    appState, bodyNav, dashBalance, onboard,
-    scanContact, contactsList, store, aliasWallets,
+    setupDialog, mainApp, wallet,
+    appState, userInfo,
+    scanContact, contactsList, store,
   } = globals;
+
+  let debounceAlias = debounce(async (state, event) => {
+    let { preferred_username } = state.contact.info
+    preferred_username = preferred_username || event.target?.value || ''
+    let alias = event.target?.value || preferred_username || ''
+
+    let newContact = await store.contacts.setItem(
+      // state.wallet.id,
+      state.wallet.xkeyId,
+      {
+        ...state.contact,
+        info: {
+          ...OIDC_CLAIMS,
+          ...(state.contact.info || {}),
+          preferred_username,
+        },
+        alias,
+      }
+    )
+
+    state.contact = newContact
+
+    // let contactExists = appState.contacts.findIndex(
+    //   c => c.info?.preferred_username === newContact.info?.preferred_username
+    // )
+    // if (contactExists > -1) {
+    //   appState.contacts[contactExists] = newContact
+    // } else {
+    //   appState.contacts.push(newContact)
+    // }
+
+    // contactsList.render(
+    //   appState.contacts.sort(sortContactsByAlias)
+    // )
+
+    loadStore(
+      store.contacts,
+      res => {
+        if (res) {
+          appState.contacts = res
+
+          return contactsList.restate({
+            contacts: res?.sort(sortContactsByAlias),
+            userInfo,
+          })
+        }
+      }
+    )
+    // console.log(
+    //   '+contact handleChange newContact',
+    //   newContact
+    // )
+  })
 
   let addContact = setupDialog(
     mainApp,
     {
       name: 'Add a New Contact',
-      submitTxt: html`
-      <svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
+      submitTxt: html`<svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
         <use xlink:href="#icon-plus-circle"></use>
       </svg> Add Contact`,
       submitAlt: 'Add Contact',
@@ -50,43 +107,39 @@ export let addContactRig = (function (globals) {
           </button>
         </footer>
       `,
-      content: state => {
-        let shareParams = new URLSearchParams([
-          ["xpub", state.wallet?.xpub || ''],
-          [
-            'name',
-            aliasWallets?.info?.name || ''
-          ],
-          [
-            'preferred_username',
-            appState.selected_alias || ''
-          ],
-          ["sub", state.wallet?.xkeyId || ''],
-          ['scope', 'sub,name,preferred_username,xpub']
-        ]);
-        let shareURI = new URL(`web+dash://?${shareParams}`)
+      generateQr: state => {
+        let shareURI = generateShareURI(state, 'web+dash')
+        let shareLink = shareURI.toString()
 
+        return {
+          uri: shareURI,
+          link: shareLink,
+          svg: qrSvg(
+            shareLink,
+            {
+              background: '#0000',
+              color: 'currentColor',
+              indent: 1,
+              padding: 1,
+              size: 'mini',
+              container: 'svg-viewbox',
+              join: true,
+            }
+          )
+        }
+      },
+      content: state => {
+        let { link, svg } = state.generateQr(state)
         return html`
         ${state.header(state)}
 
         <fieldset class="share">
           <aside>
-            <label for="pair-copy" title="${shareURI.toString()}">
-              ${qrSvg(
-                shareURI.toString(),
-                {
-                  background: '#0000',
-                  color: 'currentColor',
-                  indent: 1,
-                  padding: 1,
-                  size: 'mini',
-                  container: 'svg-viewbox',
-                  join: true,
-                }
-              )}
+            <label for="pair-copy" title="${link}">
+              ${svg}
             </label>
-            <input type="hidden" value="${shareURI.toString()}" />
-            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${shareURI.toString()})">
+            <input type="hidden" value="${link}" />
+            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${link})">
               <i class="icon-copy"></i>
               Copy URI
             </button>
@@ -150,7 +203,7 @@ export let addContactRig = (function (globals) {
                   id="${state.slugs.form}_alias"
                   name="contactAlias"
                   placeholder="your_alias"
-                  pattern="${aliasRegex.source}"
+                  pattern="${ALIAS_REGEX.source}"
                   spellcheck="false"
                 />
               </div>
@@ -223,6 +276,7 @@ export let addContactRig = (function (globals) {
                 {
                   ...state.contact,
                   info: {
+                    ...OIDC_CLAIMS,
                     ...(state.contact.info || {}),
                     ...info,
                   },
@@ -236,8 +290,25 @@ export let addContactRig = (function (globals) {
                       xpub,
                     },
                   },
+                  alias: preferred_username,
                 }
               )
+
+              loadStore(
+                store.contacts,
+                res => {
+                  if (res) {
+                    appState.contacts = res
+
+                    return contactsList.restate({
+                      contacts: res?.sort(sortContactsByAlias),
+                      userInfo,
+                    })
+                  }
+                }
+              )
+
+              state.contact = newContact
 
               if (xkeyOrAddr) {
                 event.target.form.contactAddr.value = xkeyOrAddr
@@ -250,59 +321,36 @@ export let addContactRig = (function (globals) {
               }
             }
           }
-        },
-        handleChange: state => async event => {
-          event.preventDefault()
-          if (
-            event?.target?.validity?.patternMismatch &&
-            event?.target?.type !== 'checkbox'
-          ) {
-            let label = event.target?.previousElementSibling?.textContent?.trim()
-            if (label) {
-              event.target.setCustomValidity(`Invalid ${label}`)
-            }
-          } else {
-            event.target.setCustomValidity('')
-          }
-          event.target.reportValidity()
-
-          // console.log(
-          //   '+contact handleChange',
-          //   event,
-          //   event.target?.name,
-          //   event.target?.value
-          // )
           if (event.target?.name === 'contactAlias') {
-            let newContact = await store.contacts.setItem(
-              // state.wallet.id,
-              state.wallet.xkeyId,
-              {
-                ...state.contact,
-                info: {
-                  ...(state.contact.info || {}),
-                  preferred_username: event.target?.value,
-                },
-              }
+            let updatedAlias = debounceAlias(state, event)
+            console.log(
+              'debounced updated alias',
+              updatedAlias,
             )
-
-            let contactExists = appState.contacts.findIndex(
-              c => c.info?.preferred_username === newContact.info?.preferred_username
-            )
-            if (contactExists > -1) {
-              appState.contacts[contactExists] = newContact
-            } else {
-              appState.contacts.push(newContact)
-            }
-
-            contactsList.render(
-              appState.contacts.sort(sortContactsByAlias)
-            )
-            // console.log(
-            //   '+contact handleChange newContact',
-            //   newContact
-            // )
           }
         },
+        // handleChange: state => async event => {
+        //   event.preventDefault()
+        //   if (
+        //     event?.target?.validity?.patternMismatch &&
+        //     event?.target?.type !== 'checkbox'
+        //   ) {
+        //     let label = event.target?.previousElementSibling?.textContent?.trim()
+        //     if (label) {
+        //       event.target.setCustomValidity(`Invalid ${label}`)
+        //     }
+        //   } else {
+        //     event.target.setCustomValidity('')
+        //   }
+        //   event.target.reportValidity()
+
+        //   // console.log(
+        //   //   '+contact handleChange',
+        //   //   event,
+        //   //   event.target?.name,
+        //   //   event.target?.value
+        //   // )
+        // },
         handleClick: state => async event => {
           if (
             event.target?.classList?.contains('copy') ||
@@ -342,35 +390,37 @@ export let addContactRig = (function (globals) {
             )
 
             let showScan = await scanContact.showModal()
-            let scannedUrl = new URL(showScan)
 
-            console.log(
-              'showScan',
-              showScan,
-              scannedUrl,
-              // scanContact,
-              // scanContact?.element?.returnValue
-            )
-            let { searchParams, pathname } = scannedUrl
-            let addr = pathname.replaceAll('//', '')
-            let {
-              xpub, name, preferred_username
-            } = Object.fromEntries(
-              searchParams?.entries()
-            )
-            let aOrX = addr || xpub
+            if (showScan !== 'cancel') {
+              let scannedUrl = new URL(showScan)
 
-            if (aOrX) {
-              // event.target.addr.value = addr
-              event.target.contactAddr.value = aOrX
-            }
-            if (name) {
-              // event.target.addr.value = addr
-              event.target.contactName.value = name
-            }
-            if (preferred_username) {
-              // event.target.addr.value = addr
-              event.target.contactAlias.value = preferred_username
+              console.log(
+                'scannedUrl',
+                scannedUrl,
+                // scanContact,
+                // scanContact?.element?.returnValue
+              )
+              let { searchParams, pathname } = scannedUrl
+              let addr = pathname.replaceAll('//', '')
+              let {
+                xpub, name, preferred_username
+              } = Object.fromEntries(
+                searchParams?.entries()
+              )
+              let aOrX = addr || xpub
+
+              if (aOrX) {
+                // event.target.addr.value = addr
+                event.target.contactAddr.value = aOrX
+              }
+              if (name) {
+                // event.target.addr.value = addr
+                event.target.contactName.value = name
+              }
+              if (preferred_username) {
+                // event.target.addr.value = addr
+                event.target.contactAlias.value = preferred_username
+              }
             }
 
             return;
@@ -427,40 +477,55 @@ export let addContactRig = (function (globals) {
             {
               ...storedContact,
               info: {
+                // ...OIDC_CLAIMS,
                 ...(storedContact.info || {}),
                 name: event.target.contactName.value,
-                preferred_username: event.target.contactAlias.value,
               },
               uri: event.target.contactAddr.value,
+              alias: event.target.contactAlias.value,
             }
           )
 
-          let contactExists = appState.contacts.findIndex(
-            c => c.info?.preferred_username === pairedContact.info?.preferred_username
+          // let contactExists = appState.contacts.findIndex(
+          //   c => c.info?.preferred_username === pairedContact.info?.preferred_username
+          // )
+          // if (contactExists > -1) {
+          //   appState.contacts[contactExists] = pairedContact
+          // } else {
+          //   appState.contacts.push(pairedContact)
+          // }
+
+          // appState.contacts.sort(sortContactsByAlias);
+
+          // contactsList.render(appState.contacts)
+
+          loadStore(
+            store.contacts,
+            res => {
+              if (res) {
+                appState.contacts = res
+
+                return contactsList.restate({
+                  contacts: res?.sort(sortContactsByAlias),
+                  userInfo,
+                })
+              }
+            }
           )
-          if (contactExists > -1) {
-            appState.contacts[contactExists] = pairedContact
-          } else {
-            appState.contacts.push(pairedContact)
-          }
-
-          appState.contacts.sort(sortContactsByAlias);
-
-          contactsList.render(appState.contacts)
 
           console.log('pairedContact', pairedContact)
 
           // let initialized
           // wallet = state.wallet
 
-          // if (!wallets?.[appState.selected_alias]) {
+          // if (!wallets?.[appState.selectedAlias]) {
           //   initialized = await initWallet(
           //     appState.encryptionPassword,
           //     wallet,
           //     0,
           //     0,
           //     {
-          //       preferred_username: appState.selected_alias,
+          //       preferred_username: appState.selectedAlias,
           //     }
           //   )
           //   wallets = initialized.wallets

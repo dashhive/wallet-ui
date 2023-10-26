@@ -3,16 +3,11 @@ import { lit as html } from '../helpers/lit.js'
 //   formDataEntries,
 // } from '../helpers/utils.js'
 
-const aliasRegex = new RegExp(
-  /^[a-zA-Z0-9]{1,}$/
-)
-
 export let scanContactRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, mainApp, wallet, wallets,
-    appState, bodyNav, dashBalance, onboard,
+    setupDialog, mainApp,
   } = globals;
 
   let scanContact = setupDialog(
@@ -145,14 +140,14 @@ export let scanContactRig = (function (globals) {
           // let initialized
           // wallet = state.wallet
 
-          // if (!wallets?.[appState.selected_alias]) {
+          // if (!wallets?.[appState.selectedAlias]) {
           //   initialized = await initWallet(
           //     appState.encryptionPassword,
           //     wallet,
           //     0,
           //     0,
           //     {
-          //       preferred_username: appState.selected_alias,
+          //       preferred_username: appState.selectedAlias,
           //     }
           //   )
           //   wallets = initialized.wallets

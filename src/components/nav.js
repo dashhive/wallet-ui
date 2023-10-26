@@ -11,7 +11,7 @@ const initialState = {
         <use xlink:href="#icon-logo"></use>
       </svg>
     </a>
-    <a class="alias" href="/#me">@${state.data?.alias}</a>
+    <a id="nav-alias" class="alias" href="/#me">@${state.data?.alias}</a>
   `,
   elements: {
     nav: document.createElement('nav'),

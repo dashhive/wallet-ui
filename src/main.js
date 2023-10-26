@@ -7,8 +7,15 @@ import {
   phraseToEl,
   envoy,
   sortContactsByAlias,
+  loadStore,
   // sortContactsByName,
 } from './helpers/utils.js'
+
+import {
+  OIDC_CLAIMS,
+  ALIAS_REGEX,
+  PHRASE_REGEX,
+} from './helpers/constants.js'
 
 import {
   batchAddressGenerate,
@@ -29,7 +36,7 @@ import setupInputAmount from './components/input-amount.js'
 
 import walletEncryptRig from './rigs/wallet-encrypt.js'
 import addContactRig from './rigs/add-contact.js'
-import editProfileRig from './rigs/profile.js'
+import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
 
 // Example Dash URI's
@@ -37,27 +44,26 @@ import scanContactRig from './rigs/scan.js'
 // let testDashReqUri = `dash:XYZdashAddressZYX?amount=0.50000000&label=test&message=give me monies`
 // let testDashExtUri = `web+dash://?xpub=xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz&sub=01H5KG2NGES5RVMA85YB3M6G0G&nickname=Prime%208&profile=https://imgur.com/gallery/y6sSvCr.json&picture=https://i.imgur.com/y6sSvCr.jpeg&scope=sub,nickname,profile,xpub&redirect_uri=https://`
 
-// form validation
-const phraseRegex = new RegExp(
-  /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
-)
-const aliasRegex = new RegExp(
-  /^[a-zA-Z0-9]{1,}$/
-)
-
 // app/data state
 let wallets
 let wallet
+let userInfo
 let appState = envoy(
   {
     phrase: null,
     encryptionPassword: null,
-    selected_wallet: '',
-    selected_alias: '',
+    selectedWallet: '',
+    selectedAlias: '',
+    aliasInfo: {},
     contacts: [],
   },
   (state, oldState) => {
-    if (state.foo !== oldState.bar) {
+    if (state.contacts !== oldState.contacts) {
+      console.log(
+        'state.contacts !== oldState.contacts on push',
+        oldState.contacts,
+        state.contacts,
+      )
     }
   }
 )
@@ -97,9 +103,8 @@ let contactsList = await setupContactsList(
           event.target?.id === 'add_contact' ||
           event.target?.parentNode?.id === 'add_contact'
         ) {
-          let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
-          wallets = aliasWallets?.$wallets
-          let selectedWallet = wallets?.[appState.selected_wallet]
+          await getUserInfo()
+          let selectedWallet = wallets?.[appState.selectedWallet]
           let accountIndex = selectedWallet
             ?.accountIndex || 0
 
@@ -118,13 +123,13 @@ let contactsList = await setupContactsList(
 
             if (selectedWallet) {
               let upWallet = await store.wallets.setItem(
-                appState.selected_wallet,
+                appState.selectedWallet,
                 {
                   ...selectedWallet,
                   accountIndex,
                 }
               )
-              wallets[appState.selected_wallet] = upWallet
+              wallets[appState.selectedWallet] = upWallet
             }
 
             shareAccount = await deriveWalletData(
@@ -162,7 +167,10 @@ let contactsList = await setupContactsList(
               appState.contacts.sort(sortContactsByAlias)
             )
 
-            // loadContacts(res => contactsList.render(res))
+            // await loadStore(
+            //   store.contacts,
+            //   res => contactsList.render(res)
+            // )
 
             console.log(
               'share qr new contact',
@@ -174,6 +182,7 @@ let contactsList = await setupContactsList(
             {
               wallet: shareAccount,
               contact: newContact,
+              userInfo,
             },
             'afterend',
           )
@@ -327,7 +336,7 @@ let walletGen = setupDialog(
               id="${state.slugs.form}_alias"
               name="alias"
               placeholder="your_alias"
-              pattern="${aliasRegex.source}"
+              pattern="${ALIAS_REGEX.source}"
               required
               spellcheck="false"
             />
@@ -358,11 +367,11 @@ let walletGen = setupDialog(
         wallet = await deriveWalletData()
 
         appState.phrase = wallet.recoveryPhrase
-        appState.selected_wallet = wallet.id
-        appState.selected_alias = `${fde.alias}`
+        appState.selectedWallet = wallet.id
+        appState.selectedAlias = `${fde.alias}`
 
-        localStorage.selected_wallet = appState.selected_wallet
-        localStorage.selected_alias = appState.selected_alias
+        localStorage.selectedWallet = appState.selectedWallet
+        localStorage.selectedAlias = appState.selectedAlias
 
         // console.log('GENERATE wallet!', wallet)
 
@@ -419,7 +428,7 @@ let walletImp = setupDialog(
               id="phrase"
               name="pass"
               placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
-              pattern="${phraseRegex.source}"
+              pattern="${PHRASE_REGEX.source}"
               required
               spellcheck="false"
             />
@@ -449,7 +458,7 @@ let walletImp = setupDialog(
               id="${state.slugs.form}_alias"
               name="alias"
               placeholder="your_alias"
-              pattern="${aliasRegex.source}"
+              pattern="${ALIAS_REGEX.source}"
               required
               spellcheck="false"
             />
@@ -489,11 +498,11 @@ let walletImp = setupDialog(
 
         wallet = await deriveWalletData(appState.phrase)
 
-        appState.selected_alias = `${fde.alias}`
-        appState.selected_wallet = wallet.id
+        appState.selectedAlias = `${fde.alias}`
+        appState.selectedWallet = wallet.id
 
-        localStorage.selected_wallet = appState.selected_wallet
-        localStorage.selected_alias = appState.selected_alias
+        localStorage.selectedWallet = appState.selectedWallet
+        localStorage.selectedAlias = appState.selectedAlias
 
         // console.log('IMPORT wallet!', wallet)
 
@@ -730,31 +739,43 @@ let sendOrRequest = setupDialog(
   }
 )
 
-async function loadContacts(callback) {
-  let conLen = await store.contacts.length()
 
-  return await store.contacts.iterate(function(
-    v, key, iterationNumber
-  ) {
-    appState.contacts.push(v)
+async function getUserInfo() {
+  if (appState.selectedAlias) {
+    console.log(
+      'getUserInfo selectedAlias',
+      appState.selectedAlias,
+      // appState
+    )
+    let { $wallets, ...$userInfo } = await loadWalletsForAlias(
+      appState.selectedAlias
+    )
+    wallets = $wallets
 
-    if (iterationNumber === conLen) {
-      return appState.contacts
-    }
-  })
-  .then(callback)
-  // .then(function(result) {
-  //   // console.log(
-  //   //   'Iteration has completed, last iterated pair:'
-  //   // );
-  //   // console.log(result);
-
-  //   contactsList.render(appState)
-  // })
-  .catch(err => {
-    console.error('loadContacts', err)
-    return null
-  });
+    userInfo = envoy(
+      {
+        ...OIDC_CLAIMS,
+        ...($userInfo?.info || {}),
+      },
+      async (state, oldState, prop) => {
+        if (state[prop] !== oldState[prop]) {
+          let $aliases = await store.aliases.getItem(
+            appState.selectedAlias,
+          )
+          store.aliases.setItem(
+            appState.selectedAlias,
+            {
+              ...$aliases,
+              info: {
+                ...$aliases.info,
+                [prop]: state[prop],
+              },
+            }
+          )
+        }
+      }
+    )
+  }
 }
 
 
@@ -762,54 +783,50 @@ async function main() {
   appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
   )
-  appState.selected_wallet = localStorage?.selected_wallet || ''
-  appState.selected_alias = localStorage?.selected_alias || ''
+  appState.selectedWallet = localStorage?.selectedWallet || ''
+  appState.selectedAlias = localStorage?.selectedAlias || ''
 
-  let aliasWallets = await loadWalletsForAlias(appState.selected_alias)
-  wallets = aliasWallets?.$wallets
+  await getUserInfo()
 
-  let accountIndex = wallets?.[appState.selected_wallet]
+  let accountIndex = wallets?.[appState.selectedWallet]
     ?.accountIndex || 0
 
   bodyNav = await setupNav(
     mainApp,
     {
       data: {
-        alias: appState.selected_alias
+        alias: appState.selectedAlias
       },
     }
   )
 
   walletEncrypt = walletEncryptRig({
     mainApp, setupDialog, appState,
+    bodyNav, dashBalance, onboard,
     wallet, wallets,
-    bodyNav, dashBalance, onboard,
-  })
-
-  editProfile = editProfileRig({
-    mainApp, setupDialog, appState,
-    wallet, wallets, store, aliasWallets,
-    bodyNav, dashBalance, onboard,
   })
 
   scanContact = scanContactRig({
     mainApp, setupDialog, appState,
-    wallet, wallets,
-    bodyNav, dashBalance, onboard,
   })
 
   addContact = addContactRig({
     mainApp, setupDialog, appState,
-    wallet, wallets, aliasWallets,
-    bodyNav, dashBalance, onboard,
+    wallet, wallets, userInfo,
     scanContact, contactsList, store,
+  })
+
+  editProfile = editProfileRig({
+    mainApp, setupDialog, appState,
+    wallet, wallets, store,
+    bodyNav, userInfo,
   })
 
   svgSprite.render()
 
   console.log(
     'load wallet alias',
-    aliasWallets
+    userInfo
   )
 
   document.addEventListener('submit', async event => {
@@ -854,11 +871,11 @@ async function main() {
     }
   })
 
-  let ks_phrase = wallets?.[appState.selected_wallet]
+  let ks_phrase = wallets?.[appState.selectedWallet]
     ?.keystore?.crypto?.ciphertext || ''
-  let ks_iv = wallets?.[appState.selected_wallet]
+  let ks_iv = wallets?.[appState.selectedWallet]
     ?.keystore?.crypto?.cipherparams?.iv || ''
-  let ks_salt = wallets?.[appState.selected_wallet]
+  let ks_salt = wallets?.[appState.selectedWallet]
     ?.keystore?.crypto?.kdfparams?.salt || ''
 
   if (appState.encryptionPassword) {
@@ -926,6 +943,8 @@ async function main() {
             appState.phrase = decryptedRecoveryPhrase
             appState.encryptionPassword = fde.pass
 
+            await getUserInfo()
+
             if (fde.remember) {
               sessionStorage.encryptionPassword = window.btoa(String(appState.encryptionPassword))
             }
@@ -986,27 +1005,50 @@ async function main() {
 
   bodyNav.render({
     data: {
-      alias: appState.selected_alias
+      alias: appState.selectedAlias
     },
   })
   mainFtr.render()
-  // await store.contacts.setItem()
 
-  await loadContacts(
-    res => contactsList.render(
-      res?.sort(sortContactsByAlias)
-    )
+  await loadStore(
+    store.contacts,
+    res => {
+      console.log(
+        'loadStore store.contacts',
+        res,
+      )
+      if (res) {
+        appState.contacts = res
+
+        return contactsList.render({
+          contacts: res?.sort(sortContactsByAlias),
+          userInfo,
+        })
+      }
+    }
   )
 
   await contactsList.render({
+    userInfo,
     contacts: appState.contacts
   })
   sendRequestBtn.render()
 
-  bodyNav.element.querySelector('& > a.alias')
-    .addEventListener('click', async event => {
+  document.addEventListener('click', async event => {
+    let {
+      // @ts-ignore
+      id, parentElement,
+    } = event?.target
+
+    if (id === 'nav-alias') {
       event.preventDefault()
       event.stopPropagation()
+
+      console.log(
+        'nav alias click',
+        event,
+        [event?.target],
+      )
 
       let shareAccount
 
@@ -1033,16 +1075,19 @@ async function main() {
         )
       }
 
+      await getUserInfo()
+
       editProfile.render(
         {
           wallet: shareAccount,
+          userInfo,
         },
         'afterend',
       )
 
       editProfile.showModal()
-    })
-
+    }
+  })
 
   mainApp.insertAdjacentHTML('afterbegin', html`
     <header></header>
