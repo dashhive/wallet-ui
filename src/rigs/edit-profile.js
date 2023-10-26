@@ -103,10 +103,10 @@ export let editProfileRig = (function (globals) {
       fields: html``,
       events: {
         handleRender: state => {
-          console.log(
-            'edit profile render',
-            state.userInfo,
-          )
+          // console.log(
+          //   'edit profile render',
+          //   state.userInfo,
+          // )
         },
         handleSubmit: state => async event => {
           event.preventDefault()

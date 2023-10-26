@@ -149,14 +149,18 @@ let contactsList = await setupContactsList(
               // shareAccount.id,
               shareAccount.xkeyId,
               {
-                request: {
-                  accountIndex,
-                  xprv: shareAccount.xprv,
-                  xpub: shareAccount.xpub,
-                  id: shareAccount.id,
-                  xkeyId: shareAccount.xkeyId,
-                  addressKeyId: shareAccount.addressKeyId,
-                  address: shareAccount.address,
+                incoming: {
+                  // ...(state.contact.incoming || {}),
+                  [`${appState.selectedWallet}/${shareAccount.xkeyId}`]: {
+                    accountIndex,
+                    addressIndex: shareAccount.addressIndex,
+                    xprv: shareAccount.xprv,
+                    xpub: shareAccount.xpub,
+                    id: shareAccount.id,
+                    xkeyId: shareAccount.xkeyId,
+                    addressKeyId: shareAccount.addressKeyId,
+                    address: shareAccount.address,
+                  },
                 },
               }
             )
@@ -652,7 +656,9 @@ let sendOrRequest = setupDialog(
               name="to"
               placeholder="enter @alias or dash address"
               spellcheck="false"
+              list="contactAliases"
             />
+
             <button
               class="rounded outline"
               type="submit"
@@ -666,6 +672,14 @@ let sendOrRequest = setupDialog(
                 </svg>
               </span>
             </button>
+
+            <datalist id="contactAliases">
+              ${
+                (state.contacts || []).map(contact => {
+                  return html`<option value="@${contact.alias}">${contact.info?.name || contact.alias}</option>`
+                })
+              }
+            </datalist>
           </div>
 
           ${inputAmount.renderAsHTML()}
@@ -730,6 +744,74 @@ let sendOrRequest = setupDialog(
             'You must specify a contact or address to send to'
           )
           event.target.to.reportValidity()
+          return;
+        }
+
+        if (String(fde.to).startsWith('@')) {
+          let cAlias = String(fde.to).substring(1)
+          let contact = state.contacts.find(c => c.alias === cAlias)
+          let inWallet = Object.values(contact?.incoming)?.[0]
+          let outWallet = Object.values(contact?.outgoing)?.[0]
+
+          if (fde.intent === 'send') {
+            let {
+              xkeyId,
+              addressKeyId,
+              addressIndex,
+              address: addr,
+            } = await deriveWalletData(
+              outWallet?.xpub,
+              0,
+              outWallet?.addressIndex + 1,
+            )
+
+            console.log(
+              `${fde.intent} TO CONTACT`,
+              contact,
+              {
+                xkeyId: outWallet?.xkeyId,
+                addressKeyId: outWallet?.addressKeyId,
+                addressIndex: outWallet?.addressIndex,
+                address: outWallet?.address,
+              },
+              {
+                xkeyId,
+                addressKeyId,
+                addressIndex,
+                address: addr,
+              },
+            )
+          }
+          if (fde.intent === 'request') {
+            let {
+              xkeyId,
+              addressKeyId,
+              addressIndex,
+              address: addr,
+            } = await deriveWalletData(
+              inWallet?.xpub,
+              0,
+              inWallet?.addressIndex + 1,
+            )
+
+            console.log(
+              `${fde.intent} TO CONTACT`,
+              contact,
+              {
+                xkeyId: inWallet?.xkeyId,
+                addressKeyId: inWallet?.addressKeyId,
+                addressIndex: inWallet?.addressIndex,
+                address: inWallet?.address,
+              },
+              {
+                xkeyId,
+                addressKeyId,
+                addressIndex,
+                address: addr,
+              },
+            )
+          }
+
           return;
         }
 
@@ -839,7 +921,10 @@ async function main() {
       event.preventDefault()
       event.stopPropagation()
 
-      sendOrRequest.render()
+      sendOrRequest.render({
+        userInfo,
+        contacts: appState.contacts
+      })
       sendOrRequest.showModal()
         // .catch(console.error)
     }
@@ -1020,7 +1105,7 @@ async function main() {
       if (res) {
         appState.contacts = res
 
-        return contactsList.render({
+        contactsList.render({
           contacts: res?.sort(sortContactsByAlias),
           userInfo,
         })

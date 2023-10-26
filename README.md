@@ -6,44 +6,53 @@ A Graphical User Interface (GUI) for
 
 ## Roadmap
 ### Stage 1
- - [x] Initial Project Setup
- - [x] Implementation of `DashHd` & `DashPhrase` modules
-	 - [x] To generate a new wallet
-	 - [x] To restore an existing wallet via recovery phrase
- - [ ] Add Usage Controls
-	 - [ ] Request Funds
-		 - [DashWallet.js#walletfindchangewalletfriendopts](https://github.com/dashhive/DashWallet.js#walletfindchangewalletfriendopts)
-	 - [ ] Send Funds
-		 - [DashWallet.js#walletfindfriendfriendopts](https://github.com/dashhive/DashWallet.js#walletfindfriendfriendopts)
-	 - [ ] [Share Pairing Contact Info](https://github.com/dashhive/DashWallet.js#walletbefriendfrienddetails)
-	 - [ ] Add a Contact
- - [ ] Display List of Contacts
-	 - [ ] Send
-	 - [ ] Request
-	 - [ ] Edit
-	 - [ ] Remove
- - [ ] Backup Wallet & Contacts
- - [ ] Encrypt wallet data in local storage
-	 - [x] Reocvery Phrase
-	 - [ ] Contact Data
+- [x] Initial Project Setup
+- [x] Implementation of `DashHd` & `DashPhrase` modules
+  - [x] To generate a new wallet
+  - [x] To restore an existing wallet via recovery phrase
+- [ ] Contacts
+  - [x] Share Pairing Contact Info
+    - Dash URI
+      - [DIP: aj-contact-scanback](https://github.com/dashhive/DIPs/blob/aj-contact-scanback/aj-contact-scanback.md#1-contact-exchange)
+      - ```
+        dash://?xpub=xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz
+              &sub=01H5KG2NGES5RVMA85YB3M6G0G
+              &nickname=Prime%208
+              &profile=https://imgur.com/gallery/y6sSvCr.json
+              &picture=https://i.imgur.com/y6sSvCr.jpeg
+              &scope=sub,nickname,profile,xpub
+              &redirect_uri=https://
+        ```
+    - QR Code (uses the Dash URI from above)
+  - [x] Add a Contact
+  - [x] List
+  - [ ] Edit
+  - [ ] Remove
+- [ ] Funding
+  - [ ] Request
+  - [ ] Send
+- [ ] Backup Wallet & Contacts
+- [ ] Encrypt wallet data in local storage
+  - [x] Recovery Phrase
+  - [ ] Contact Data
 
 ### Stage 2
  - [ ] Transactions view
-	 - [ ] Table with filter/sort
-	 - [ ] Select & Copy as CSV
+   - [ ] Table with filter/sort
+   - [ ] Select & Copy as CSV
  - [ ] Display Wallet balance in desired fiat currency
  - [ ] Settings
-	 - [ ] Select Wallet (multiple accounts)
-	 - [ ] Set Alias for selected wallet
-	 - [ ] Preferred fiat Currency
-		 - USD
-		 - GBP
-		 - EUR
-		 - etc
+   - [ ] Select Wallet (multiple accounts)
+   - [ ] Set Alias for selected wallet
+   - [ ] Preferred fiat Currency
+     - USD
+     - GBP
+     - EUR
+     - etc
  - [ ] Contact/Payment Share Features
-	 - [ ] SMS
-	 - [ ] Email
-	 - [ ] QR Image
+   - [ ] SMS
+   - [ ] Email
+   - [ ] QR Image
  - [ ] Set Fund Denomination for Send & Request  payments
 
 ### Stage 3
@@ -51,13 +60,13 @@ A Graphical User Interface (GUI) for
  - [ ] View & manage addresses associated with Wallet
  - [ ] Add side-by-side view for contacts to display the XPubs that represent both you & the contact in the connection
  - [ ] Gift card integration
-	 - [ ] DashDirect
-	 - [ ] BitRefill
+   - [ ] DashDirect
+   - [ ] BitRefill
 
 ### Stage 4
  - [ ] Savings account (Investing) Integration
-	 - [ ] CrowdNode
-	 - [ ] THORChain / Maya
+   - [ ] CrowdNode
+   - [ ] THORChain / Maya
  - [ ] Subscriptions
  - [ ] If possible, automate `befriend` process with blockchain messaging.
 

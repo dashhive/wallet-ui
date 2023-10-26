@@ -280,12 +280,13 @@ export let addContactRig = (function (globals) {
                     ...(state.contact.info || {}),
                     ...info,
                   },
-                  wallets: {
-                    ...(state.contact.wallets || {}),
+                  outgoing: {
+                    ...(state.contact.outgoing || {}),
                     [xkeyId]: {
                       addressIndex,
                       addressKeyId,
                       address: address || addr,
+                      xkeyId,
                       xprv,
                       xpub,
                     },
@@ -362,11 +363,11 @@ export let addContactRig = (function (globals) {
           }
         },
         handleRender: state => {
-          console.log(
-            '+contact app state & wallets',
-            appState,
-            state,
-          )
+          // console.log(
+          //   '+contact app state & wallets',
+          //   appState,
+          //   state,
+          // )
         },
         handleSubmit: state => async event => {
           event.preventDefault()

@@ -248,6 +248,10 @@ dialog.responsive fieldset section article {
 dialog.responsive button[type="submit"] {
   flex: 1 1 auto;
 }
+dialog.responsive footer button[type="reset"],
+dialog.responsive footer button[type="submit"] {
+  flex: 1 1 50%;
+}
 /* dialog.responsive button[type="reset"] {
   position: absolute;
   top: 0;
@@ -259,10 +263,6 @@ dialog.responsive button[type="submit"] {
   transition: none;
   padding: 1rem;
   line-height: 1;
-}
-dialog.responsive footer button[type="reset"],
-dialog.responsive footer button[type="submit"] {
-  flex: 1 1 50%;
 }
 dialog.responsive button[type="reset"]:focus {
   outline: 0;
