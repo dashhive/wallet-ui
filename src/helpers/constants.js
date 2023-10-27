@@ -28,4 +28,5 @@ export const PHRASE_REGEX = new RegExp(
 )
 export const ALIAS_REGEX = new RegExp(
   /^[a-zA-Z0-9]{1,}$/
+  // Needs support added for Dashes, Underscores & Periods
 )

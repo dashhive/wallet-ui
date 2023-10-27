@@ -2,31 +2,28 @@ import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
 } from '../helpers/utils.js'
-import {
-  initWallet,
-} from '../helpers/wallet.js'
 
-export let walletEncryptRig = (function (globals) {
+export let walletDecryptRig = (function (globals) {
   'use strict';
 
   let {
     setupDialog, appDialogs, appState, mainApp,
-    wallet, wallets, bodyNav, dashBalance,
+    wallets, decryptWallet, getUserInfo,
   } = globals;
 
-  let walletEncrypt = setupDialog(
+  let walletDecrypt = setupDialog(
     mainApp,
     {
-      name: 'Encrypt Wallet',
-      submitTxt: 'Encrypt',
-      submitAlt: 'Encrypt Wallet',
+      name: 'Decrypt Wallet',
+      submitTxt: 'Decrypt',
+      submitAlt: 'Decrypt Wallet',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel Form`,
       closeTxt: html`<i class="icon-x"></i>`,
       closeAlt: `Close`,
       footer: state => html`
         <footer class="inline col">
-          <sup>Encrypt sensitive wallet data stored in the browser.</sup>
+          <sup>Temporarily decrypt wallet data stored in the browser.</sup>
           <button
             class="rounded"
             type="submit"
@@ -120,73 +117,59 @@ export let walletEncryptRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          event.target.pass.setCustomValidity('')
-          event.target.pass.reportValidity()
+          let ks_phrase = wallets?.[appState.selectedWallet]
+            ?.keystore?.crypto?.ciphertext || ''
+          let ks_iv = wallets?.[appState.selectedWallet]
+            ?.keystore?.crypto?.cipherparams?.iv || ''
+          let ks_salt = wallets?.[appState.selectedWallet]
+            ?.keystore?.crypto?.kdfparams?.salt || ''
 
-          // console.log('ENCRYPT OVERRIDE!', state, event)
-
+          let decryptedRecoveryPhrase
           let fde = formDataEntries(event)
 
           if (!fde.pass) {
             event.target.pass.setCustomValidity(
-              'An encryption password is required'
+              'A decryption password is required'
             )
             event.target.reportValidity()
             return;
           }
 
-          let initialized
-          wallet = state.wallet
+          try {
+            decryptedRecoveryPhrase = await decryptWallet(
+              fde.pass,
+              ks_iv,
+              ks_salt,
+              ks_phrase
+            )
+          } catch(err) {
+            console.error('[fail] unable to decrypt recovery phrase', err)
+            event.target.pass.setCustomValidity(
+              'Unable to decrypt recovery phrase. Did you type the correct encryption password?'
+            )
+            event.target.reportValidity()
+            return;
+          }
 
-          // console.log(
-          //   'walletEncrypt state.wallet',
-          //   wallet,
-          //   state,
-          //   fde
-          // )
-
-          appState.phrase = wallet.recoveryPhrase
+          appState.phrase = decryptedRecoveryPhrase
           appState.encryptionPassword = fde.pass
+
+          await getUserInfo()
 
           if (fde.remember) {
             sessionStorage.encryptionPassword = window.btoa(String(appState.encryptionPassword))
           }
 
-          if (!wallets?.[appState.selectedAlias]) {
-            initialized = await initWallet(
-              fde.pass,
-              wallet,
-              0,
-              0,
-              {
-                preferred_username: appState.selectedAlias,
-              }
-            )
-            wallets = initialized.wallets
-          }
-
-          // console.log('ENCRYPT wallet!', wallet, appState.selectedAlias)
-
-          bodyNav?.render({
-            data: {
-              alias: appState.selectedAlias
-            },
-          })
-          dashBalance?.render({
-            wallet,
-          })
-
-          appDialogs.onboard?.close()
-          walletEncrypt.close()
+          appDialogs.walletDecrypt.close()
         },
       },
     }
   )
 
   // @ts-ignore
-  globals.walletEncrypt = walletEncrypt;
+  globals.walletDecrypt = walletDecrypt;
 
-  return walletEncrypt
+  return walletDecrypt
 })
 
-export default walletEncryptRig
+export default walletDecryptRig

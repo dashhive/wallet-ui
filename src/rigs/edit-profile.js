@@ -16,9 +16,8 @@ export let editProfileRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, mainApp,
+    mainApp, setupDialog, store,
     appState, bodyNav,
-    store, userInfo, //addContact,
   } = globals;
 
   let editProfile = setupDialog(
@@ -166,7 +165,6 @@ export let editProfileRig = (function (globals) {
           )
 
           let updatedWallet = await store.wallets.setItem(
-            // state.wallet.id,
             appState.selectedWallet,
             {
               ...storedWallet,
@@ -179,34 +177,10 @@ export let editProfileRig = (function (globals) {
             },
           })
 
-          // addContact.render(
-          //   {
-          //     wallet: state.wallet,
-          //     // contact: newContact,
-          //   },
-          //   'afterend',
-          // )
-
           console.log(
             'Edit Profile Updated!',
             removedAlias, updatedAlias, updatedWallet
           )
-
-          // let initialized
-          // wallet = state.wallet
-
-          // if (!wallets?.[appState.selectedAlias]) {
-          //   initialized = await initWallet(
-          //     appState.encryptionPassword,
-          //     wallet,
-          //     0,
-          //     0,
-          //     {
-          //       preferred_username: appState.selectedAlias,
-          //     }
-          //   )
-          //   wallets = initialized.wallets
-          // }
 
           editProfile.close()
         },

@@ -22,9 +22,8 @@ export let addContactRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, mainApp, wallet,
-    appState, userInfo,
-    scanContact, contactsList, store,
+    setupDialog, appDialogs, appState, store,
+    mainApp, wallet, userInfo, contactsList,
   } = globals;
 
   let debounceAlias = debounce(async (state, event) => {
@@ -379,17 +378,17 @@ export let addContactRig = (function (globals) {
 
           let fde = formDataEntries(event)
 
-          console.log('scanContact', scanContact)
+          console.log('scanContact', appDialogs.scanContact)
 
           if (fde?.intent === 'scan_new_contact') {
-            scanContact.render(
+            appDialogs.scanContact.render(
               {
                 wallet,
               },
               'afterend',
             )
 
-            let showScan = await scanContact.showModal()
+            let showScan = await appDialogs.scanContact.showModal()
 
             if (showScan !== 'cancel') {
               let {
