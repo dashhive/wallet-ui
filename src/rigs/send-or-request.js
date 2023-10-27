@@ -10,12 +10,9 @@ export let sendOrRequestRig = (function (globals) {
   let {
     mainApp, setupDialog, appDialogs,
     wallet, deriveWalletData,
-  } = globals;
+  } = globals
 
-  let inputAmount = setupInputAmount(
-    mainApp,
-    {}
-  )
+  let inputAmount = setupInputAmount(mainApp)
 
   let sendOrRequest = setupDialog(
     mainApp,
@@ -93,7 +90,7 @@ export let sendOrRequestRig = (function (globals) {
 
               <datalist id="contactAliases">
                 ${
-                  (state.contacts || []).map(contact => {
+                  (state.contacts || []).filter(c => c.alias).map(contact => {
                     return html`<option value="@${
                       contact.alias
                     }">${
@@ -169,75 +166,67 @@ export let sendOrRequestRig = (function (globals) {
             return;
           }
 
-          if (String(fde.to).startsWith('@')) {
-            let cAlias = String(fde.to).substring(1)
-            let contact = state.contacts.find(c => c.alias === cAlias)
-            let inWallet = Object.values(contact?.incoming)?.[0]
-            let outWallet = Object.values(contact?.outgoing)?.[0]
+          let inWallet, contact, to = String(fde.to)
 
-            if (fde.intent === 'send') {
-              let {
-                xkeyId,
-                addressKeyId,
-                addressIndex,
-                address: addr,
-              } = await deriveWalletData(
-                outWallet?.xpub,
-                0,
-                outWallet?.addressIndex + 1,
-              )
-
-              console.log(
-                `${fde.intent} TO CONTACT`,
-                contact,
-                {
-                  xkeyId: outWallet?.xkeyId,
-                  addressKeyId: outWallet?.addressKeyId,
-                  addressIndex: outWallet?.addressIndex,
-                  address: outWallet?.address,
-                },
-                {
-                  xkeyId,
-                  addressKeyId,
-                  addressIndex,
-                  address: addr,
-                },
-              )
-            }
-            if (fde.intent === 'request') {
-              let {
-                xkeyId,
-                addressKeyId,
-                addressIndex,
-                address: addr,
-              } = await deriveWalletData(
-                inWallet?.xpub,
-                0,
-                inWallet?.addressIndex + 1,
-              )
-
-              console.log(
-                `${fde.intent} TO CONTACT`,
-                contact,
-                {
-                  xkeyId: inWallet?.xkeyId,
-                  addressKeyId: inWallet?.addressKeyId,
-                  addressIndex: inWallet?.addressIndex,
-                  address: inWallet?.address,
-                },
-                {
-                  xkeyId,
-                  addressKeyId,
-                  addressIndex,
-                  address: addr,
-                },
-              )
-            }
-
-            return;
+          if (to.startsWith('@')) {
+            contact = state.contacts.find(c => c.alias === to.substring(1))
+            inWallet = Object.values(contact?.incoming)?.[0]
           }
 
-          sendOrRequest.close(fde.intent)
+          if (fde.intent === 'send') {
+            console.log(
+              `CONFIRM ${fde.intent} TO`,
+              contact,
+              `Ð ${fde.amount || 0}`,
+            )
+
+            appDialogs.sendConfirm.render(
+              {
+                wallet,
+                contact,
+                to,
+                amount: Number(fde.amount),
+              },
+              'afterend',
+            )
+
+            let showConfirm = await appDialogs.sendConfirm.showModal()
+          }
+
+          if (fde.intent === 'request') {
+            let {
+              xkeyId,
+              addressKeyId,
+              addressIndex,
+              address: addr,
+            } = await deriveWalletData(
+              inWallet?.xpub,
+              0,
+              inWallet?.addressIndex + 1,
+            )
+
+            console.log(
+              `${fde.intent} TO CONTACT`,
+              `Ð ${fde.amount || 0}`,
+              contact,
+              {
+                xkeyId: inWallet?.xkeyId,
+                addressKeyId: inWallet?.addressKeyId,
+                addressIndex: inWallet?.addressIndex,
+                address: inWallet?.address,
+              },
+              {
+                xkeyId,
+                addressKeyId,
+                addressIndex,
+                address: addr,
+              },
+            )
+          }
+
+          // return;
+
+          // sendOrRequest.close(fde.intent)
         },
       },
     }

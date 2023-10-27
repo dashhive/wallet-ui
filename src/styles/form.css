@@ -164,7 +164,7 @@ form .field {
   padding: 1rem 1.5rem;
   margin-top: 3rem;
   flex: 0;
-  max-width: 21rem;
+  max-width: 22rem;
   min-width: initial;
   align-self: center;
   align-items: flex-start;
@@ -187,6 +187,42 @@ form .field > div > label:has(+ input) {
 }
 form .field:has(> div > label + input:focus) {
   border: 1px solid var(--dark-200);
+}
+form > article {
+  display: flex;
+  font-size: 1.25rem;
+  color: var(--f);
+  padding: 0 4rem;
+}
+form > article > figure {
+  align-items: flex-start;
+  align-self: auto;
+  row-gap: .25rem;
+  flex: none;
+  max-width: 100%;
+  word-break: break-all;
+}
+form > article > figure figcaption:has(+ div) {
+  font-size: .75rem;
+  font-weight: 500;
+  line-height: 1;
+}
+form > article > figure figcaption + div {
+  display: flex;
+  line-height: 1;
+  margin: 0;
+  text-align: left;
+}
+form > article > figure figcaption + div.big {
+  font-size: 3.75rem;
+}
+form > article > figure figcaption + div svg {
+  align-self: center;
+  margin-right: 1rem;
+}
+form > article > figure figcaption + div sub {
+  align-self: self-end;
+  font-size: 2.75rem;
 }
 
 /* form fieldset div > input + button i {

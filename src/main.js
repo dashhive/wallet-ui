@@ -37,6 +37,7 @@ import addContactRig from './rigs/add-contact.js'
 import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
 import sendOrRequestRig from './rigs/send-or-request.js'
+import sendConfirmRig from './rigs/send-confirm.js'
 
 // Example Dash URI's
 
@@ -80,6 +81,7 @@ let appDialogs = envoy(
     editProfile: {},
     scanContact: {},
     sendOrRequest: {},
+    sendConfirm: {},
   },
 )
 
@@ -141,9 +143,18 @@ let contactsList = await setupContactsList(
               accountIndex
             )
 
+            let addressIndex = 0
+            let { addresses, finalAddressIndex } = await batchAddressGenerate(
+              shareAccount,
+              accountIndex,
+              addressIndex,
+            )
+
             console.log(
               'share qr derived wallet',
               accountIndex,
+              finalAddressIndex,
+              addresses,
               // shareAccount?.xkeyId,
               shareAccount,
               // wallet,
@@ -303,6 +314,11 @@ async function main() {
   })
 
   appDialogs.sendOrRequest = sendOrRequestRig({
+    mainApp, setupDialog, appDialogs,
+    wallet, deriveWalletData,
+  })
+
+  appDialogs.sendConfirm = sendConfirmRig({
     mainApp, setupDialog, appDialogs,
     wallet, deriveWalletData,
   })

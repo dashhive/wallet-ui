@@ -26,6 +26,7 @@
  *  accountIndex: number;
  *  addressIndex: number;
  *  addressKeyId: string;
+ *  addressKey: HDKey;
  *  address: string;
  *  xkeyId: string;
  *  xkey: HDXKey;

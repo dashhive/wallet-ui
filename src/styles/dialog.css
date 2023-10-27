@@ -251,6 +251,18 @@ dialog.responsive button[type="submit"] {
 dialog.responsive footer button[type="reset"],
 dialog.responsive footer button[type="submit"] {
   flex: 1 1 50%;
+  border: 1px solid transparent;
+}
+dialog.responsive footer button[type="reset"] {
+  border: 1px solid var(--dark-200);
+  color: var(--dark-200);
+  outline: 0;
+}
+dialog.responsive footer button[type="reset"]:hover {
+  background-color: transparent;
+  border: 1px solid var(--dang);
+  color: var(--dang);
+  outline: 0;
 }
 /* dialog.responsive button[type="reset"] {
   position: absolute;
@@ -497,5 +509,12 @@ dialog.responsive fieldset.share {
     padding: 2rem 1rem; */
     min-width: 33.75rem;
     /* flex: 1 1 auto; */
+  }
+
+  dialog > form > article {
+    /* min-width: 33.75rem;
+    max-width: 33.75rem; */
+    width: 33.75rem;
+    overflow: hidden;
   }
 }

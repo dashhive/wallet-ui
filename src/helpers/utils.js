@@ -103,6 +103,7 @@ export async function deriveWalletData(
     accountIndex,
     addressIndex,
     addressKeyId,
+    addressKey,
     address,
     xkeyId,
     xkey,

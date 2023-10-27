@@ -427,16 +427,16 @@ th {
 }
 
 
-main header figure figcaption:has(+ div) {
+figure figcaption:has(+ div) {
   color: var(--dark-200);
 }
-main header figure figcaption + div {
+figure figcaption + div {
   color: var(--emphasize);
 }
-main header figure figcaption + div sub {
+figure figcaption + div sub {
   color: var(--de-emphasize);
 }
-main header figure figcaption + div sub span {
+figure figcaption + div sub span {
   color: var(--emphasize);
 }
 

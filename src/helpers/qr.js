@@ -2,8 +2,6 @@
 
 import { toDash } from './utils.js'
 
-let qrWidth = 2 + 33 + 2;
-
 /**
  * @typedef QrOpts
  * @property {String} [background]
@@ -57,11 +55,5 @@ export function showQr(addr, duffs = 0) {
     dashUri += `?amount=${dashAmount}`;
   }
 
-  let dashQr = qrSvg(dashUri, { indent: 4, size: "mini" });
-  // let addrPad = Math.max(0, Math.ceil((qrWidth - dashUri.length) / 2));
-
-  // console.info(dashQr);
-  // console.info();
-  // console.info(" ".repeat(addrPad) + dashUri);
-  return dashQr
+  return qrSvg(dashUri, { indent: 4, size: "mini" });
 }
