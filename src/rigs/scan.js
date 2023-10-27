@@ -29,15 +29,15 @@ export let scanContactRig = (function (globals) {
           ${state.header(state)}
 
           <fieldset class="px-6">
-            <sup>Hold the QR in front of your device camera</sup>
             <div class="scanner" id="${state.slugs.form}_reader"></div>
+            <sup>Hold the QR in front of your device camera</sup>
 
-            <div class="updrop">
+            <!-- <div class="updrop">
               <svg class="upload" width="40" height="40" viewBox="0 0 40 40">
                 <use xlink:href="#icon-upload"></use>
               </svg>
               <span>Drag and drop the QR image or click to <strong><u>upload</u></strong></span>
-            </div>
+            </div> -->
           </fieldset>
 
           ${state.footer(state)}

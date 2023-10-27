@@ -18,6 +18,7 @@
      - [x] QR Code
        - [x] Share
        - [x] Scan
+         - [ ] Upload QR image
      - [x] Add a Contact
        - [x] Share QR Code not getting up to date name for Profile
        - [x] Changing alias field removes wallet from localForage contact
