@@ -235,14 +235,13 @@ export let addContactRig = (function (globals) {
 
           if (event.target?.name === 'contactAddr') {
             if (event.target?.value) {
-              let parsedAddr = parseAddressField(event.target.value)
               let {
                 address,
                 xpub,
                 xprv,
                 name,
                 preferred_username,
-              } = parsedAddr
+              } = parseAddressField(event.target.value)
 
               let xkey = xprv || xpub
 
@@ -265,9 +264,7 @@ export let addContactRig = (function (globals) {
               console.log(
                 'add contact handleChange parsedAddr',
                 event.target.value,
-                parsedAddr,
                 xkey,
-                // xkeyData,
               )
 
               let newContact = await store.contacts.setItem(
@@ -292,6 +289,7 @@ export let addContactRig = (function (globals) {
                     },
                   },
                   alias: preferred_username,
+                  uri: event.target.value,
                 }
               )
 
@@ -323,11 +321,12 @@ export let addContactRig = (function (globals) {
             }
           }
           if (event.target?.name === 'contactAlias') {
-            let updatedAlias = debounceAlias(state, event)
-            console.log(
-              'debounced updated alias',
-              updatedAlias,
-            )
+            // let updatedAlias =
+            debounceAlias(state, event)
+            // console.log(
+            //   'debounced updated alias',
+            //   updatedAlias,
+            // )
           }
         },
         // handleChange: state => async event => {
@@ -393,33 +392,25 @@ export let addContactRig = (function (globals) {
             let showScan = await scanContact.showModal()
 
             if (showScan !== 'cancel') {
-              let scannedUrl = new URL(showScan)
-
-              console.log(
-                'scannedUrl',
-                scannedUrl,
-                // scanContact,
-                // scanContact?.element?.returnValue
-              )
-              let { searchParams, pathname } = scannedUrl
-              let addr = pathname.replaceAll('//', '')
               let {
-                xpub, name, preferred_username
-              } = Object.fromEntries(
-                searchParams?.entries()
-              )
-              let aOrX = addr || xpub
+                address,
+                xpub,
+                xprv,
+                name,
+                preferred_username,
+              } = parseAddressField(showScan)
 
-              if (aOrX) {
-                // event.target.addr.value = addr
-                event.target.contactAddr.value = aOrX
+              let xkey = xprv || xpub
+
+              let xkeyOrAddr = xkey || address
+
+              if (xkeyOrAddr) {
+                event.target.contactAddr.value = xkeyOrAddr
               }
               if (name) {
-                // event.target.addr.value = addr
                 event.target.contactName.value = name
               }
               if (preferred_username) {
-                // event.target.addr.value = addr
                 event.target.contactAlias.value = preferred_username
               }
             }
@@ -445,31 +436,6 @@ export let addContactRig = (function (globals) {
 
           let storedContact = await store.contacts.getItem(
             state.wallet.xkeyId,
-          )
-          let parsedAddr = parseAddressField(String(fde.contactAddr))
-          let {
-            address,
-            xpub,
-            xprv,
-            // name,
-            // preferred_username,
-          } = parsedAddr
-
-          let xkey = xprv || xpub
-
-          // let xkeyOrAddr = xkey || address
-
-          // let info = {
-          //   name,
-          //   preferred_username,
-          // }
-
-          let xkeyData = await deriveWalletData(
-            xkey,
-          )
-          console.log(
-            'xkeyData',
-            xkeyData
           )
 
           let pairedContact = await store.contacts.setItem(

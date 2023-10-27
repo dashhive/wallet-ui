@@ -469,7 +469,7 @@ export function parseAddressField(uri) {
   let result = {}
 
   if (uri.includes(':')) {
-    let [protocol, params] = uri.split(':')
+    let [protocol] = uri.split(':')
     if (protocol.includes('dash')) {
       result = parseDashURI(uri)
     }
