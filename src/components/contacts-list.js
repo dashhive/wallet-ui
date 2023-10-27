@@ -6,18 +6,23 @@ import {
 } from '../helpers/utils.js'
 // import { updateAllFunds, } from '../helpers/wallet.js'
 
-function getAvatar(info) {
-  let initials = info?.name?.
+function getAvatar(c) {
+  let initials = c.info?.name?.
     split(' ').map(n => n[0]).join('') || ''
+
+  if (!initials) {
+    initials = (c.alias || c.info?.preferred_username)?.[0] || ''
+  }
+
   let avStr = `<div class="avatar" style="`
 
-  if (info?.picture) {
-    avStr += `color:transparent;background-image:url(${info.picture});`
+  if (c.info?.picture) {
+    avStr += `color:transparent;background-image:url(${c.info.picture});`
   }
 
   // Gravatar
-  // if (info.email) {
-  //   avStr += `color:transparent;background-image:url(${info.email});`
+  // if (c.info.email) {
+  //   avStr += `color:transparent;background-image:url(${c.info.email});`
   // }
 
   return html`${avStr}">${initials}</div>`
@@ -84,7 +89,7 @@ const initialState = {
 
     return html`
       <article>
-        ${getAvatar(c.info)}
+        ${getAvatar(c)}
         <address>
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
