@@ -34,6 +34,8 @@
     "deploy": "node .github/workflows/deploy.js"
   },
   "dependencies": {
+    "@dashincubator/base58check": "^1.4.1",
+    "@dashincubator/ripemd160": "^3.0.0",
     "@dashincubator/secp256k1": "^1.7.1-5",
     "@zxing/library": "^0.20.0",
     "crypticstorage": "^0.0.1-1",
@@ -41,6 +43,7 @@
     "dashkeys": "^1.0.1",
     "dashphrase": "^1.3.9",
     "dashsight": "^1.6.0",
+    "dashtx": "^0.13.1",
     "dashwallet": "^0.6.0",
     "html5-qrcode": "^2.3.8",
     "idb": "^7.1.1",
