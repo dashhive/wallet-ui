@@ -3,7 +3,10 @@ import {
   DashPhrase,
 } from '../imports.js'
 
-import { DUFFS } from './constants.js'
+import {
+  DUFFS,
+  DASH_URI_REGEX,
+} from './constants.js'
 
 // export async function walletSchema(
 //   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
@@ -433,18 +436,19 @@ export function sortContactsByName(a, b) {
 
 export function parseDashURI(uri) {
   let result = {}
-  let parsedUri = new URL(uri)
+  let parsedUri = [
+    ...uri.matchAll(DASH_URI_REGEX)
+  ]?.[0]?.groups || {}
+  let searchParams = new URLSearchParams(parsedUri?.params || '')
 
   console.log(
     'parseDashURI',
-    parsedUri
+    parsedUri,
+    searchParams
   )
 
-  let { searchParams, pathname } = parsedUri
-  let addr = pathname.replaceAll('//', '')
-
-  if (addr) {
-    result.address = addr
+  if (parsedUri?.address) {
+    result.address = parsedUri?.address
   }
 
   // let xkeyOrAddr = xprv || xpub || addr
@@ -501,13 +505,6 @@ export function parseAddressField(uri) {
     result.address = uri
   }
 
-  // ^((?:web\+)?dash:)(?:\/{0,2})?(.+)$
-  // (?:web\+dash:)?(?:\/{0,2})?(.+)
-  // ^(?:(web\+)?dash:)(?:\/{0,2})?(.+)$
-  // if (uri.match(/^((web\+)?dash:)(\/\/)?(.+)/ig)) {
-  //   result = parseDashURI(uri)
-  // }
-
   return result
 }
 
@@ -559,17 +556,14 @@ export function generateShareURI(state, protocol = 'web+dash') {
   }
 
   let scope = claims.map(p => p[0]).join(',')
+  let searchParams = new URLSearchParams([
+    ...claims,
+    ['scope', scope]
+  ])
 
-  console.log('Generate QR claims', claims, scope)
+  console.log('Generate QR claims', claims, scope, searchParams)
 
-  return new URL(
-    `${protocol}://?${
-      new URLSearchParams([
-        ...claims,
-        ['scope', scope]
-      ])
-    }`
-  )
+  return `${protocol}://?${searchParams.toString()}`
 }
 
 export async function loadStore(store, callback) {

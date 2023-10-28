@@ -30,3 +30,31 @@ export const ALIAS_REGEX = new RegExp(
   /^[a-zA-Z0-9]{1,}$/
   // Needs support added for Dashes, Underscores & Periods
 )
+export const DASH_URI_REGEX = new RegExp(
+  /^(?:web\+)?(?<protocol>dash)(?:\:)(?:\/\/)?(?<address>X[1-9A-HJ-NP-Za-km-z]{33})?(?:[?])(?<params>.+)/,
+  'ig'
+)
+
+
+// const DASH_URI_REGEX = new RegExp(
+//   /(?<protocol>dash)(?:\:)(?:\/\/)?(?<address>X[1-9A-HJ-NP-Za-km-z]{33})?(?:[?])(?<params>.+)?$/,
+//   'ig'
+// )
+
+// const DASH_URI_REGEX = new RegExp(
+//   /(?<protocol>dash)(?:\:)(?:\/\/)?(?<address>X[1-9A-HJ-NP-Za-km-z]{33})?(?:[?])(?<params>.+)?$/,
+//   'ig'
+// )
+
+// const DASH_URI_REGEX = new RegExp(
+//   /^(?:web\+)?(?<protocol>dash)(?:\:)(?:\/\/)?(?<address>.+)?(?<params>(?:[?])([a-zA-Z_-]+)(?:[=])([a-zA-Z0-9,_\-]+)(?:[&])?)+/,
+//   'ig'
+// )
+
+// ^((?:web\+)?dash:)(?:\/{0,2})?(.+)$
+// (?:web\+dash:)?(?:\/{0,2})?(.+)
+// ^(?:(web\+)?dash:)(?:\/{0,2})?(.+)$
+
+// if (uri.match(/^((web\+)?dash:)(\/\/)?(.+)/ig)) {
+//   result = parseDashURI(uri)
+// }

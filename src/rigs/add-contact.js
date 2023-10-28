@@ -108,11 +108,9 @@ export let addContactRig = (function (globals) {
         </footer>
       `,
       generateQr: state => {
-        let shareURI = generateShareURI(state, 'web+dash')
-        let shareLink = shareURI.toString()
+        let shareLink = generateShareURI(state, 'web+dash')
 
         return {
-          uri: shareURI,
           link: shareLink,
           svg: qrSvg(
             shareLink,
@@ -319,43 +317,25 @@ export let addContactRig = (function (globals) {
             }
           }
           if (event.target?.name === 'contactAlias') {
-            // let updatedAlias =
             debounceAlias(state, event)
-            // console.log(
-            //   'debounced updated alias',
-            //   updatedAlias,
-            // )
           }
         },
-        // handleChange: state => async event => {
-        //   event.preventDefault()
-        //   if (
-        //     event?.target?.validity?.patternMismatch &&
-        //     event?.target?.type !== 'checkbox'
-        //   ) {
-        //     let label = event.target?.previousElementSibling?.textContent?.trim()
-        //     if (label) {
-        //       event.target.setCustomValidity(`Invalid ${label}`)
-        //     }
-        //   } else {
-        //     event.target.setCustomValidity('')
-        //   }
-        //   event.target.reportValidity()
-
-        //   // console.log(
-        //   //   '+contact handleChange',
-        //   //   event,
-        //   //   event.target?.name,
-        //   //   event.target?.value
-        //   // )
-        // },
         handleClick: state => async event => {
-          let shareAside = appDialogs.addContact.element.querySelector(
+          let shareAside = state.elements?.dialog?.querySelector(
             'fieldset.share > aside'
           )
           if (
-            shareAside.contains(event.target)
+            shareAside?.contains(event.target)
           ) {
+            if (
+              event.target?.nodeName.toLowerCase() === 'input' &&
+              event.target?.readOnly
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              event.target.select()
+            }
             if (
               event.target?.classList?.contains('copy') ||
               event.target?.classList?.contains('icon-copy')
@@ -366,7 +346,7 @@ export let addContactRig = (function (globals) {
               setClipboard(event)
             }
             if (
-              event.target?.nodeName === 'svg'
+              event.target?.nodeName.toLowerCase() === 'svg'
             ) {
               event.preventDefault()
               event.stopPropagation()
@@ -374,7 +354,7 @@ export let addContactRig = (function (globals) {
               openBlobSVG(event.target)
             }
             if (
-              event.target?.parentElement?.nodeName === 'svg'
+              event.target?.parentElement?.nodeName.toLowerCase() === 'svg'
             ) {
               event.preventDefault()
               event.stopPropagation()
@@ -383,13 +363,7 @@ export let addContactRig = (function (globals) {
             }
           }
         },
-        handleRender: state => {
-          // console.log(
-          //   '+contact app state & wallets',
-          //   appState,
-          //   state,
-          // )
-        },
+        handleRender: state => {},
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
