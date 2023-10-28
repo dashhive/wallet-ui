@@ -6,6 +6,8 @@
  * @typedef {import("dashhd").HDFromXKeyOptions} HDFromXKeyOptions
  * @typedef {import("dashhd").HDToPublic} HDToPublic
  * @typedef {import("dashhd").HDKey} HDKey
+ * @typedef {import("dashkeys").PublicKeyToPubKeyHash} PublicKeyToPubKeyHash
+ * @typedef {import("dashkeys").AddressToPubKeyHash} AddressToPubKeyHash
  *
  * @typedef {{
  *  encPrivKey?: HTMLElement & { passphrase?: HTMLInputElement };

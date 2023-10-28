@@ -9,15 +9,18 @@ import {
 } from './helpers/utils.js'
 
 import {
+  DUFFS,
   OIDC_CLAIMS,
 } from './helpers/constants.js'
 
 import {
+  initDashSocket,
   batchAddressGenerate,
   updateAllFunds,
   decryptWallet,
   loadWalletsForAlias,
   store,
+  sendTx,
 } from './helpers/wallet.js'
 
 import setupNav from './components/nav.js'
@@ -57,15 +60,15 @@ let appState = envoy(
     aliasInfo: {},
     contacts: [],
   },
-  (state, oldState) => {
-    if (state.contacts !== oldState.contacts) {
-      console.log(
-        'state.contacts !== oldState.contacts on push',
-        oldState.contacts,
-        state.contacts,
-      )
-    }
-  }
+  // (state, oldState) => {
+  //   if (state.contacts !== oldState.contacts) {
+  //     console.log(
+  //       'state.contacts !== oldState.contacts on push',
+  //       oldState.contacts,
+  //       state.contacts,
+  //     )
+  //   }
+  // }
 )
 
 // rigs
@@ -320,7 +323,7 @@ async function main() {
 
   appDialogs.sendConfirm = sendConfirmRig({
     mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData,
+    wallet, deriveWalletData, sendTx,
   })
 
   svgSprite.render()
@@ -336,6 +339,7 @@ async function main() {
       event.stopPropagation()
 
       appDialogs.sendOrRequest.render({
+        wallet,
         userInfo,
         contacts: appState.contacts
       })
@@ -539,14 +543,102 @@ async function main() {
 
   updateAllFunds(wallet)
     .then(funds => {
-      dashBalance?.restate({
-        wallet,
-        walletFunds: {
-          balance: funds
-        }
-      })
+      walletFunds.balance = funds
+      // dashBalance?.restate({
+      //   wallet,
+      //   walletFunds: {
+      //     balance: funds
+      //   }
+      // })
     })
     .catch(err => console.error('catch updateAllFunds', err, wallet))
+
+  let addr = wallet?.address
+
+  initDashSocket({
+    onMessage: async function (evname, data) {
+      // console.log('onMessage check for', addr, evname, data)
+      // let result;
+      // try {
+      //   result = await find(evname, data);
+      // } catch (e) {
+      //   reject(e);
+      //   return;
+      // }
+
+      // if (result) {
+      //   resolve(result);
+      // }
+
+      if (![
+          // "tx",
+          "txlock"
+        ].includes(evname)
+      ) {
+        return;
+      }
+
+      let now = Date.now();
+      // if (mempoolTx?.timestamp) {
+      //   // don't wait longer than 3s for a txlock
+      //   if (now - mempoolTx.timestamp > maxTxLockWait) {
+      //     return mempoolTx;
+      //   }
+      // }
+
+      let result = data.vout.some(function (vout) {
+        if (!(addr in vout)) {
+          return false;
+        }
+
+        let duffs = vout[addr];
+        // if (amount && duffs !== amount) {
+        //   return false;
+        // }
+
+        let newTx = {
+          address: addr,
+          timestamp: now,
+          txid: data.txid,
+          satoshis: duffs,
+          dash: (duffs / DUFFS),
+          txlock: data.txlock,
+        };
+
+        walletFunds.balance = walletFunds?.balance + newTx.dash
+
+        // dashBalance?.restate({
+        //   wallet,
+        //   walletFunds: {
+        //     balance: walletFunds?.balance || 0
+        //   }
+        // })
+
+        // if ("txlock" !== evname) {
+        //   if (!mempoolTx) {
+        //     mempoolTx = newTx;
+        //   }
+        //   return false;
+        // }
+
+        // result = newTx;
+        console.log(
+          'found main address',
+          addr,
+          newTx,
+        )
+
+        return newTx;
+      });
+
+      if (result) {
+        console.log(
+          'socket found main address',
+          addr,
+        )
+      }
+    },
+  })
 }
 
 main()

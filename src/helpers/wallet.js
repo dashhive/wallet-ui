@@ -1,6 +1,8 @@
 import {
+  DashTx,
   DashHd,
   DashSight,
+  DashSocket,
   Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
@@ -11,6 +13,34 @@ let dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
 });
+
+let defaultSocketEvents = {
+  onClose: async (e) => console.log('onClose', e),
+  onError: async (e) => console.log('onError', e),
+  onMessage: async (e, data) => console.log('onMessage', e, data),
+}
+
+export async function initDashSocket(
+  events = {}
+) {
+  // @ts-ignore
+  let dashsocket = DashSocket.create({
+    dashsocketBaseUrl: 'https://insight.dash.org/socket.io',
+    cookieStore: null,
+    debug: true,
+    ...defaultSocketEvents,
+    ...events,
+  })
+
+  await dashsocket.init()
+    .catch((e) => console.log('dashsocket catch err', e));
+
+  setTimeout(() => {
+    dashsocket.close()
+  }, 15*60*1000);
+
+  return dashsocket
+}
 
 export const store = await DatabaseSetup()
 
@@ -334,4 +364,103 @@ export async function batchAddressGenerate(
     addresses,
     finalAddressIndex: addressIndex,
   }
+}
+
+// await forceInsightUpdate('XsiasfIJBjifeifasdijbuUt3')
+export async function forceInsightUpdateForAddress(addr) {
+  let currentAddr = await store.addresses.getItem(
+    addr
+  )
+  await store.addresses.setItem(
+    addr,
+    {
+      ...currentAddr,
+      insight: {
+        ...currentAddr.insight,
+        updated_at: 0
+      }
+    }
+  )
+}
+
+export async function sendTx(
+  fromWallet, recipient, amount,
+) {
+  const MIN_FEE = 191;
+  const DUST = 2000;
+
+  console.log(DashTx, fromWallet)
+  let dashTx = DashTx.create({
+    // @ts-ignore
+    version: 3,
+  });
+
+  let privateKeys = {
+    [fromWallet.address]: fromWallet.addressKey.privateKey,
+  };
+
+  let coreUtxos = await dashsight.getCoreUtxos(fromWallet.address);
+
+  console.log('coreUtxos', coreUtxos);
+
+  let payments = [
+    {
+      address: recipient?.address || recipient,
+      satoshis: DashTx.toSats(amount),
+    },
+  ];
+
+  let spendableDuffs = coreUtxos.reduce(function (total, utxo) {
+    return total + utxo.satoshis;
+  }, 0);
+  let spentDuffs = payments.reduce(function (total, output) {
+    return total + output.satoshis;
+  }, 0);
+  let unspentDuffs = spendableDuffs - spentDuffs;
+
+  let txInfo = {
+    inputs: coreUtxos,
+    outputs: payments,
+  };
+
+  let sizes = DashTx.appraise(txInfo);
+  let midFee = sizes.mid;
+
+  if (unspentDuffs < MIN_FEE) {
+    throw new Error(
+      `overspend: inputs total '${spendableDuffs}', but outputs total '${spentDuffs}', which leaves no way to pay the fee of '${sizes.mid}'`,
+    );
+  }
+
+  txInfo.inputs.sort(DashTx.sortInputs)
+
+  let outputs = txInfo.outputs.slice(0);
+  let change;
+
+  change = unspentDuffs - (midFee + DashTx.OUTPUT_SIZE);
+  if (change < DUST) {
+    change = 0;
+  }
+  if (change) {
+    txInfo.outputs = outputs.slice(0);
+    txInfo.outputs.push({
+      address: fromWallet.address,
+      satoshis: change,
+    });
+  }
+
+  let keys = coreUtxos.map(utxo => privateKeys[utxo.address]);
+
+  let tx = await dashTx.hashAndSignAll(txInfo, keys);
+
+  let txHex = tx.transaction;
+
+  console.log('tx', tx);
+  console.log('txHex', [txHex]);
+
+  let result = await dashsight.instantSend(txHex);
+
+  console.log('instantSend result', result);
+
+  return result
 }

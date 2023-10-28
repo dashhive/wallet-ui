@@ -138,7 +138,7 @@ export let sendOrRequestRig = (function (globals) {
           if (fde?.intent === 'scan_new_contact') {
             appDialogs.scanContact.render(
               {
-                wallet,
+                wallet: state.wallet,
               },
               'afterend',
             )
@@ -182,7 +182,7 @@ export let sendOrRequestRig = (function (globals) {
 
             appDialogs.sendConfirm.render(
               {
-                wallet,
+                wallet: state.wallet,
                 contact,
                 to,
                 amount: Number(fde.amount),
