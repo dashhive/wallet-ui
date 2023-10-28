@@ -435,7 +435,7 @@ label {
   flex-direction: row;
   align-items: center;
   user-select: none;
-  min-width: 100px;
+  min-width: 64px;
   gap: 1rem;
   justify-content: inherit;
 }

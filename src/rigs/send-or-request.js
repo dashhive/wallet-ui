@@ -64,7 +64,7 @@ export let sendOrRequestRig = (function (globals) {
             <!-- <label for="to">
               To
             </label> -->
-            <div>
+            <div class="input">
               <input
                 type="text"
                 id="${state.slugs.form}_to"
