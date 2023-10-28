@@ -4,6 +4,7 @@ import {
   deriveWalletData,
   formDataEntries,
   setClipboard,
+  openBlobSVG,
   sortContactsByAlias,
   // sortContactsByName,
   parseAddressField,
@@ -116,10 +117,10 @@ export let addContactRig = (function (globals) {
           svg: qrSvg(
             shareLink,
             {
-              background: '#0000',
-              color: 'currentColor',
-              indent: 1,
-              padding: 1,
+              // background: '#0000',
+              // color: '#fff',
+              indent: 0,
+              padding: 4,
               size: 'mini',
               container: 'svg-viewbox',
               join: true,
@@ -134,10 +135,8 @@ export let addContactRig = (function (globals) {
 
         <fieldset class="share">
           <aside>
-            <label for="pair-copy" title="${link}">
-              ${svg}
-            </label>
-            <input type="hidden" value="${link}" />
+            <span title="Open QR Code in new Window">${svg}</span>
+            <input readonly value="${link}" />
             <button id="pair-copy" class="pill rounded copy" title="Copy URI (${link})">
               <i class="icon-copy"></i>
               Copy URI
@@ -150,7 +149,7 @@ export let addContactRig = (function (globals) {
               <label for="contactAddress">
                 Contact Address
               </label>
-              <div>
+              <div class="input">
                 <input
                   id="contactAddress"
                   name="contactAddr"
@@ -351,13 +350,37 @@ export let addContactRig = (function (globals) {
         //   // )
         // },
         handleClick: state => async event => {
+          let shareAside = appDialogs.addContact.element.querySelector(
+            'fieldset.share > aside'
+          )
           if (
-            event.target?.classList?.contains('copy') ||
-            event.target?.classList?.contains('icon-copy')
+            shareAside.contains(event.target)
           ) {
-            event.preventDefault()
-            event.stopPropagation()
-            setClipboard(event)
+            if (
+              event.target?.classList?.contains('copy') ||
+              event.target?.classList?.contains('icon-copy')
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              setClipboard(event)
+            }
+            if (
+              event.target?.nodeName === 'svg'
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              openBlobSVG(event.target)
+            }
+            if (
+              event.target?.parentElement?.nodeName === 'svg'
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              openBlobSVG(event.target?.parentElement)
+            }
           }
         },
         handleRender: state => {

@@ -36,6 +36,9 @@ form fieldset legend {
 form fieldset svg {
   margin: 0;
   max-width: max-content;
+  height: 100%;
+  width: 100%;
+  cursor: pointer;
 }
 form fieldset:last-of-type:has(> button) {
   flex-direction: row;
@@ -69,6 +72,11 @@ form fieldset .password {
   display: flex;
   flex-direction: row;
   /* border-radius: 6.25rem; */
+  align-items: center;
+}
+form fieldset div.input {
+  display: flex;
+  flex-direction: row;
   align-items: center;
 }
 form fieldset div:has(input),
@@ -239,7 +247,8 @@ form fieldset.share {
   flex: none;
 }
 form fieldset.share aside {
-  max-width: 13rem;
+  max-width: 16rem;
+  /* max-width: 305px; */
   display: flex;
   flex: 1 1 auto;
   flex-direction: column;
@@ -257,6 +266,7 @@ form fieldset.share aside label {
   width: 100%;
   padding: 0;
   color: inherit;
+  /* margin-bottom: 2rem; */
 }
 
 

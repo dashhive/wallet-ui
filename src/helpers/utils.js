@@ -286,9 +286,8 @@ export function formDataEntries(event) {
   return Object.fromEntries(fd.entries())
 }
 
-export function copyToClipboard(event) {
-  event.preventDefault()
-  event.target.previousElementSibling.select();
+export function copyToClipboard(target) {
+  target.select();
   document.execCommand("copy");
 }
 
@@ -301,16 +300,32 @@ export function setClipboard(event) {
   }
   const type = "text/plain";
   const blob = new Blob([val], { type });
-  const data = [new ClipboardItem({ [type]: blob })];
 
-  navigator.clipboard.write(data).then(
-    cv => {
-      console.log('setClipboard', cv)
-    },
-    ce => {
-      console.error('[fail] setClipboard', ce)
-    }
-  );
+  if (
+    "clipboard" in navigator &&
+    typeof navigator.clipboard.write === "function"
+  ) {
+    const data = [new ClipboardItem({ [type]: blob })];
+
+    navigator.clipboard.write(data).then(
+      cv => {
+        console.log('setClipboard', cv)
+      },
+      ce => {
+        console.error('[fail] setClipboard', ce)
+      }
+    );
+  } else {
+    copyToClipboard(el)
+  }
+}
+
+export function openBlobSVG(target) {
+	const svgStr = new XMLSerializer().serializeToString(target);
+	const svgBlob = new Blob([svgStr], { type: "image/svg+xml" });
+	const url = URL.createObjectURL(svgBlob);
+	const win = open(url);
+	win.onload = (evt) => URL.revokeObjectURL(url);
 }
 
 /**

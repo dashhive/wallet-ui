@@ -25,11 +25,10 @@ export function create(data, opts) {
   return new QRCode({
     ...opts,
     content: data,
-    padding: opts?.padding || 4,
     width: opts?.width || 256,
     height: opts?.height || 256,
-    color: opts?.color || "#000000",
-    background: opts?.background || "#ffffff",
+    color: opts?.color || "#000",
+    background: opts?.background || "#fff",
     ecl: opts?.ecl || "M",
   });
 };
