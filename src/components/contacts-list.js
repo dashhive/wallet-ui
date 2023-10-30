@@ -120,10 +120,10 @@ const initialState = {
     },
     handleContactsChange: (newState, oldState) => {
       if (newState.contacts !== oldState.contacts) {
-        console.log(
-          'handle contacts update',
-          {newState, oldState}
-        )
+        // console.log(
+        //   'handle contacts update',
+        //   {newState, oldState}
+        // )
 
         newState.render?.({
           contacts: newState.contacts?.sort(sortContactsByAlias),
