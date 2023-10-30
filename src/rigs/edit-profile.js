@@ -1,8 +1,9 @@
 import { lit as html } from '../helpers/lit.js'
-// import { qrSvg } from '../helpers/qr.js'
+import { qrSvg } from '../helpers/qr.js'
 import {
   formDataEntries,
-  // setClipboard,
+  setClipboard,
+  openBlobSVG,
   // sortContactsByAlias,
   // sortContactsByName,
   // parseAddressField,
@@ -50,57 +51,122 @@ export let editProfileRig = (function (globals) {
           </button>
         </footer>
       `,
+      getLink: state => `dash:${state.wallet?.address || ''}?label=funding`,
       content: state => html`
         ${state.header(state)}
 
-        <fieldset>
-          <article>
-            <label for="profileName">
-              Your Name
-            </label>
-            <div>
-              <input
-                id="profileName"
-                name="profileName"
-                placeholder="John Doe"
-                value="${
-                  state.userInfo?.name || ''
-                }"
-              />
-            </div>
-            <p>Optional</p>
+        <fieldset class="share">
+          <aside>
+            <span title="Open QR Code in new Window">${qrSvg(
+              state.getLink(state),
+              {
+                indent: 0,
+                padding: 4,
+                size: 'mini',
+                container: 'svg-viewbox',
+                join: true,
+              }
+            )}</span>
+            <input readonly value="${state.getLink(state)}" />
+            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${state.getLink(state)})">
+              <i class="icon-copy"></i>
+              Copy URI
+            </button>
+            <sub>Use this QR code to fund your wallet</sub>
+          </aside>
 
-            <div class="error"></div>
-          </article>
+          <section>
+            <article>
+              <label for="profileName">
+                Your Name
+              </label>
+              <div>
+                <input
+                  id="profileName"
+                  name="profileName"
+                  placeholder="John Doe"
+                  value="${
+                    state.userInfo?.name || ''
+                  }"
+                />
+              </div>
+              <p>Optional</p>
 
-          <article>
-            <label for="${state.slugs.form}_alias">
-              Alias
-            </label>
-            <div
-              data-prefix="@"
-            >
-              <input
-                type="text"
-                id="${state.slugs.form}_alias"
-                name="profileAlias"
-                value="${appState.selectedAlias}"
-                placeholder="your_alias"
-                pattern="${ALIAS_REGEX.source}"
-                required
-                spellcheck="false"
-              />
-            </div>
-            <p>Alias others can call you (similar to a @username)</p>
+              <div class="error"></div>
+            </article>
 
-            <div class="error"></div>
-          </article>
+            <article>
+              <label for="${state.slugs.form}_alias">
+                Alias
+              </label>
+              <div
+                data-prefix="@"
+              >
+                <input
+                  type="text"
+                  id="${state.slugs.form}_alias"
+                  name="profileAlias"
+                  value="${appState.selectedAlias}"
+                  placeholder="your_alias"
+                  pattern="${ALIAS_REGEX.source}"
+                  required
+                  spellcheck="false"
+                />
+              </div>
+              <p>Alias others can call you (similar to a @username)</p>
+
+              <div class="error"></div>
+            </article>
+          </section>
         </fieldset>
 
         ${state.footer(state)}
       `,
       fields: html``,
       events: {
+        handleClick: state => async event => {
+          let shareAside = state.elements?.dialog?.querySelector(
+            'fieldset.share > aside'
+          )
+          if (
+            shareAside?.contains(event.target)
+          ) {
+            if (
+              event.target?.nodeName.toLowerCase() === 'input' &&
+              event.target?.readOnly
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              event.target.select()
+            }
+            if (
+              event.target?.classList?.contains('copy') ||
+              event.target?.classList?.contains('icon-copy')
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              setClipboard(event)
+            }
+            if (
+              event.target?.nodeName.toLowerCase() === 'svg'
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              openBlobSVG(event.target)
+            }
+            if (
+              event.target?.parentElement?.nodeName.toLowerCase() === 'svg'
+            ) {
+              event.preventDefault()
+              event.stopPropagation()
+
+              openBlobSVG(event.target?.parentElement)
+            }
+          }
+        },
         handleRender: state => {
           // console.log(
           //   'edit profile render',

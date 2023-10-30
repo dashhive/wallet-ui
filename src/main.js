@@ -511,7 +511,7 @@ async function main() {
 
       appDialogs.editProfile.render(
         {
-          wallet: shareAccount,
+          wallet,
           userInfo,
         },
         'afterend',
