@@ -455,7 +455,7 @@ export function parseDashURI(uri) {
 
   if (searchParams?.size > 0) {
     let {
-      xprv, xpub, name, preferred_username, sub, scope
+      xprv, xpub, name, preferred_username, sub, scope, amount,
     } = Object.fromEntries(
       searchParams?.entries()
     )
@@ -472,6 +472,9 @@ export function parseDashURI(uri) {
     }
     if (preferred_username) {
       result.preferred_username = preferred_username
+    }
+    if (amount) {
+      result.amount = amount
     }
 
     if (sub) {

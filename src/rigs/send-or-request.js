@@ -1,6 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
+  parseAddressField,
 } from '../helpers/utils.js'
 import setupInputAmount from '../components/input-amount.js'
 
@@ -123,6 +124,60 @@ export let sendOrRequestRig = (function (globals) {
             resolve(state.elements.dialog.returnValue)
           } else {
             resolve('cancel')
+          }
+        },
+        handleInput: state => async event => {
+          event.preventDefault()
+          if (
+            event?.target?.validity?.patternMismatch &&
+            event?.target?.type !== 'checkbox'
+          ) {
+            let label = event.target?.previousElementSibling?.textContent?.trim()
+            if (label) {
+              event.target.setCustomValidity(`Invalid ${label}`)
+            }
+          } else {
+            event.target.setCustomValidity('')
+          }
+          event.target.reportValidity()
+
+          if (event.target?.name === 'to') {
+            if (
+              event.target.value &&
+              !event.target.value.startsWith('@')
+            ) {
+              let {
+                address,
+                xpub,
+                xprv,
+                name,
+                preferred_username,
+                amount,
+              } = parseAddressField(event.target.value)
+
+              let xkey = xprv || xpub
+
+              let xkeyOrAddr = xkey || address
+
+              // let info = {
+              //   name,
+              //   preferred_username,
+              // }
+
+              console.log(
+                'handleInput parsedAddr',
+                event.target.value,
+                xkey,
+              )
+
+              if (xkeyOrAddr) {
+                event.target.form.to.value = xkeyOrAddr
+              }
+
+              if (amount) {
+                event.target.form.amount.value = amount
+              }
+            }
           }
         },
         handleFocus: state => event => {

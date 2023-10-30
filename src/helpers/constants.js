@@ -31,7 +31,7 @@ export const ALIAS_REGEX = new RegExp(
   // Needs support added for Dashes, Underscores & Periods
 )
 export const DASH_URI_REGEX = new RegExp(
-  /^(?:web\+)?(?<protocol>dash)(?:\:)(?:\/\/)?(?<address>X[1-9A-HJ-NP-Za-km-z]{33})?(?:[?])(?<params>.+)/,
+  /^(?:web\+)?(?<protocol>dash)(?:[:])(?:\/\/)?(?<address>X[a-zA-Z0-9]{33})?(?:(?:[?])(?<params>.+))?/,
   'ig'
 )
 

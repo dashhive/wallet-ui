@@ -625,7 +625,7 @@ async function main() {
           txlock: data.txlock,
         };
 
-        walletFunds.balance = walletFunds?.balance + newTx.dash
+        // walletFunds.balance = walletFunds?.balance + newTx.dash
 
         // dashBalance?.restate({
         //   wallet,
