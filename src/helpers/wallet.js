@@ -35,9 +35,9 @@ export async function initDashSocket(
   await dashsocket.init()
     .catch((e) => console.log('dashsocket catch err', e));
 
-  setTimeout(() => {
-    dashsocket.close()
-  }, 15*60*1000);
+  // setTimeout(() => {
+  //   dashsocket.close()
+  // }, 15*60*1000);
 
   return dashsocket
 }

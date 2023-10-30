@@ -554,6 +554,7 @@ async function main() {
     .catch(err => console.error('catch updateAllFunds', err, wallet))
 
   let addr = wallet?.address
+  let addrs = (await store.addresses.keys()) || []
 
   initDashSocket({
     onMessage: async function (evname, data) {
@@ -586,8 +587,11 @@ async function main() {
       //   }
       // }
 
+      // console.log('init dash socket vout', data.vout)
+
       let result = data.vout.some(function (vout) {
-        if (!(addr in vout)) {
+        let v = Object.keys(vout)
+        if (!addrs.includes(v[0])) {
           return false;
         }
 
@@ -623,7 +627,7 @@ async function main() {
 
         // result = newTx;
         console.log(
-          'found main address',
+          'found address in store',
           addr,
           newTx,
         )
@@ -633,7 +637,7 @@ async function main() {
 
       if (result) {
         console.log(
-          'socket found main address',
+          'socket found address in store',
           addr,
         )
       }
