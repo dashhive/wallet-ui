@@ -1,14 +1,16 @@
 import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
+  loadStore,
+  sortContactsByAlias,
 } from '../helpers/utils.js'
 
 export let sendConfirmRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData, sendTx,
+    mainApp, setupDialog, appDialogs, appState,
+    deriveWalletData, sendTx, store, userInfo, contactsList,
   } = globals
 
   let sendConfirm = setupDialog(
@@ -23,6 +25,7 @@ export let sendConfirmRig = (function (globals) {
         <use xlink:href="#icon-x"></use>
       </svg>`,
       closeAlt: `Cancel & Close`,
+      amount: 0,
       footer: state => html`
         <footer class="inline row">
           <button
@@ -58,6 +61,25 @@ export let sendConfirmRig = (function (globals) {
         }
         return to
       },
+      showAmount: state => {
+        if (!state.amount) {
+          return ''
+        }
+
+        return html`
+          <article>
+            <figure>
+              <figcaption>Amount</figcaption>
+              <div class="big">
+                <svg width="32" height="33" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${state.amount}
+              </div>
+            </figure>
+          </article>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
@@ -68,17 +90,7 @@ export let sendConfirmRig = (function (globals) {
           </figure>
         </article>
 
-        <article>
-          <figure>
-            <figcaption>Amount</figcaption>
-            <div class="big">
-              <svg width="32" height="33" viewBox="0 0 32 33">
-                <use xlink:href="#icon-dash-mark"></use>
-              </svg>
-              ${state.amount}
-            </div>
-          </figure>
-        </article>
+        ${state.showAmount(state)}
 
         ${state.footer(state)}
       `,
@@ -116,19 +128,21 @@ export let sendConfirmRig = (function (globals) {
           //   return;
           // }
 
-          let outWallet, address, txRes
+          let outWallet, inWallet, address, addressIndex, txRes
           let sendWallet = {}
 
           if (state.contact) {
             outWallet = Object.values(state.contact?.outgoing)?.[0]
+            inWallet = Object.values(state.contact?.incoming)?.[0]
           }
 
           if (fde.intent === 'send') {
             if (outWallet) {
+              addressIndex = outWallet?.addressIndex + 1
               sendWallet = await deriveWalletData(
                 outWallet?.xpub,
                 0,
-                outWallet?.addressIndex + 1,
+                addressIndex,
               )
               address = sendWallet.address
             } else {
@@ -141,6 +155,37 @@ export let sendConfirmRig = (function (globals) {
                 address,
                 state.amount,
               )
+            }
+
+            if (txRes && addressIndex !== undefined) {
+              store.contacts
+                .getItem(inWallet.xkeyId)
+                .then(async c => {
+                  await store.contacts.setItem(
+                    inWallet.xkeyId,
+                    {
+                      ...c,
+                      outgoing: {
+                        ...c.outgoing,
+                        [outWallet.xkeyId]: {
+                          ...c.outgoing[outWallet.xkeyId],
+                          addressIndex,
+                        }
+                      }
+                    }
+                  )
+
+                  loadStore(store.contacts, res => {
+                    if (res) {
+                      appState.contacts = res
+
+                      return contactsList.restate({
+                        contacts: res?.sort(sortContactsByAlias),
+                        userInfo,
+                      })
+                    }
+                  })
+                })
             }
 
             console.log(

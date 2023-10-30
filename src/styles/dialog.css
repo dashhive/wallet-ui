@@ -132,7 +132,9 @@ dialog > form sup {
   font-weight: 400;
   color: var(--dark-200);
 }
-dialog > form > footer sup {
+dialog > form > footer sup,
+dialog > form > footer sub {
+  font-size: .875rem;
   margin-bottom: 1.25rem;
 }
 dialog > form > footer button {
@@ -398,7 +400,7 @@ dialog.responsive fieldset.share section article {
   flex-direction: column;
   align-items: stretch;
 }
-dialog.responsive fieldset.share {
+dialog.responsive fieldset.share:not(.solo) {
   min-width: 44rem;
 }
 

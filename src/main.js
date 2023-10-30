@@ -41,6 +41,7 @@ import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
 import sendOrRequestRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
+import requestQrRig from './rigs/request-qr.js'
 
 // Example Dash URI's
 
@@ -85,6 +86,7 @@ let appDialogs = envoy(
     scanContact: {},
     sendOrRequest: {},
     sendConfirm: {},
+    requestQr: {},
   },
 )
 
@@ -322,8 +324,12 @@ async function main() {
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
-    mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData, sendTx,
+    mainApp, setupDialog, appDialogs, appState,
+    deriveWalletData, sendTx, store, userInfo, contactsList,
+  })
+
+  appDialogs.requestQr = requestQrRig({
+    mainApp, setupDialog,
   })
 
   svgSprite.render()
@@ -445,6 +451,11 @@ async function main() {
     }
   }
 
+  // temp fix, should be handled already
+  if (appState.phrase && !wallet) {
+    wallet = await deriveWalletData(appState.phrase)
+  }
+
   bodyNav.render({
     data: {
       alias: appState.selectedAlias
@@ -491,20 +502,23 @@ async function main() {
           wallet?.xkeyId,
           wallet,
         )
+        // if (!wallet) {
+        //   wallet = await deriveWalletData(appState.phrase)
+        // }
 
-        accountIndex += 1
+        // accountIndex += 1
 
-        shareAccount = await deriveWalletData(
-          appState.phrase,
-          accountIndex
-        )
+        // shareAccount = await deriveWalletData(
+        //   appState.phrase,
+        //   accountIndex
+        // )
 
-        console.log(
-          'share qr derived wallet',
-          accountIndex,
-          shareAccount?.xkeyId,
-          shareAccount,
-        )
+        // console.log(
+        //   'share qr derived wallet',
+        //   accountIndex,
+        //   shareAccount?.xkeyId,
+        //   shareAccount,
+        // )
       }
 
       await getUserInfo()
@@ -536,7 +550,7 @@ async function main() {
       dashBalance.render({
         wallet,
         walletFunds: {
-          balance: walletFunds?.balance || 0
+          balance: (walletFunds?.balance || 0)
         }
       })
     })
@@ -553,11 +567,12 @@ async function main() {
     })
     .catch(err => console.error('catch updateAllFunds', err, wallet))
 
-  let addr = wallet?.address
+  // let addr = wallet?.address
   let addrs = (await store.addresses.keys()) || []
 
   initDashSocket({
     onMessage: async function (evname, data) {
+      let updates = {}
       // console.log('onMessage check for', addr, evname, data)
       // let result;
       // try {
@@ -591,7 +606,8 @@ async function main() {
 
       let result = data.vout.some(function (vout) {
         let v = Object.keys(vout)
-        if (!addrs.includes(v[0])) {
+        let addr = v[0]
+        if (!addrs.includes(addr)) {
           return false;
         }
 
@@ -631,6 +647,14 @@ async function main() {
           addr,
           newTx,
         )
+        updates[addr] = newTx
+        store.addresses.getItem(addr)
+          .then(async storedAddr => {
+            if (storedAddr.insight?.updated_at) {
+              storedAddr.insight.updated_at = 0
+              store.addresses.setItem(addr, storedAddr)
+            }
+          })
 
         return newTx;
       });
@@ -638,7 +662,7 @@ async function main() {
       if (result) {
         console.log(
           'socket found address in store',
-          addr,
+          updates,
         )
       }
     },

@@ -95,6 +95,13 @@ const initialState = {
       }
       event.target.reportValidity()
     },
+    handleFocus: state => event => {
+      // event.preventDefault()
+      // console.log(
+      //   'handle input focus',
+      //   event,
+      // )
+    },
     handleChange: state => event => {
       event.preventDefault()
       if (
@@ -260,6 +267,11 @@ export function setupDialog(
       state.events.handleClick(state),
     )
 
+    addListener(
+      form,
+      'focusout',
+      state.events.handleFocus(state),
+    )
     addListener(
       form,
       'change',

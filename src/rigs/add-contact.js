@@ -8,7 +8,7 @@ import {
   sortContactsByAlias,
   // sortContactsByName,
   parseAddressField,
-  generateShareURI,
+  generateContactPairingURI,
   loadStore,
   debounce,
   nobounce,
@@ -108,7 +108,7 @@ export let addContactRig = (function (globals) {
         </footer>
       `,
       generateQr: state => {
-        let shareLink = generateShareURI(state, 'web+dash')
+        let shareLink = generateContactPairingURI(state)
 
         return {
           link: shareLink,
@@ -132,16 +132,6 @@ export let addContactRig = (function (globals) {
         ${state.header(state)}
 
         <fieldset class="share">
-          <aside>
-            <span title="Open QR Code in new Window">${svg}</span>
-            <input readonly value="${link}" />
-            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${link})">
-              <i class="icon-copy"></i>
-              Copy URI
-            </button>
-            <sub>Share this QR code with your new contact</sub>
-          </aside>
-
           <section>
             <article>
               <label for="contactAddress">
@@ -208,6 +198,16 @@ export let addContactRig = (function (globals) {
               <div class="error"></div>
             </article>
           </section>
+
+          <aside>
+            <span title="Open QR Code in new Window">${svg}</span>
+            <input readonly value="${link}" />
+            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${link})">
+              <i class="icon-copy"></i>
+              Copy URI
+            </button>
+            <sub>Share this QR code with your new contact</sub>
+          </aside>
         </fieldset>
 
         ${state.footer(state)}

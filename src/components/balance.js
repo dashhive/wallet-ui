@@ -29,6 +29,7 @@ const initialState = {
     if (state.walletFunds.balance) {
       funds += state.walletFunds.balance
       balance = fixedDash(funds, state.fract)
+      // TODO FIX: does not support large balances
 
       // console.log('balance fixedDash', balance, balance.length)
 

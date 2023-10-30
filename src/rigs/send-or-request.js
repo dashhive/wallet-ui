@@ -125,15 +125,29 @@ export let sendOrRequestRig = (function (globals) {
             resolve('cancel')
           }
         },
+        handleFocus: state => event => {
+          // event.preventDefault()
+          // console.log(
+          //   'handle input focus',
+          //   event,
+          // )
+          event.target.setCustomValidity('')
+          event.target.reportValidity()
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          event.target.to.setCustomValidity(
-            ''
-          )
+          event.target.to.setCustomValidity('')
           event.target.to.reportValidity()
+          event.target.amount.setCustomValidity('')
+          event.target.amount.reportValidity()
 
           let fde = formDataEntries(event)
+          console.warn(
+            'FORM INTENT',
+            fde.intent,
+            [event.target],
+          )
 
           if (fde?.intent === 'scan_new_contact') {
             appDialogs.scanContact.render(
@@ -166,7 +180,16 @@ export let sendOrRequestRig = (function (globals) {
             return;
           }
 
+          if (fde.intent === 'send' && (!fde.amount || Number(fde.amount) === 0)) {
+            event.target.amount.setCustomValidity(
+              'You must specify an amount to send'
+            )
+            event.target.amount.reportValidity()
+            return;
+          }
+
           let inWallet, contact, to = String(fde.to)
+          let receiveWallet = {}
 
           if (to.startsWith('@')) {
             contact = state.contacts.find(c => c.alias === to.substring(1))
@@ -194,34 +217,46 @@ export let sendOrRequestRig = (function (globals) {
           }
 
           if (fde.intent === 'request') {
-            let {
-              xkeyId,
-              addressKeyId,
-              addressIndex,
-              address: addr,
-            } = await deriveWalletData(
+            receiveWallet = await deriveWalletData(
               inWallet?.xpub,
               0,
               inWallet?.addressIndex + 1,
             )
+            //   address = receiveWallet.address
+            // } else {
+            //   address = state.to
+            // }
 
             console.log(
               `${fde.intent} TO CONTACT`,
               `Ð ${fde.amount || 0}`,
               contact,
-              {
-                xkeyId: inWallet?.xkeyId,
-                addressKeyId: inWallet?.addressKeyId,
-                addressIndex: inWallet?.addressIndex,
-                address: inWallet?.address,
-              },
-              {
-                xkeyId,
-                addressKeyId,
-                addressIndex,
-                address: addr,
-              },
+              receiveWallet,
+              // {
+              //   xkeyId: inWallet?.xkeyId,
+              //   addressKeyId: inWallet?.addressKeyId,
+              //   addressIndex: inWallet?.addressIndex,
+              //   address: inWallet?.address,
+              // },
+              // {
+              //   xkeyId,
+              //   addressKeyId,
+              //   addressIndex,
+              //   address: addr,
+              // },
             )
+
+            appDialogs.requestQr.render(
+              {
+                wallet: receiveWallet,
+                contact,
+                to,
+                amount: Number(fde.amount),
+              },
+              'afterend',
+            )
+
+            let showRequestQR = await appDialogs.requestQr.showModal()
           }
 
           // return;

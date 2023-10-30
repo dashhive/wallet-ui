@@ -527,27 +527,33 @@ export function isEmpty(value) {
   return false;
 }
 
-export function generateShareURI(state, protocol = 'web+dash') {
+export function generateContactPairingURI(
+  state,
+  protocol = 'dash', // 'web+dash'
+  joiner = ':'
+) {
+  let addr = state.wallet?.address || ''
   let claims = [
     ["xpub", state.wallet?.xpub || ''],
     ["sub", state.wallet?.xkeyId || ''],
   ]
 
   if (state.userInfo) {
-    let filteredInfo = Array.from(Object.entries(state.userInfo))
-      .filter(p => {
-        let [key, val] = p
-        if (
-          ![
-            'updated_at',
-            'email_verified',
-            'phone_number_verified',
-          ].includes(key) &&
-          !isEmpty(val)
-        ) {
-          return true
-        }
-      })
+    let filteredInfo = Array.from(
+      Object.entries(state.userInfo)
+    ).filter(p => {
+      let [key, val] = p
+      if (
+        ![
+          'updated_at',
+          'email_verified',
+          'phone_number_verified',
+        ].includes(key) &&
+        !isEmpty(val)
+      ) {
+        return true
+      }
+    })
 
     claims = [
       ...claims,
@@ -561,10 +567,107 @@ export function generateShareURI(state, protocol = 'web+dash') {
     ['scope', scope]
   ])
 
-  console.log('Generate QR claims', claims, scope, searchParams)
+  console.log(
+    'Generate Dash URI claims',
+    claims, scope, searchParams,
+  )
 
-  return `${protocol}://?${searchParams.toString()}`
+  let res = `${protocol}${joiner}${addr}`
+
+  if (searchParams.size > 0) {
+    res += `?${searchParams.toString()}`
+  }
+
+  return res
 }
+
+export function generatePaymentRequestURI(
+  state,
+  protocol = 'dash',
+  joiner = ':'
+) {
+  let addr = state.wallet?.address || ''
+  let claims = []
+
+  // dash:XmPNH5bMkwwc1kjVGwxWxTs86C3ZsgjdSX?amount=0.0001
+  // dash:XktddCruaWEMDqqiciagWPXCfqc1jfY6zf?amount=0.0001
+  // dash:XtXnZkocKvrqGDxW7mhBvoR6yCAD99mnau?amount=0.0001
+
+  if (state.userInfo) {
+    let filteredInfo = Array.from(
+      Object.entries(state.userInfo)
+    ).filter(p => {
+      let [key, val] = p
+      if (
+        ![
+          'updated_at',
+          'email_verified',
+          'phone_number_verified',
+        ].includes(key) &&
+        !isEmpty(val)
+      ) {
+        return true
+      }
+    })
+
+    claims = [
+      ...filteredInfo,
+    ]
+  }
+
+  if (state.amount > 0) {
+    claims.push(
+      ["amount", state.amount],
+    )
+  }
+
+  if (state.label) {
+    claims.push(
+      ["label", state.label],
+    )
+  }
+
+  if (state.message) {
+    claims.push(
+      ["message", state.message],
+    )
+  }
+
+  let searchParams = new URLSearchParams([
+    ...claims,
+  ])
+
+  let res = `${protocol}${joiner}${addr}`
+
+  if (searchParams.size > 0) {
+    res += `?${searchParams.toString()}`
+  }
+
+  return res
+}
+
+// export function generatePaymentRequestURI(state) {
+//   let shareUri = `dash:${state.wallet?.address || ''}?`
+//   let shareParams = []
+
+//   if (state.amount > 0) {
+//     shareParams.push(`amount=${state.amount}`)
+//   }
+
+//   if (state.label) {
+//     shareParams.push(`label=${state.label}`)
+//   }
+
+//   if (state.message) {
+//     shareParams.push(`message=${state.message}`)
+//   }
+
+//   if (shareParams.length > 0) {
+//     shareUri += `?${shareParams.join('&')}`
+//   }
+
+//   return shareUri
+// }
 
 export async function loadStore(store, callback) {
   // let storeLen = await store.length()

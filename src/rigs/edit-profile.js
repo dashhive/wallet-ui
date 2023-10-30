@@ -44,7 +44,7 @@ export let editProfileRig = (function (globals) {
             class="rounded"
             type="submit"
             name="intent"
-            value="new_contact"
+            value="edit_profile"
             title="${state.submitAlt}"
           >
             <span>${state.submitTxt}</span>
@@ -56,25 +56,6 @@ export let editProfileRig = (function (globals) {
         ${state.header(state)}
 
         <fieldset class="share">
-          <aside>
-            <span title="Open QR Code in new Window">${qrSvg(
-              state.getLink(state),
-              {
-                indent: 0,
-                padding: 4,
-                size: 'mini',
-                container: 'svg-viewbox',
-                join: true,
-              }
-            )}</span>
-            <input readonly value="${state.getLink(state)}" />
-            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${state.getLink(state)})">
-              <i class="icon-copy"></i>
-              Copy URI
-            </button>
-            <sub>Use this QR code to fund your wallet</sub>
-          </aside>
-
           <section>
             <article>
               <label for="profileName">
@@ -118,6 +99,25 @@ export let editProfileRig = (function (globals) {
               <div class="error"></div>
             </article>
           </section>
+
+          <aside>
+            <span title="Open QR Code in new Window">${qrSvg(
+              state.getLink(state),
+              {
+                indent: 0,
+                padding: 4,
+                size: 'mini',
+                container: 'svg-viewbox',
+                join: true,
+              }
+            )}</span>
+            <input readonly value="${state.getLink(state)}" />
+            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${state.getLink(state)})">
+              <i class="icon-copy"></i>
+              Copy URI
+            </button>
+            <sub>Use this QR code to fund your wallet</sub>
+          </aside>
         </fieldset>
 
         ${state.footer(state)}
