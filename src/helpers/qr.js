@@ -38,7 +38,7 @@ export function create(data, opts) {
  * @param {QrOpts} opts
  */
 export function qrSvg (data, opts) {
-  console.log('qrSvg', data)
+  // console.log('qrSvg', data)
   let qrcode = create(data, opts);
   return qrcode.svg();
 };
