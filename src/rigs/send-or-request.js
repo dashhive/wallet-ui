@@ -10,7 +10,7 @@ export let sendOrRequestRig = (function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData,
+    wallet, createTx, deriveWalletData,
   } = globals
 
   let inputAmount = setupInputAmount(mainApp)
@@ -91,13 +91,17 @@ export let sendOrRequestRig = (function (globals) {
 
               <datalist id="contactAliases">
                 ${
-                  (state.contacts || []).filter(c => c.alias).map(contact => {
-                    return html`<option value="@${
-                      contact.alias
-                    }">${
-                      contact.info?.name || contact.alias
-                    }</option>`
-                  })
+                  (state.contacts || [])
+                    .filter(
+                      c => c.alias &&
+                      Object.keys(c.outgoing || {}).length > 0
+                    ).map(contact => {
+                      return html`<option value="@${
+                        contact.alias
+                      }">${
+                        contact.info?.name || contact.alias
+                      }</option>`
+                    })
                 }
               </datalist>
             </div>
@@ -243,11 +247,13 @@ export let sendOrRequestRig = (function (globals) {
             return;
           }
 
-          let inWallet, contact, to = String(fde.to)
-          let receiveWallet = {}
+          let inWallet, outWallet, address, addressIndex, tx, contact
+          let to = String(fde.to), amount = Number(fde.amount)
+          let receiveWallet = {}, sendWallet = {}
 
           if (to.startsWith('@')) {
             contact = state.contacts.find(c => c.alias === to.substring(1))
+            outWallet = Object.values(contact?.outgoing)?.[0]
             inWallet = Object.values(contact?.incoming)?.[0]
           }
 
@@ -255,15 +261,47 @@ export let sendOrRequestRig = (function (globals) {
             console.log(
               `CONFIRM ${fde.intent} TO`,
               contact,
-              `Ð ${fde.amount || 0}`,
+              `Ð ${amount || 0}`,
             )
+
+            if (outWallet) {
+              addressIndex = outWallet?.addressIndex + 1
+              sendWallet = await deriveWalletData(
+                outWallet?.xpub,
+                0,
+                addressIndex,
+              )
+              address = sendWallet.address
+            } else {
+              address = state.to
+            }
+
+            if (amount > 0) {
+              tx = await createTx(
+                state.wallet,
+                address,
+                amount,
+              )
+
+              console.log(
+                `TX TO ${address}`,
+                `Ð ${amount || 0}`,
+                contact,
+                tx,
+              )
+              console.log(
+                `TX HEX`,
+                tx.transaction,
+              )
+            }
 
             appDialogs.sendConfirm.render(
               {
                 wallet: state.wallet,
                 contact,
                 to,
-                amount: Number(fde.amount),
+                amount,
+                tx,
               },
               'afterend',
             )

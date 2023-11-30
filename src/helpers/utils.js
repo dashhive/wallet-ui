@@ -6,6 +6,11 @@ import {
 import {
   DUFFS,
   DASH_URI_REGEX,
+  OIDC_CLAIMS,
+  SUPPORTED_CLAIMS,
+  TIMEAGO_LOCALE_EN,
+  MOMENT, MOMENTS, NEVER,
+  SECONDS, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR,
 } from './constants.js'
 
 // export async function walletSchema(
@@ -451,37 +456,15 @@ export function parseDashURI(uri) {
     result.address = parsedUri?.address
   }
 
-  // let xkeyOrAddr = xprv || xpub || addr
-
   if (searchParams?.size > 0) {
-    let {
-      xprv, xpub, name, preferred_username, sub, scope, amount,
-    } = Object.fromEntries(
+    let claims = Object.fromEntries(
       searchParams?.entries()
     )
 
-    if (xprv) {
-      result.xprv = xprv
-    }
-    if (xpub) {
-      result.xpub = xpub
-    }
-
-    if (name) {
-      result.name = name
-    }
-    if (preferred_username) {
-      result.preferred_username = preferred_username
-    }
-    if (amount) {
-      result.amount = amount
-    }
-
-    if (sub) {
-      result.sub = sub
-    }
-    if (scope) {
-      result.scope = scope
+    for (let c in claims) {
+      if (SUPPORTED_CLAIMS.includes(c)) {
+        result[c] = claims[c]
+      }
     }
   }
 
@@ -489,11 +472,13 @@ export function parseDashURI(uri) {
 }
 
 export function parseAddressField(uri) {
+  /* @type {Record<keyof OIDC_CLAIMS,any>} */
   let result = {}
 
   if (uri.includes(':')) {
     let [protocol] = uri.split(':')
     if (protocol.includes('dash')) {
+      // @ts-ignore
       result = parseDashURI(uri)
     }
   } else if (
@@ -548,7 +533,7 @@ export function generateContactPairingURI(
       let [key, val] = p
       if (
         ![
-          'updated_at',
+          // 'updated_at',
           'email_verified',
           'phone_number_verified',
         ].includes(key) &&
@@ -804,4 +789,49 @@ export function nobounce(callback, delay = 300) {
       timer = undefined
     }, delay)
   }
+}
+
+export function timeago(ms, locale = TIMEAGO_LOCALE_EN) {
+  var ago = Math.floor(ms / 1000);
+  var part = 0;
+
+  if (ago < MOMENTS) { return locale.moment; }
+  if (ago < SECONDS) { return locale.moments; }
+  if (ago < MINUTE) { return locale.seconds.replace(/%\w?/, `${ago}`); }
+
+  if (ago < (2 * MINUTE)) { return locale.minute; }
+  if (ago < HOUR) {
+    while (ago >= MINUTE) { ago -= MINUTE; part += 1; }
+    return locale.minutes.replace(/%\w?/, `${part}`);
+  }
+
+  if (ago < (2 * HOUR)) { return locale.hour; }
+  if (ago < DAY) {
+    while (ago >= HOUR) { ago -= HOUR; part += 1; }
+    return locale.hours.replace(/%\w?/, `${part}`);
+  }
+
+  if (ago < (2 * DAY)) { return locale.day; }
+  if (ago < WEEK) {
+    while (ago >= DAY) { ago -= DAY; part += 1; }
+    return locale.days.replace(/%\w?/, `${part}`);
+  }
+
+  if (ago < (2 * WEEK)) { return locale.week; }
+  if (ago < MONTH) {
+    while (ago >= WEEK) { ago -= WEEK; part += 1; }
+    return locale.weeks.replace(/%\w?/, `${part}`);
+  }
+
+  if (ago < (2 * MONTH)) { return locale.month; }
+  if (ago < YEAR) { // 45 years, approximately the epoch
+    while (ago >= MONTH) { ago -= MONTH; part += 1; }
+    return locale.months.replace(/%\w?/, `${part}`);
+  }
+
+  if (ago < NEVER) {
+    return locale.years;
+  }
+
+  return locale.never;
 }

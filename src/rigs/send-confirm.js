@@ -10,7 +10,7 @@ export let sendConfirmRig = (function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, appState,
-    deriveWalletData, sendTx, store, userInfo, contactsList,
+    deriveWalletData, createTx, sendTx, store, userInfo, contactsList,
   } = globals
 
   let sendConfirm = setupDialog(
@@ -151,9 +151,7 @@ export let sendConfirmRig = (function (globals) {
 
             if (state.amount > 0) {
               txRes = await sendTx(
-                state.wallet,
-                address,
-                state.amount,
+                state.tx,
               )
             }
 
@@ -187,6 +185,15 @@ export let sendConfirmRig = (function (globals) {
                   })
                 })
             }
+
+            appState.sentTransactions = {
+              ...appState.sentTransactions,
+              [txRes.txid]: state.tx,
+            }
+            console.log(
+              '===sentTransactions===',
+              appState?.sentTransactions
+            )
 
             console.log(
               `${fde.intent} TO ${address}`,

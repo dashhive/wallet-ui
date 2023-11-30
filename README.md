@@ -35,6 +35,7 @@ A Graphical User Interface (GUI) for
 - [ ] Encrypt wallet data in local storage
   - [x] Recovery Phrase
   - [ ] Contact Data
+  - [ ] Make Keystore Xchain Compatible
 
 ### Stage 2
  - [ ] Transactions view

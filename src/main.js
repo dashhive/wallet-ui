@@ -20,6 +20,7 @@ import {
   decryptWallet,
   loadWalletsForAlias,
   store,
+  createTx,
   sendTx,
 } from './helpers/wallet.js'
 
@@ -60,6 +61,7 @@ let appState = envoy(
     selectedAlias: '',
     aliasInfo: {},
     contacts: [],
+    sentTransactions: {},
   },
   // (state, oldState) => {
   //   if (state.contacts !== oldState.contacts) {
@@ -90,6 +92,12 @@ let appDialogs = envoy(
   },
 )
 
+let walletFunds = envoy(
+  {
+    balance: 0
+  },
+)
+
 // element
 let bodyNav
 let dashBalance
@@ -105,11 +113,38 @@ let contactsList = await setupContactsList(
     events: {
       handleClick: state => async event => {
         event.preventDefault()
-        // console.warn(
-        //   'handle contacts click',
-        //   event.target,
-        //   state,
-        // )
+        console.warn(
+          'handle contacts click',
+          event.target,
+          state,
+        )
+
+        if (
+          event.target?.nodeName === 'ARTICLE'
+        ) {
+          let contactID = event.target.dataset.id
+          let contactData = await store.contacts.getItem(
+            contactID,
+          )
+          let contactAccountID = Object.values(contactData.incoming)?.[0]?.accountIndex
+          console.log('contact click data', contactData)
+
+          let shareAccount = await deriveWalletData(
+            appState.phrase,
+            contactAccountID
+          )
+
+          appDialogs.addContact.render(
+            {
+              wallet: shareAccount,
+              contact: contactData,
+              userInfo,
+            },
+            'afterend',
+          )
+          appDialogs.addContact.showModal()
+        }
+
         if (
           event.target?.id === 'add_contact' ||
           event.target?.parentNode?.id === 'add_contact'
@@ -169,6 +204,7 @@ let contactsList = await setupContactsList(
               // shareAccount.id,
               shareAccount.xkeyId,
               {
+                created_at: (new Date()).toISOString(),
                 incoming: {
                   // ...(state.contact.incoming || {}),
                   [`${appState.selectedWallet}/${shareAccount.xkeyId}`]: {
@@ -305,7 +341,8 @@ async function main() {
   })
 
   appDialogs.addContact = addContactRig({
-    setupDialog, appDialogs, appState, store,
+    setupDialog, updateAllFunds,
+    appDialogs, appState, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
   })
 
@@ -320,12 +357,12 @@ async function main() {
 
   appDialogs.sendOrRequest = sendOrRequestRig({
     mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData,
+    wallet, deriveWalletData, createTx,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
     mainApp, setupDialog, appDialogs, appState,
-    deriveWalletData, sendTx, store, userInfo, contactsList,
+    deriveWalletData, createTx, sendTx, store, userInfo, contactsList,
   })
 
   appDialogs.requestQr = requestQrRig({
@@ -414,10 +451,8 @@ async function main() {
     await appDialogs.walletDecrypt.showModal()
   }
 
-  let walletFunds = envoy(
-    {
-      balance: 0
-    },
+  walletFunds._listeners = [
+    ...walletFunds._listeners,
     (state, oldState) => {
       if (state.balance !== oldState.balance) {
         dashBalance?.restate({
@@ -428,7 +463,7 @@ async function main() {
         })
       }
     }
-  )
+  ]
 
   if (!appState.phrase) {
     appDialogs.onboard.render()
@@ -555,9 +590,10 @@ async function main() {
       })
     })
 
-  updateAllFunds(wallet)
+  updateAllFunds(wallet, walletFunds)
     .then(funds => {
-      walletFunds.balance = funds
+      console.log('updateAllFunds then funds', funds)
+      // walletFunds.balance = funds
       // dashBalance?.restate({
       //   wallet,
       //   walletFunds: {
@@ -573,6 +609,7 @@ async function main() {
   initDashSocket({
     onMessage: async function (evname, data) {
       let updates = {}
+      let txUpdates = {}
       // console.log('onMessage check for', addr, evname, data)
       // let result;
       // try {
@@ -594,6 +631,13 @@ async function main() {
         return;
       }
 
+      if (appState?.sentTransactions?.[data.txid]) {
+        console.log(
+          '===sentTransactions TXID===',
+          appState?.sentTransactions?.[data.txid]
+        )
+      }
+
       let now = Date.now();
       // if (mempoolTx?.timestamp) {
       //   // don't wait longer than 3s for a txlock
@@ -607,11 +651,40 @@ async function main() {
       let result = data.vout.some(function (vout) {
         let v = Object.keys(vout)
         let addr = v[0]
-        if (!addrs.includes(addr)) {
-          return false;
+        let duffs = vout[addr];
+        let checkAddr = addrs.includes(addr)
+
+        if (!checkAddr) {
+          if (
+            appState?.sentTransactions?.[data.txid]
+          ) {
+            walletFunds.balance = (
+              walletFunds.balance - (duffs / DUFFS)
+            )
+
+            txUpdates[data.txid] = true
+          }
+
+          return false
         }
 
-        let duffs = vout[addr];
+        if (
+          checkAddr &&
+          appState?.sentTransactions?.[data.txid]
+        ) {
+          txUpdates[data.txid] = true
+          store.addresses.getItem(addr)
+            .then(async storedAddr => {
+              if (storedAddr?.insight?.updated_at) {
+                storedAddr.insight.balance = (duffs / DUFFS)
+                storedAddr.insight.balanceSat = duffs
+                storedAddr.insight.updated_at = 0
+                store.addresses.setItem(addr, storedAddr)
+              }
+            })
+          return false
+        }
+
         // if (amount && duffs !== amount) {
         //   return false;
         // }
@@ -625,7 +698,7 @@ async function main() {
           txlock: data.txlock,
         };
 
-        // walletFunds.balance = walletFunds?.balance + newTx.dash
+        walletFunds.balance = walletFunds?.balance + newTx.dash
 
         // dashBalance?.restate({
         //   wallet,
@@ -651,6 +724,8 @@ async function main() {
         store.addresses.getItem(addr)
           .then(async storedAddr => {
             if (storedAddr.insight?.updated_at) {
+              storedAddr.insight.balance += (duffs / DUFFS)
+              storedAddr.insight.balanceSat += duffs
               storedAddr.insight.updated_at = 0
               store.addresses.setItem(addr, storedAddr)
             }
@@ -663,8 +738,21 @@ async function main() {
         console.log(
           'socket found address in store',
           updates,
+          txUpdates,
         )
       }
+      let txs = appState?.sentTransactions
+
+      Object.keys(txUpdates).forEach(
+        txid => {
+          // let txs = appState?.sentTransactions
+          if (txs?.[txid]) {
+            delete txs[txid]
+          }
+        }
+      )
+
+      appState.sentTransactions = txs
     },
   })
 }

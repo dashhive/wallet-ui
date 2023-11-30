@@ -25,10 +25,15 @@ export let addContactRig = (function (globals) {
   let {
     setupDialog, appDialogs, appState, store,
     mainApp, wallet, userInfo, contactsList,
+    updateAllFunds, walletFunds,
   } = globals;
 
   let debounceAlias = debounce(async (state, event) => {
-    let { preferred_username } = state.contact.info
+    let preferred_username
+    let { info } = state.contact
+    if (info) {
+      preferred_username = info.preferred_username
+    }
     preferred_username = preferred_username || event.target?.value || ''
     let alias = event.target?.value || preferred_username || ''
 
@@ -237,6 +242,7 @@ export let addContactRig = (function (globals) {
                 xprv,
                 name,
                 preferred_username,
+                sub,
               } = parseAddressField(event.target.value)
 
               let xkey = xprv || xpub
@@ -245,6 +251,7 @@ export let addContactRig = (function (globals) {
 
               let info = {
                 name,
+                sub,
                 preferred_username,
               }
 
@@ -374,6 +381,7 @@ export let addContactRig = (function (globals) {
           console.log('ADD CONTACT!', state, event)
 
           let fde = formDataEntries(event)
+          let parsedAddr
 
           console.log('scanContact', appDialogs.scanContact)
 
@@ -388,13 +396,15 @@ export let addContactRig = (function (globals) {
             let showScan = await appDialogs.scanContact.showModal()
 
             if (showScan !== 'cancel') {
+              parsedAddr = parseAddressField(showScan)
               let {
                 address,
                 xpub,
                 xprv,
                 name,
                 preferred_username,
-              } = parseAddressField(showScan)
+                sub,
+              } = parsedAddr
 
               let xkey = xprv || xpub
 
@@ -442,6 +452,8 @@ export let addContactRig = (function (globals) {
               info: {
                 // ...OIDC_CLAIMS,
                 ...(storedContact.info || {}),
+                // @ts-ignore
+                sub: parsedAddr?.sub || '',
                 name: event.target.contactName.value,
               },
               uri: event.target.contactAddr.value,
@@ -467,6 +479,13 @@ export let addContactRig = (function (globals) {
             res => {
               if (res) {
                 appState.contacts = res
+
+                updateAllFunds(state.wallet, walletFunds)
+                  .then(funds => {
+                    // walletFunds.balance = funds
+                    console.log('updateAllFunds then funds', funds)
+                  })
+                  .catch(err => console.error('catch updateAllFunds', err, state.wallet))
 
                 return contactsList.restate({
                   contacts: res?.sort(sortContactsByAlias),

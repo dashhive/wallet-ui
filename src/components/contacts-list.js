@@ -3,6 +3,7 @@ import {
   envoy,
   restate,
   sortContactsByAlias,
+  timeago,
 } from '../helpers/utils.js'
 // import { updateAllFunds, } from '../helpers/wallet.js'
 
@@ -77,18 +78,29 @@ const initialState = {
     ${state.footer(state)}
   `,
   item: c => {
+    let paired = Object.keys(c?.outgoing || {}).length > 0
+    let created = c.created_at
+      ? timeago(Date.now() - (new Date(c.created_at)).getTime())
+      : ''
+    let finishPairing = !paired
+      ? 'Finish pairing with contact'
+      : ''
     let user = c.alias || c.info?.preferred_username
-    let name = c.info?.name
+    let name = c.info?.name || created
+    let inId = Object.keys(c.incoming)[0].split('/')[1]
 
     let itemAlias = user
-      ? `@${user}`
-      : 'Finish pairing with contact'
+      ? `@${user}${ !paired ? ' - ' : '' }${finishPairing}`
+      : finishPairing
     let itemName = name
       ? `${name}`
       : ''
+    let itemSub = inId
+      ? `data-id="${inId}"`
+      : ''
 
     return html`
-      <article>
+      <article ${itemSub}>
         ${getAvatar(c)}
         <address>
           <h4>${itemAlias}</h4>

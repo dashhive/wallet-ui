@@ -22,7 +22,7 @@
      - [x] Add a Contact
        - [x] Share QR Code not getting up to date name for Profile
        - [x] Changing alias field removes wallet from localForage contact
-       - [x] `Finish pairing` contact in contacts list after save.
+       - [ ] `Finish pairing` contact in contacts list after save.
          - should just be named contact
      - [ ] Send & Request Funds to / from Contact
    - [ ] Fiat balance from:
@@ -37,3 +37,4 @@
        - [ ] Send Btn
        - [ ] Request Btn
      - [ ] Connect to Dialogs on Click
+   - [ ] Display Recovery Phrase in Edit Profile
