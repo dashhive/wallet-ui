@@ -859,3 +859,25 @@ export function timeago(ms, locale = TIMEAGO_LOCALE_EN) {
 
   return locale.never;
 }
+
+export function getAvatar(c) {
+  let initials = c?.info?.name?.
+    split(' ').map(n => n[0]).join('') || ''
+
+  if (!initials) {
+    initials = (c?.alias || c?.info?.preferred_username)?.[0] || ''
+  }
+
+  let avStr = `<div class="avatar" style="`
+
+  if (c?.info?.picture) {
+    avStr += `color:transparent;background-image:url(${c.info.picture});`
+  }
+
+  // Gravatar
+  // if (c.info.email) {
+  //   avStr += `color:transparent;background-image:url(${c.info.email});`
+  // }
+
+  return `${avStr}">${initials}</div>`
+}

@@ -88,7 +88,7 @@ dialog.responsive {
   bottom: 0;
   /* height: auto; */
   /* height: 100vh; */
-  /* width: 100%; */
+  width: 98%;
   max-height: 100%;
   max-width: 100%;
   border: 0 solid;
@@ -404,7 +404,47 @@ dialog.responsive fieldset.share:not(.solo) {
   min-width: 44rem;
 }
 
+
+dialog.responsive fieldset.contact .avatar {
+  width: 5rem;
+  height: 5rem;
+  font-size: 2rem;
+  font-weight: 400;
+  place-self: center;
+}
+dialog.responsive fieldset.contact h3 {
+  font-size: 1.5rem;
+  font-weight: 400;
+  place-self: center;
+}
+dialog.responsive fieldset.contact section {
+  padding: 0;
+}
+dialog.responsive fieldset.contact header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  font-size: 1.25rem;
+  line-height: initial;
+  padding: 1rem 0 0;
+  /* line-height: 1.5; */
+}
+dialog.responsive fieldset.contact section {
+  flex: 1 1 auto;
+  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+dialog.responsive fieldset.contact section article {
+  flex-direction: column;
+  align-items: stretch;
+}
+
 @media (min-width: 650px) {
+  dialog.responsive {
+    width: fit-content;
+  }
   /* dialog.responsive {
     position: fixed;
     top: 0px;

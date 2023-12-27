@@ -73,6 +73,7 @@ export let sendOrRequestRig = (function (globals) {
                 placeholder="enter @alias or dash address"
                 spellcheck="false"
                 list="contactAliases"
+                value="${state.to || ''}"
               />
 
               <button
@@ -310,48 +311,74 @@ export let sendOrRequestRig = (function (globals) {
           }
 
           if (fde.intent === 'request') {
-            let incAddrIdx = state.wallet.addressIndex + 1
-            receiveWallet = await deriveWalletData(
-              // state.wallet.xprv,
-              state.wallet.xpub,
-              // state.wallet.recoveryPhrase,
-              0,
-              incAddrIdx,
-            )
-
-            state.wallet = await store.accounts.setItem(state.wallet.xkeyId, {
-              ...state.wallet,
-              address: receiveWallet.address,
-              addressIndex: incAddrIdx,
-            })
-
-            if (inWallet) {
+            if (!inWallet) {
+              state.wallet.addressIndex = state.wallet.addressIndex + 1
+              receiveWallet = await deriveWalletData(
+                // state.wallet.xprv,
+                state.wallet.xpub,
+                // state.wallet.recoveryPhrase,
+                0,
+                state.wallet.addressIndex,
+              )
+            } else {
+              inWallet.addressIndex = inWallet.addressIndex + 1
               receiveWallet = await deriveWalletData(
                 inWallet.xpub,
                 0,
-                inWallet.addressIndex + 1,
+                inWallet.addressIndex,
               )
+
+              await store.contacts.setItem(
+                inWallet.xkeyId,
+                {
+                  ...contact,
+                  incoming: {
+                    ...contact.incoming,
+                    [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
+                      ...inWallet,
+                      address: receiveWallet.address,
+                      addressIndex: receiveWallet.addressIndex,
+                    }
+                  },
+                }
+              )
+
+              inWallet.address = receiveWallet.address
             }
+
+            let tmpWallet = await store.accounts.getItem(
+              receiveWallet.xkeyId,
+            )
+
+            // state.wallet =
+            await store.accounts.setItem(
+              receiveWallet.xkeyId,
+              {
+                ...tmpWallet,
+                // createdAt: created,
+                // accountIndex,
+                // addressIndex: shareAccount.addressIndex,
+                // xprv: shareAccount.xprv,
+                // xpub: shareAccount.xpub,
+                // // walletId: appState.selectedWallet,
+                // walletId: shareAccount.id,
+                // xkeyId: shareAccount.xkeyId,
+                // addressKeyId: shareAccount.addressKeyId,
+                // address: shareAccount.address,
+                address: receiveWallet.address,
+                addressIndex: receiveWallet.addressIndex,
+              }
+            )
 
             console.log(
               `${fde.intent} TO CONTACT`,
               `Ð ${fde.amount || 0}`,
-              contact,
-              state.wallet,
-              inWallet,
-              receiveWallet,
-              // {
-              //   xkeyId: inWallet?.xkeyId,
-              //   addressKeyId: inWallet?.addressKeyId,
-              //   addressIndex: inWallet?.addressIndex,
-              //   address: inWallet?.address,
-              // },
-              // {
-              //   xkeyId,
-              //   addressKeyId,
-              //   addressIndex,
-              //   address: addr,
-              // },
+              {
+                contact,
+                stateWallet: state.wallet,
+                inWallet,
+                receiveWallet,
+              }
             )
 
             appDialogs.requestQr.render(

@@ -4,30 +4,8 @@ import {
   restate,
   sortContactsByAlias,
   timeago,
+  getAvatar,
 } from '../helpers/utils.js'
-// import { updateAllFunds, } from '../helpers/wallet.js'
-
-function getAvatar(c) {
-  let initials = c.info?.name?.
-    split(' ').map(n => n[0]).join('') || ''
-
-  if (!initials) {
-    initials = (c.alias || c.info?.preferred_username)?.[0] || ''
-  }
-
-  let avStr = `<div class="avatar" style="`
-
-  if (c.info?.picture) {
-    avStr += `color:transparent;background-image:url(${c.info.picture});`
-  }
-
-  // Gravatar
-  // if (c.info.email) {
-  //   avStr += `color:transparent;background-image:url(${c.info.email});`
-  // }
-
-  return html`${avStr}">${initials}</div>`
-}
 
 let _handlers = []
 
@@ -79,8 +57,8 @@ const initialState = {
   `,
   item: c => {
     let paired = Object.keys(c?.outgoing || {}).length > 0
-    let created = c.created_at
-      ? timeago(Date.now() - (new Date(c.created_at)).getTime())
+    let created = c.createdAt
+      ? timeago(Date.now() - (new Date(c.createdAt)).getTime())
       : ''
     let finishPairing = !paired
       ? 'Finish pairing with contact'

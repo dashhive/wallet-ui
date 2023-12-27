@@ -11,7 +11,7 @@ export let phraseImportRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, appDialogs, appState,
+    setupDialog, appDialogs, appState, store,
     mainApp, wallet, deriveWalletData,
   } = globals;
 
@@ -129,6 +129,21 @@ export let phraseImportRig = (function (globals) {
 
           localStorage.selectedWallet = appState.selectedWallet
           localStorage.selectedAlias = appState.selectedAlias
+
+          let newAccount = await store.accounts.setItem(
+            wallet.xkeyId,
+            {
+              createdAt: (new Date()).toISOString(),
+              accountIndex: wallet.accountIndex,
+              addressIndex: wallet.addressIndex,
+              xprv: wallet.xprv,
+              xpub: wallet.xpub,
+              walletId: wallet.id,
+              xkeyId: wallet.xkeyId,
+              addressKeyId: wallet.addressKeyId,
+              address: wallet.address,
+            }
+          )
 
           // console.log('IMPORT wallet!', wallet)
 

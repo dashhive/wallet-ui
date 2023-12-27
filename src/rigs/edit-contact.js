@@ -12,6 +12,7 @@ import {
   loadStore,
   debounce,
   // nobounce,
+  getAvatar,
 } from '../helpers/utils.js'
 
 import {
@@ -19,7 +20,7 @@ import {
   ALIAS_REGEX,
 } from '../helpers/constants.js'
 
-export let addContactRig = (function (globals) {
+export let editContactRig = (function (globals) {
   'use strict';
 
   let {
@@ -53,7 +54,7 @@ export let addContactRig = (function (globals) {
 
     let newContact = await store.contacts.setItem(
       // state.wallet.id,
-      state.wallet.xkeyId,
+      state.account.xkeyId,
       contact,
     )
 
@@ -76,87 +77,80 @@ export let addContactRig = (function (globals) {
     )
   }, 1000)
 
-  let addContact = setupDialog(
+  let editContact = setupDialog(
     mainApp,
     {
-      name: 'Add a New Contact',
+      name: 'Edit Contact',
       submitTxt: html`<svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
         <use xlink:href="#icon-plus-circle"></use>
       </svg> Add Contact`,
       submitAlt: 'Add Contact',
-      scanAlt: 'Scan Contact QR Code',
+      trashAlt: 'Remove Contact',
+      sendTxt: 'Send',
+      sendAlt: 'Send Dash to Contact',
+      requestTxt: 'Request',
+      requestAlt: 'Request Dash from Contact',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
       closeAlt: `Close`,
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       placement: 'wide',
+      header: state => html`
+        <header class="no-brdr">
+          <button
+            class="rounded link fs-3"
+            name="intent"
+            value="delete_contact"
+            title="${state.trashAlt}"
+          >
+            <span>
+              <svg class="trash-icon" width="16" height="16" viewBox="0 0 16 16">
+                <use xlink:href="#icon-trash"></use>
+              </svg>
+              Delete
+            </span>
+          </button>
+          ${
+            state.closeTxt && html`<button class="link" type="reset" value="close" title="${state.closeAlt}"><span>${state.closeTxt}</span></button>`
+          }
+        </header>
+      `,
       footer: state => html`
-        <footer class="inline col">
+        <footer class="inline row">
           <button
             class="rounded"
             type="submit"
             name="intent"
-            value="new_contact"
-            title="${state.submitAlt}"
+            value="send"
+            title="${state.sendAlt}"
           >
-            <span>${state.submitTxt}</span>
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-arrow-circle-up"></use>
+            </svg>
+            <span>${state.sendTxt}</span>
+          </button>
+          <button
+            class="rounded"
+            type="submit"
+            name="intent"
+            value="request"
+            title="${state.requestAlt}"
+          >
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-arrow-circle-down"></use>
+            </svg>
+            <span>${state.requestTxt}</span>
           </button>
         </footer>
       `,
-      generateQr: state => {
-        let shareLink = generateContactPairingURI(state)
-
-        return {
-          link: shareLink,
-          svg: qrSvg(
-            shareLink,
-            {
-              // background: '#0000',
-              // color: '#fff',
-              indent: 0,
-              padding: 4,
-              size: 'mini',
-              container: 'svg-viewbox',
-              join: true,
-            }
-          )
-        }
-      },
-      content: state => {
-        let { link, svg } = state.generateQr(state)
-        return html`
-        ${state.header(state)}
-
-        <fieldset class="share">
+      content: state => html`
+        <fieldset class="contact">
           <section>
+            ${state.header(state)}
             <article>
-              <label for="contactAddress">
-                Contact Address
-              </label>
-              <div class="input">
-                <input
-                  id="contactAddress"
-                  name="contactAddr"
-                  placeholder="Contact Addr"
-                />
-                <button
-                  class="rounded outline"
-                  name="intent"
-                  value="scan_new_contact"
-                  title="${state.scanAlt}"
-                >
-                  <span>
-                    <svg class="qr-code" width="24" height="24" viewBox="0 0 24 24">
-                      <use xlink:href="#icon-qr-code"></use>
-                    </svg>
-                  </span>
-                </button>
-              </div>
-              <p>Paste a Dash Address, Xprv/Xpub, or Link</p>
-
-              <div class="error"></div>
+              ${getAvatar(state.contact)}
+              <h3>@${state.contact?.alias || state.contact?.info?.preferred_username}</h3>
             </article>
-
             <article>
               <label for="contactName">
                 Contact Name
@@ -166,11 +160,9 @@ export let addContactRig = (function (globals) {
                   id="contactName"
                   name="contactName"
                   placeholder="Contact Name"
-                  value="${state.contact?.info?.name || ''}"
+                  value="${state.contact?.info?.name}"
                 />
               </div>
-              <p>Optional</p>
-
               <div class="error"></div>
             </article>
 
@@ -188,7 +180,7 @@ export let addContactRig = (function (globals) {
                   placeholder="your_alias"
                   pattern="${ALIAS_REGEX.source}"
                   spellcheck="false"
-                  value="${state.contact?.alias || ''}"
+                  value="${state.contact?.alias}"
                 />
               </div>
               <p>Alias for the contact (similar to a @username)</p>
@@ -196,20 +188,10 @@ export let addContactRig = (function (globals) {
               <div class="error"></div>
             </article>
           </section>
-
-          <aside>
-            <span title="Open QR Code in new Window">${svg}</span>
-            <input readonly value="${link}" />
-            <button id="pair-copy" class="pill rounded copy" title="Copy URI (${link})">
-              <i class="icon-copy"></i>
-              Copy URI
-            </button>
-            <sub>Share this QR code with your new contact</sub>
-          </aside>
         </fieldset>
 
         ${state.footer(state)}
-      `},
+      `,
       fields: html``,
       events: {
         handleInput: state => async event => {
@@ -243,7 +225,7 @@ export let addContactRig = (function (globals) {
               let xkeyOrAddr = xkey || address
 
               let info = {
-                name: name || '',
+                name,
                 sub,
                 preferred_username,
               }
@@ -265,7 +247,7 @@ export let addContactRig = (function (globals) {
 
               let newContact = await store.contacts.setItem(
                 // state.wallet.id,
-                state.wallet.xkeyId,
+                state.account.xkeyId,
                 {
                   ...state.contact,
                   info: {
@@ -378,8 +360,59 @@ export let addContactRig = (function (globals) {
 
           let fde = formDataEntries(event)
           let parsedAddr
+          let storedContact = await store.contacts.getItem(
+            state.account.xkeyId,
+          )
 
-          console.log('scanContact', appDialogs.scanContact)
+          console.log('edit contact intent', fde?.intent, storedContact)
+
+          if (['send','request'].includes(String(fde?.intent))) {
+
+            editContact.close()
+
+            appDialogs.sendOrRequest.render({
+              wallet: state.wallet,
+              userInfo,
+              contacts: appState.contacts,
+              to: `@${storedContact.alias}`,
+            })
+            appDialogs.sendOrRequest.showModal()
+
+            return;
+          }
+
+          if (fde?.intent === 'delete_contact') {
+            let removedContact = await store.contacts.removeItem(
+              state.account.xkeyId,
+            )
+
+            console.log('delete contact', storedContact, removedContact)
+
+            loadStore(
+              store.contacts,
+              res => {
+                if (res) {
+                  appState.contacts = res
+
+                  updateAllFunds(state.account, walletFunds)
+                    .then(funds => {
+                      // walletFunds.balance = funds
+                      console.log('updateAllFunds then funds', funds)
+                    })
+                    .catch(err => console.error('catch updateAllFunds', err, state.account))
+
+                  return contactsList.restate({
+                    contacts: res?.sort(sortContactsByAlias),
+                    userInfo,
+                  })
+                }
+              }
+            )
+
+            editContact.close()
+
+            return;
+          }
 
           if (fde?.intent === 'scan_new_contact') {
             appDialogs.scanContact.render(
@@ -436,13 +469,13 @@ export let addContactRig = (function (globals) {
             return;
           }
 
-          let storedContact = await store.contacts.getItem(
-            state.wallet.xkeyId,
-          )
+          // let storedContact = await store.contacts.getItem(
+          //   state.account.xkeyId,
+          // )
 
           let pairedContact = await store.contacts.setItem(
             // state.wallet.id,
-            state.wallet.xkeyId,
+            state.account.xkeyId,
             {
               ...storedContact,
               info: {
@@ -476,12 +509,12 @@ export let addContactRig = (function (globals) {
               if (res) {
                 appState.contacts = res
 
-                updateAllFunds(state.wallet, walletFunds)
+                updateAllFunds(state.account, walletFunds)
                   .then(funds => {
                     // walletFunds.balance = funds
                     console.log('updateAllFunds then funds', funds)
                   })
-                  .catch(err => console.error('catch updateAllFunds', err, state.wallet))
+                  .catch(err => console.error('catch updateAllFunds', err, state.account))
 
                 return contactsList.restate({
                   contacts: res?.sort(sortContactsByAlias),
@@ -494,7 +527,7 @@ export let addContactRig = (function (globals) {
           console.log('pairedContact', pairedContact)
 
           // let initialized
-          // wallet = state.wallet
+          // wallet = state.account
 
           // if (!wallets?.[appState.selectedAlias]) {
           //   initialized = await initWallet(
@@ -509,16 +542,16 @@ export let addContactRig = (function (globals) {
           //   wallets = initialized.wallets
           // }
 
-          addContact.close()
+          editContact.close()
         },
       },
     }
   )
 
   // @ts-ignore
-  globals.addContact = addContact;
+  globals.editContact = editContact;
 
-  return addContact
+  return editContact
 })
 
-export default addContactRig
+export default editContactRig

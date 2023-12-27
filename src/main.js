@@ -40,6 +40,7 @@ import phraseImportRig from './rigs/phrase-import.js'
 import walletEncryptRig from './rigs/wallet-encrypt.js'
 import walletDecryptRig from './rigs/wallet-decrypt.js'
 import addContactRig from './rigs/add-contact.js'
+import editContactRig from './rigs/edit-contact.js'
 import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
 import sendOrRequestRig from './rigs/send-or-request.js'
@@ -53,6 +54,7 @@ import requestQrRig from './rigs/request-qr.js'
 
 // app/data state
 let accounts
+let account
 let wallets
 let wallet
 let userInfo
@@ -87,6 +89,7 @@ let appDialogs = envoy(
     walletEncrypt: {},
     walletDecrypt: {},
     addContact: {},
+    editContact: {},
     editProfile: {},
     scanContact: {},
     sendOrRequest: {},
@@ -122,10 +125,13 @@ let contactsList = await setupContactsList(
           state,
         )
 
+        let contactArticle = event.target?.closest('article')
+
         if (
-          event.target?.nodeName === 'ARTICLE'
+          // event.target?.nodeName === 'ARTICLE'
+          contactArticle !== null
         ) {
-          let contactID = event.target.dataset.id
+          let contactID = contactArticle.dataset.id
           let contactData = await store.contacts.getItem(
             contactID,
           )
@@ -137,15 +143,32 @@ let contactsList = await setupContactsList(
             contactAccountID
           )
 
-          appDialogs.addContact.render(
-            {
-              wallet: shareAccount,
-              contact: contactData,
-              userInfo,
-            },
-            'afterend',
-          )
-          appDialogs.addContact.showModal()
+          if (!contactData.outgoing) {
+            // Finish Pairing
+            let contactName = contactData?.info?.name || 'Contact'
+            appDialogs.addContact.render(
+              {
+                name: `Finish Pairing with ${contactName}`,
+                wallet: shareAccount,
+                contact: contactData,
+                userInfo,
+              },
+              'afterend',
+            )
+            appDialogs.addContact.showModal()
+          } else {
+            // Edit Contact
+            appDialogs.editContact.render(
+              {
+                wallet: account,
+                account: shareAccount,
+                contact: contactData,
+                userInfo,
+              },
+              'afterend',
+            )
+            appDialogs.editContact.showModal()
+          }
         }
 
         if (
@@ -255,6 +278,7 @@ let contactsList = await setupContactsList(
 
           appDialogs.addContact.render(
             {
+              name: 'Add a New Contact',
               wallet: shareAccount,
               contact: newContact,
               userInfo,
@@ -324,7 +348,7 @@ async function main() {
     }
   )
 
-  let account = Object.values(accounts || {})?.[0]
+  account = Object.values(accounts || {})?.[0]
 
   let accountIndex = account
     ?.accountIndex || 0
@@ -359,7 +383,7 @@ async function main() {
   })
 
   appDialogs.phraseImport = phraseImportRig({
-    setupDialog, appDialogs, appState,
+    setupDialog, appDialogs, appState, store,
     mainApp, wallet, deriveWalletData,
   })
 
@@ -368,6 +392,12 @@ async function main() {
   })
 
   appDialogs.addContact = addContactRig({
+    setupDialog, updateAllFunds,
+    appDialogs, appState, store, walletFunds,
+    mainApp, wallet, userInfo, contactsList,
+  })
+
+  appDialogs.editContact = editContactRig({
     setupDialog, updateAllFunds,
     appDialogs, appState, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
@@ -384,7 +414,7 @@ async function main() {
 
   appDialogs.sendOrRequest = sendOrRequestRig({
     mainApp, setupDialog, appDialogs, store,
-    wallet: account, accounts, wallets, deriveWalletData, createTx,
+    wallet: account, deriveWalletData, createTx,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
@@ -410,9 +440,10 @@ async function main() {
 
       appDialogs.sendOrRequest.render({
         wallet: account,
-        accounts,
+        // accounts,
         userInfo,
-        contacts: appState.contacts
+        contacts: appState.contacts,
+        to: null,
       })
       appDialogs.sendOrRequest.showModal()
         // .catch(console.error)

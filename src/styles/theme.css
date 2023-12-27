@@ -420,7 +420,7 @@ th {
   background-color: var(--dark-600);
 }
 
-.contacts > div > article .avatar {
+.avatar {
   background-color: var(--dark-500);
   color: var(--dark-100);
   text-transform: uppercase;

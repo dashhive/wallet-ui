@@ -94,7 +94,6 @@ export let phraseGenerateRig = (function (globals) {
           localStorage.selectedWallet = appState.selectedWallet
           localStorage.selectedAlias = appState.selectedAlias
 
-
           let newAccount = await store.accounts.setItem(
             wallet.xkeyId,
             {

@@ -146,6 +146,28 @@ figure h4 {
 .ta-justify {
   text-align: justify;
 }
+.va-baseline {
+  vertical-align: baseline;
+}
+
+.fs-1 {
+  font-size: .25rem;
+}
+.fs-2 {
+  font-size: .5rem;
+}
+.fs-3 {
+  font-size: .75rem;
+}
+.fs-4 {
+  font-size: 1rem;
+}
+.fs-5 {
+  font-size: 1.25rem;
+}
+.fs-6 {
+  font-size: 1.5rem;
+}
 
 .px-0 {
   padding-left: 0;
@@ -217,6 +239,9 @@ figure h4 {
 .py-3 {
   padding-top: 1rem;
   padding-bottom: 1rem;
+}
+.no-brdr {
+  border: 1px solid transparent;
 }
 
 /* main > header + form,

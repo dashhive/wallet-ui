@@ -61,7 +61,7 @@
   color: var(--dark-200);
 }
 
-.contacts > div > article .avatar {
+.avatar {
   display: flex;
   overflow: hidden;
   width: 2.5rem;
