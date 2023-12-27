@@ -11,7 +11,7 @@ import {
   generateContactPairingURI,
   loadStore,
   debounce,
-  nobounce,
+  // nobounce,
 } from '../helpers/utils.js'
 
 import {

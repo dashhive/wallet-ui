@@ -1,6 +1,7 @@
 import { lit as html } from './helpers/lit.js'
 
 import {
+  generateWalletData,
   deriveWalletData,
   formDataEntries,
   envoy,
@@ -14,6 +15,7 @@ import {
 } from './helpers/constants.js'
 
 import {
+  findAllInStore,
   initDashSocket,
   batchAddressGenerate,
   updateAllFunds,
@@ -50,6 +52,7 @@ import requestQrRig from './rigs/request-qr.js'
 // let testDashExtUri = `web+dash://?xpub=xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz&sub=01H5KG2NGES5RVMA85YB3M6G0G&nickname=Prime%208&profile=https://imgur.com/gallery/y6sSvCr.json&picture=https://i.imgur.com/y6sSvCr.jpeg&scope=sub,nickname,profile,xpub&redirect_uri=https://`
 
 // app/data state
+let accounts
 let wallets
 let wallet
 let userInfo
@@ -156,6 +159,7 @@ let contactsList = await setupContactsList(
 
           let shareAccount
           let newContact
+          let newAccount
 
           if (appState.phrase) {
             console.log(
@@ -200,24 +204,35 @@ let contactsList = await setupContactsList(
               // wallet,
             )
 
+            let created = (new Date()).toISOString()
+
+            newAccount = await store.accounts.setItem(
+              shareAccount.xkeyId,
+              {
+                createdAt: created,
+                accountIndex,
+                addressIndex: shareAccount.addressIndex,
+                xprv: shareAccount.xprv,
+                xpub: shareAccount.xpub,
+                // walletId: appState.selectedWallet,
+                walletId: shareAccount.id,
+                xkeyId: shareAccount.xkeyId,
+                addressKeyId: shareAccount.addressKeyId,
+                address: shareAccount.address,
+              }
+            )
+            let { createdAt, ...contactAcct } = newAccount
+
             newContact = await store.contacts.setItem(
               // shareAccount.id,
               shareAccount.xkeyId,
               {
-                created_at: (new Date()).toISOString(),
+                createdAt,
                 incoming: {
-                  // ...(state.contact.incoming || {}),
-                  [`${appState.selectedWallet}/${shareAccount.xkeyId}`]: {
-                    accountIndex,
-                    addressIndex: shareAccount.addressIndex,
-                    xprv: shareAccount.xprv,
-                    xpub: shareAccount.xpub,
-                    id: shareAccount.id,
-                    xkeyId: shareAccount.xkeyId,
-                    addressKeyId: shareAccount.addressKeyId,
-                    address: shareAccount.address,
-                  },
-                },
+                  [`${contactAcct.walletId}/${contactAcct.xkeyId}`]: {
+                    ...contactAcct,
+                  }
+                }
               }
             )
 
@@ -297,10 +312,21 @@ async function main() {
   )
   appState.selectedWallet = localStorage?.selectedWallet || ''
   appState.selectedAlias = localStorage?.selectedAlias || ''
+  appState.selectedAccount = localStorage?.selectedAccount || ''
 
   await getUserInfo()
 
-  let accountIndex = wallets?.[appState.selectedWallet]
+  accounts = await findAllInStore(
+    store.accounts,
+    {
+      walletId: appState.selectedWallet,
+      accountIndex: 0,
+    }
+  )
+
+  let account = Object.values(accounts || {})?.[0]
+
+  let accountIndex = account
     ?.accountIndex || 0
 
   bodyNav = await setupNav(
@@ -328,7 +354,8 @@ async function main() {
 
   appDialogs.phraseGenerate = phraseGenerateRig({
     setupDialog, appDialogs, appState,
-    mainApp, wallet, deriveWalletData,
+    mainApp, wallet, store,
+    deriveWalletData, generateWalletData,
   })
 
   appDialogs.phraseImport = phraseImportRig({
@@ -356,8 +383,8 @@ async function main() {
   })
 
   appDialogs.sendOrRequest = sendOrRequestRig({
-    mainApp, setupDialog, appDialogs,
-    wallet, deriveWalletData, createTx,
+    mainApp, setupDialog, appDialogs, store,
+    wallet: account, accounts, wallets, deriveWalletData, createTx,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
@@ -382,7 +409,8 @@ async function main() {
       event.stopPropagation()
 
       appDialogs.sendOrRequest.render({
-        wallet,
+        wallet: account,
+        accounts,
         userInfo,
         contacts: appState.contacts
       })

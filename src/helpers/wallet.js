@@ -61,6 +61,42 @@ export async function loadWallets() {
   })
 }
 
+export async function findAllInStore(targStore, query = {}) {
+  let result = {}
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+  console.log('findAllInStore qs', qs)
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = value
+
+    console.log('findAllInStore qs before each', key, res)
+
+    qs.forEach(([k,v]) => {
+      console.log('findAllInStore qs each', k, v, value[k])
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    console.log('findAllInStore qs after each', key, res)
+
+    if (res) {
+      result[key] = res
+    }
+
+    // if (value[queryKey] && value[queryKey] === queryVal) {
+    //   result[key] = value
+    // }
+
+    if (iterationNumber === storeLen) {
+      return result
+    }
+  })
+}
+
 export async function loadWalletsForAlias(alias) {
   let $alias = await store.aliases.getItem(alias)
   $alias.$wallets = {}

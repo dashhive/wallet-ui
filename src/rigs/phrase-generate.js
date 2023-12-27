@@ -11,7 +11,8 @@ export let phraseGenerateRig = (function (globals) {
 
   let {
     setupDialog, appDialogs, appState,
-    mainApp, wallet, deriveWalletData,
+    mainApp, wallet, store,
+    deriveWalletData, generateWalletData,
   } = globals;
 
   let phraseGenerate = setupDialog(
@@ -84,7 +85,7 @@ export let phraseGenerateRig = (function (globals) {
             return;
           }
 
-          wallet = await deriveWalletData()
+          wallet = await generateWalletData()
 
           appState.phrase = wallet.recoveryPhrase
           appState.selectedWallet = wallet.id
@@ -92,6 +93,22 @@ export let phraseGenerateRig = (function (globals) {
 
           localStorage.selectedWallet = appState.selectedWallet
           localStorage.selectedAlias = appState.selectedAlias
+
+
+          let newAccount = await store.accounts.setItem(
+            wallet.xkeyId,
+            {
+              createdAt: (new Date()).toISOString(),
+              accountIndex: wallet.accountIndex,
+              addressIndex: wallet.addressIndex,
+              xprv: wallet.xprv,
+              xpub: wallet.xpub,
+              walletId: wallet.id,
+              xkeyId: wallet.xkeyId,
+              addressKeyId: wallet.addressKeyId,
+              address: wallet.address,
+            }
+          )
 
           // console.log('GENERATE wallet!', wallet)
 

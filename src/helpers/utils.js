@@ -69,19 +69,19 @@ export async function deriveWalletData(
   addressIndex = 0,
   use = DashHd.RECEIVE
 ) {
-  let recoveryPhrase, seed, derivedWallet, wpub, id, account
+  if (!phraseOrXkey) {
+    throw new Error('Recovery phrase or xkey value empty or invalid')
+  }
+
+  let recoveryPhrase
+  let seed, derivedWallet, wpub, id, account
   let xkey, xprv, xpub, xkeyId
   let addressKey, addressKeyId, address
-  let targetBitEntropy = 128;
   let secretSalt = ''; // "TREZOR";
-  let recoveryPhraseArr = phraseOrXkey?.split(' ')
+  let recoveryPhraseArr = phraseOrXkey.trim().split(' ')
 
   if (recoveryPhraseArr?.length >= 12) {
     recoveryPhrase = phraseOrXkey;
-  }
-
-  if (!phraseOrXkey) {
-    recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
   }
 
   if (
@@ -123,6 +123,30 @@ export async function deriveWalletData(
     derivedWallet,
     recoveryPhrase,
   }
+}
+
+/**
+ *
+ * @param {Number} [accountIndex]
+ * @param {Number} [addressIndex]
+ * @param {Number} [use]
+ *
+ * @returns {Promise<SeedWallet>}
+ */
+export async function generateWalletData(
+  accountIndex = 0,
+  addressIndex = 0,
+  use = DashHd.RECEIVE
+) {
+  let targetBitEntropy = 128;
+  let recoveryPhrase = await DashPhrase.generate(targetBitEntropy);
+
+  return await deriveWalletData(
+    recoveryPhrase,
+    accountIndex,
+    addressIndex,
+    use
+  )
 }
 
 /**

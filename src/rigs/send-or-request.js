@@ -9,8 +9,8 @@ export let sendOrRequestRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs,
-    wallet, createTx, deriveWalletData,
+    mainApp, setupDialog, appDialogs, store,
+    wallet, wallets, accounts, createTx, deriveWalletData,
   } = globals
 
   let inputAmount = setupInputAmount(mainApp)
@@ -310,20 +310,35 @@ export let sendOrRequestRig = (function (globals) {
           }
 
           if (fde.intent === 'request') {
+            let incAddrIdx = state.wallet.addressIndex + 1
             receiveWallet = await deriveWalletData(
-              inWallet?.xpub,
+              // state.wallet.xprv,
+              state.wallet.xpub,
+              // state.wallet.recoveryPhrase,
               0,
-              inWallet?.addressIndex + 1,
+              incAddrIdx,
             )
-            //   address = receiveWallet.address
-            // } else {
-            //   address = state.to
-            // }
+
+            state.wallet = await store.accounts.setItem(state.wallet.xkeyId, {
+              ...state.wallet,
+              address: receiveWallet.address,
+              addressIndex: incAddrIdx,
+            })
+
+            if (inWallet) {
+              receiveWallet = await deriveWalletData(
+                inWallet.xpub,
+                0,
+                inWallet.addressIndex + 1,
+              )
+            }
 
             console.log(
               `${fde.intent} TO CONTACT`,
               `Ð ${fde.amount || 0}`,
               contact,
+              state.wallet,
+              inWallet,
               receiveWallet,
               // {
               //   xkeyId: inWallet?.xkeyId,
