@@ -99,7 +99,7 @@ export let editContactRig = (function (globals) {
       header: state => html`
         <header class="no-brdr">
           <button
-            class="rounded link fs-3"
+            class="pill rounded fs-3"
             name="intent"
             value="delete_contact"
             title="${state.trashAlt}"

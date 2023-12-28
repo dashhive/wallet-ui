@@ -363,6 +363,10 @@ button.rounded:not(:first-of-type) {
   border-top-left-radius: 0;
   border-bottom-left-radius: 0;
 }
+header button.rounded:not(:last-of-type),
+header button.rounded:not(:first-of-type) {
+  border-radius: 2rem;
+}
 button.pill,
 button.link {
   background-color: transparent;
