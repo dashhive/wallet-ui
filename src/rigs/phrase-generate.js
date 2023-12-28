@@ -109,6 +109,8 @@ export let phraseGenerateRig = (function (globals) {
             }
           )
 
+          appState.account = newAccount
+
           // console.log('GENERATE wallet!', wallet)
 
           appDialogs.phraseBackup.render(

@@ -311,12 +311,16 @@ export let sendOrRequestRig = (function (globals) {
           }
 
           if (fde.intent === 'request') {
+            if (!inWallet && !state.wallet?.xpub) {
+              return;
+            }
+
             if (!inWallet) {
-              state.wallet.addressIndex = state.wallet.addressIndex + 1
+              state.wallet.addressIndex = (
+                state.wallet?.addressIndex || 0
+              ) + 1
               receiveWallet = await deriveWalletData(
-                // state.wallet.xprv,
                 state.wallet.xpub,
-                // state.wallet.recoveryPhrase,
                 0,
                 state.wallet.addressIndex,
               )
@@ -346,52 +350,44 @@ export let sendOrRequestRig = (function (globals) {
               inWallet.address = receiveWallet.address
             }
 
-            let tmpWallet = await store.accounts.getItem(
-              receiveWallet.xkeyId,
-            )
+            if (receiveWallet?.xkeyId) {
+              let tmpWallet = await store.accounts.getItem(
+                receiveWallet.xkeyId,
+              )
 
-            // state.wallet =
-            await store.accounts.setItem(
-              receiveWallet.xkeyId,
-              {
-                ...tmpWallet,
-                // createdAt: created,
-                // accountIndex,
-                // addressIndex: shareAccount.addressIndex,
-                // xprv: shareAccount.xprv,
-                // xpub: shareAccount.xpub,
-                // // walletId: appState.selectedWallet,
-                // walletId: shareAccount.id,
-                // xkeyId: shareAccount.xkeyId,
-                // addressKeyId: shareAccount.addressKeyId,
-                // address: shareAccount.address,
-                address: receiveWallet.address,
-                addressIndex: receiveWallet.addressIndex,
-              }
-            )
+              // state.wallet =
+              await store.accounts.setItem(
+                receiveWallet.xkeyId,
+                {
+                  ...tmpWallet,
+                  address: receiveWallet.address,
+                  addressIndex: receiveWallet.addressIndex,
+                }
+              )
 
-            console.log(
-              `${fde.intent} TO CONTACT`,
-              `Ð ${fde.amount || 0}`,
-              {
-                contact,
-                stateWallet: state.wallet,
-                inWallet,
-                receiveWallet,
-              }
-            )
+              console.log(
+                `${fde.intent} TO CONTACT`,
+                `Ð ${fde.amount || 0}`,
+                {
+                  contact,
+                  stateWallet: state.wallet,
+                  inWallet,
+                  receiveWallet,
+                }
+              )
 
-            appDialogs.requestQr.render(
-              {
-                wallet: receiveWallet,
-                contact,
-                to,
-                amount: Number(fde.amount),
-              },
-              'afterend',
-            )
+              appDialogs.requestQr.render(
+                {
+                  wallet: receiveWallet,
+                  contact,
+                  to,
+                  amount: Number(fde.amount),
+                },
+                'afterend',
+              )
 
-            let showRequestQR = await appDialogs.requestQr.showModal()
+              let showRequestQR = await appDialogs.requestQr.showModal()
+            }
           }
 
           // return;

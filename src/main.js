@@ -54,7 +54,6 @@ import requestQrRig from './rigs/request-qr.js'
 
 // app/data state
 let accounts
-let account
 let wallets
 let wallet
 let userInfo
@@ -67,6 +66,7 @@ let appState = envoy(
     aliasInfo: {},
     contacts: [],
     sentTransactions: {},
+    account: {},
   },
   // (state, oldState) => {
   //   if (state.contacts !== oldState.contacts) {
@@ -160,7 +160,7 @@ let contactsList = await setupContactsList(
             // Edit Contact
             appDialogs.editContact.render(
               {
-                wallet: account,
+                wallet: appState.account,
                 account: shareAccount,
                 contact: contactData,
                 userInfo,
@@ -348,9 +348,9 @@ async function main() {
     }
   )
 
-  account = Object.values(accounts || {})?.[0]
+  appState.account = Object.values(accounts || {})?.[0]
 
-  let accountIndex = account
+  let accountIndex = appState.account
     ?.accountIndex || 0
 
   bodyNav = await setupNav(
@@ -414,7 +414,7 @@ async function main() {
 
   appDialogs.sendOrRequest = sendOrRequestRig({
     mainApp, setupDialog, appDialogs, store,
-    wallet: account, deriveWalletData, createTx,
+    wallet: appState.account, deriveWalletData, createTx,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
@@ -439,7 +439,7 @@ async function main() {
       event.stopPropagation()
 
       appDialogs.sendOrRequest.render({
-        wallet: account,
+        wallet: appState.account,
         // accounts,
         userInfo,
         contacts: appState.contacts,

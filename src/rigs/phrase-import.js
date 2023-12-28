@@ -145,6 +145,8 @@ export let phraseImportRig = (function (globals) {
             }
           )
 
+          appState.account = newAccount
+
           // console.log('IMPORT wallet!', wallet)
 
           phraseImport.close()
