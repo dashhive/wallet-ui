@@ -6,6 +6,7 @@ import {
   Cryptic,
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
+import { deriveWalletData } from './utils.js'
 import { STOREAGE_SALT, OIDC_CLAIMS } from './constants.js'
 
 // @ts-ignore
@@ -184,7 +185,7 @@ export async function initWallet(
         walletId: wallet.id,
         accountIndex: a.accountIndex,
         addressIndex: a.addressIndex,
-        insight: {},
+        // insight: {},
       }
     )
   }
@@ -312,14 +313,19 @@ export async function checkWalletFunds(addr, wallet = {}) {
 export async function updateAllFunds(wallet, walletFunds) {
   let funds = 0
   let addrKeys = await store.addresses.keys()
-  console.log(
-    'checkWalletFunds wallet',
-    wallet,
-  )
+  // console.log(
+  //   'checkWalletFunds wallet',
+  //   wallet,
+  // )
 
-  console.log('updateAllFunds getInstantBalances for', addrKeys, addrKeys.length)
+  console.log(
+    'updateAllFunds getInstantBalances for',
+    addrKeys,
+    addrKeys.length,
+  )
   let balances = await dashsight.getInstantBalances(addrKeys)
   let updated_at = (new Date()).getTime()
+
   console.log('updateAllFunds balances', balances)
 
   if (balances.length > 0) {
@@ -389,6 +395,29 @@ export async function getTotalFunds(wallet) {
   })
 }
 
+export async function getAddrsWithFunds(wallet) {
+  let result = {}
+  let addrsLen = await store.addresses.length()
+
+  return await store.addresses.iterate((
+    value, key, iterationNumber
+  ) => {
+    if (
+      value?.walletId === wallet?.id &&
+      value?.insight?.balance > 0
+    ) {
+      result[key] = {
+        ...value,
+        address: key,
+      }
+    }
+
+    if (iterationNumber === addrsLen) {
+      return result
+    }
+  })
+}
+
 export async function batchAddressGenerate(
   wallet,
   accountIndex = 0,
@@ -450,11 +479,97 @@ export async function forceInsightUpdateForAddress(addr) {
   )
 }
 
+export function sortAddrs(a, b) {
+  // Ascending Lexicographical on TxId (prev-hash) in-memory (not wire) byte order
+  if (a.accountIndex > b.accountIndex) {
+    return 1;
+  }
+  if (a.accountIndex < b.accountIndex) {
+    return -1;
+  }
+  // addressIndex
+  // Ascending Vout (Numerical)
+  let indexDiff = a.addressIndex - b.addressIndex;
+  return indexDiff;
+};
+
+export function getBalance(utxos) {
+  return utxos.reduce(function (total, utxo) {
+    return total + utxo.satoshis;
+  }, 0);
+}
+
+export function selectOptimalUtxos(utxos, output) {
+  let balance = getBalance(utxos);
+  let fees = DashTx.appraise({
+    //@ts-ignore
+    inputs: [{}],
+    //@ts-ignore
+    outputs: [{}],
+  });
+
+  let fullSats = output + fees.min;
+
+  if (balance < fullSats) {
+    return [];
+  }
+
+  // from largest to smallest
+  utxos.sort(function (a, b) {
+    return b.satoshis - a.satoshis;
+  });
+
+  // /** @type Array<T> */
+  let included = [];
+  let total = 0;
+
+  // try to get just one
+  utxos.every(function (utxo) {
+    if (utxo.satoshis > fullSats) {
+      included[0] = utxo;
+      total = utxo.satoshis;
+      return true;
+    }
+    return false;
+  });
+  if (total) {
+    return included;
+  }
+
+  // try to use as few coins as possible
+  utxos.some(function (utxo, i) {
+    included.push(utxo);
+    total += utxo.satoshis;
+    if (total >= fullSats) {
+      return true;
+    }
+
+    // it quickly becomes astronomically unlikely to hit the one
+    // exact possibility that least to paying the absolute minimum,
+    // but remains about 75% likely to hit any of the mid value
+    // possibilities
+    if (i < 2) {
+      // 1 input 25% chance of minimum (needs ~2 tries)
+      // 2 inputs 6.25% chance of minimum (needs ~8 tries)
+      fullSats = fullSats + DashTx.MIN_INPUT_SIZE;
+      return false;
+    }
+    // but by 3 inputs... 1.56% chance of minimum (needs ~32 tries)
+    // by 10 inputs... 0.00953674316% chance (needs ~524288 tries)
+    fullSats = fullSats + DashTx.MIN_INPUT_SIZE + 1;
+  });
+  return included;
+}
+
 export async function createTx(
-  fromWallet, recipient, amount,
+  fromWallet,
+  fundAddrs,
+  recipient,
+  amount,
 ) {
   const MIN_FEE = 191;
   const DUST = 2000;
+  const AMOUNT_SATS = DashTx.toSats(amount)
 
   console.log(DashTx, fromWallet)
   let dashTx = DashTx.create({
@@ -462,22 +577,72 @@ export async function createTx(
     version: 3,
   });
 
-  let privateKeys = {
-    [fromWallet.address]: fromWallet.addressKey.privateKey,
-  };
+  let privateKeys = {}
+  let coreUtxos
+  let changeAddr = (await deriveWalletData(
+    fromWallet.recoveryPhrase,
+    0,
+    0,
+  ))?.address
+  let tmpWallet
 
-  let coreUtxos = await dashsight.getCoreUtxos(fromWallet.address);
+  // console.log('createTx fundAddrs', [...fundAddrs])
+
+  if (Array.isArray(fundAddrs)) {
+    fundAddrs.sort(sortAddrs)
+    changeAddr = changeAddr || fundAddrs[0].address
+    // console.log('createTx fundAddrs sorted', fundAddrs)
+    for (let w of fundAddrs) {
+      // if (w.insight?.balanceSat < AMOUNT_SATS) {}
+      tmpWallet = await deriveWalletData(
+        fromWallet.recoveryPhrase,
+        w.accountIndex,
+        w.addressIndex,
+      )
+      privateKeys[tmpWallet.address] = tmpWallet.addressKey.privateKey
+    }
+    // console.log('createTx privateKeys', Object.keys(privateKeys), privateKeys)
+    coreUtxos = await dashsight.getMultiCoreUtxos(
+      Object.keys(privateKeys)
+    )
+  } else {
+    tmpWallet = await deriveWalletData(
+      fromWallet.recoveryPhrase,
+      fundAddrs.accountIndex,
+      fundAddrs.addressIndex,
+    )
+    privateKeys[tmpWallet.address] = tmpWallet.addressKey.privateKey
+    coreUtxos = await dashsight.getCoreUtxos(
+      tmpWallet.address
+    )
+    changeAddr = changeAddr || tmpWallet.address
+  }
+
+  let optimalUtxos = selectOptimalUtxos(
+    coreUtxos,
+    AMOUNT_SATS,
+  )
 
   console.log('coreUtxos', coreUtxos);
+  // console.log(
+  //   'coreUtxos amounts',
+  //   coreUtxos.map(({ address, satoshis }) => ({ address, satoshis }))
+  // );
+  // console.log(
+  //   'optimalUtxos',
+  //   amount,
+  //   AMOUNT_SATS,
+  //   optimalUtxos
+  // );
 
   let payments = [
     {
       address: recipient?.address || recipient,
-      satoshis: DashTx.toSats(amount),
+      satoshis: AMOUNT_SATS,
     },
   ];
 
-  let spendableDuffs = coreUtxos.reduce(function (total, utxo) {
+  let spendableDuffs = optimalUtxos.reduce(function (total, utxo) {
     return total + utxo.satoshis;
   }, 0);
   let spentDuffs = payments.reduce(function (total, output) {
@@ -486,7 +651,7 @@ export async function createTx(
   let unspentDuffs = spendableDuffs - spentDuffs;
 
   let txInfo = {
-    inputs: coreUtxos,
+    inputs: optimalUtxos,
     outputs: payments,
   };
 
@@ -511,12 +676,16 @@ export async function createTx(
   if (change) {
     txInfo.outputs = outputs.slice(0);
     txInfo.outputs.push({
-      address: fromWallet.address,
+      address: changeAddr,
       satoshis: change,
     });
   }
 
-  let keys = coreUtxos.map(utxo => privateKeys[utxo.address]);
+  txInfo.outputs.sort(DashTx.sortOutputs)
+
+  let keys = optimalUtxos.map(
+    utxo => privateKeys[utxo.address]
+  );
 
   console.log('txInfo', txInfo);
 

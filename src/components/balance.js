@@ -88,8 +88,8 @@ const initialState = {
       //   event.target === state.elements.balance
       // )
 
-      if (state?.wallet) {
-        updateAllFunds(state?.wallet)
+      if (state?.wallet && state.walletFunds) {
+        updateAllFunds(state.wallet, state.walletFunds)
           .then(balance => {
             console.log(
               'Update Balance',

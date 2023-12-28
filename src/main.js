@@ -24,6 +24,7 @@ import {
   store,
   createTx,
   sendTx,
+  getAddrsWithFunds,
 } from './helpers/wallet.js'
 
 import setupNav from './components/nav.js'
@@ -160,8 +161,9 @@ let contactsList = await setupContactsList(
             // Edit Contact
             appDialogs.editContact.render(
               {
-                wallet: appState.account,
-                account: shareAccount,
+                wallet,
+                account: appState.account,
+                shareAccount,
                 contact: contactData,
                 userInfo,
               },
@@ -414,12 +416,12 @@ async function main() {
 
   appDialogs.sendOrRequest = sendOrRequestRig({
     mainApp, setupDialog, appDialogs, store,
-    wallet: appState.account, deriveWalletData, createTx,
+    wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
     mainApp, setupDialog, appDialogs, appState,
-    deriveWalletData, createTx, sendTx, store, userInfo, contactsList,
+    deriveWalletData, createTx, sendTx, getAddrsWithFunds, store, userInfo, contactsList,
   })
 
   appDialogs.requestQr = requestQrRig({
@@ -439,7 +441,8 @@ async function main() {
       event.stopPropagation()
 
       appDialogs.sendOrRequest.render({
-        wallet: appState.account,
+        wallet,
+        account: appState.account,
         // accounts,
         userInfo,
         contacts: appState.contacts,
@@ -643,26 +646,16 @@ async function main() {
       )
       dashBalance.render({
         wallet,
-        walletFunds: {
-          balance: (walletFunds?.balance || 0)
-        }
+        walletFunds,
       })
     })
 
   updateAllFunds(wallet, walletFunds)
     .then(funds => {
       console.log('updateAllFunds then funds', funds)
-      // walletFunds.balance = funds
-      // dashBalance?.restate({
-      //   wallet,
-      //   walletFunds: {
-      //     balance: funds
-      //   }
-      // })
     })
     .catch(err => console.error('catch updateAllFunds', err, wallet))
 
-  // let addr = wallet?.address
   let addrs = (await store.addresses.keys()) || []
 
   initDashSocket({
@@ -799,6 +792,13 @@ async function main() {
           updates,
           txUpdates,
         )
+
+        if (appDialogs.requestQr.element.open) {
+          if (appDialogs.sendOrRequest.element.open) {
+            appDialogs.sendOrRequest.close()
+          }
+          appDialogs.requestQr.close()
+        }
       }
       let txs = appState?.sentTransactions
 

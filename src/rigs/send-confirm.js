@@ -10,7 +10,7 @@ export let sendConfirmRig = (function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, appState,
-    deriveWalletData, createTx, sendTx, store, userInfo, contactsList,
+    sendTx, store, userInfo, contactsList,
   } = globals
 
   let sendConfirm = setupDialog(
@@ -138,18 +138,15 @@ export let sendConfirmRig = (function (globals) {
 
           if (fde.intent === 'send') {
             if (outWallet) {
-              addressIndex = outWallet?.addressIndex + 1
-              sendWallet = await deriveWalletData(
-                outWallet?.xpub,
-                0,
-                addressIndex,
-              )
-              address = sendWallet.address
-            } else {
-              address = state.to
+              addressIndex = (outWallet?.addressIndex || 0) + 1
+              // sendWallet = await deriveWalletData(
+              //   outWallet?.xpub,
+              //   0,
+              //   addressIndex,
+              // )
             }
 
-            if (state.amount > 0) {
+            if (state.tx) {
               txRes = await sendTx(
                 state.tx,
               )

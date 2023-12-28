@@ -52,15 +52,16 @@ export let editContactRig = (function (globals) {
       contact[localName] = fieldValue
     }
 
-    let newContact = await store.contacts.setItem(
+    let modifyContact = await store.contacts.setItem(
       // state.wallet.id,
-      state.account.xkeyId,
+      // state.account.xkeyId,
+      state.shareAccount.xkeyId,
       contact,
     )
 
-    state.contact = newContact
+    state.contact = modifyContact
 
-    console.log('debounceField', field, localName, newContact)
+    console.log('debounceField', field, localName, modifyContact)
 
     loadStore(
       store.contacts,
@@ -245,9 +246,9 @@ export let editContactRig = (function (globals) {
                 xkey,
               )
 
-              let newContact = await store.contacts.setItem(
+              let modifyContact = await store.contacts.setItem(
                 // state.wallet.id,
-                state.account.xkeyId,
+                state.shareAccount.xkeyId,
                 {
                   ...state.contact,
                   info: {
@@ -285,7 +286,7 @@ export let editContactRig = (function (globals) {
                 }
               )
 
-              state.contact = newContact
+              state.contact = modifyContact
 
               if (xkeyOrAddr) {
                 event.target.form.contactAddr.value = xkeyOrAddr
@@ -361,7 +362,7 @@ export let editContactRig = (function (globals) {
           let fde = formDataEntries(event)
           let parsedAddr
           let storedContact = await store.contacts.getItem(
-            state.account.xkeyId,
+            state.shareAccount.xkeyId,
           )
 
           console.log('edit contact intent', fde?.intent, storedContact)
@@ -372,6 +373,7 @@ export let editContactRig = (function (globals) {
 
             appDialogs.sendOrRequest.render({
               wallet: state.wallet,
+              account: appState.account,
               userInfo,
               contacts: appState.contacts,
               to: `@${storedContact.alias}`,
@@ -383,7 +385,7 @@ export let editContactRig = (function (globals) {
 
           if (fde?.intent === 'delete_contact') {
             let removedContact = await store.contacts.removeItem(
-              state.account.xkeyId,
+              state.shareAccount.xkeyId,
             )
 
             console.log('delete contact', storedContact, removedContact)
@@ -394,12 +396,12 @@ export let editContactRig = (function (globals) {
                 if (res) {
                   appState.contacts = res
 
-                  updateAllFunds(state.account, walletFunds)
+                  updateAllFunds(state.shareAccount, walletFunds)
                     .then(funds => {
                       // walletFunds.balance = funds
                       console.log('updateAllFunds then funds', funds)
                     })
-                    .catch(err => console.error('catch updateAllFunds', err, state.account))
+                    .catch(err => console.error('catch updateAllFunds', err, state.shareAccount))
 
                   return contactsList.restate({
                     contacts: res?.sort(sortContactsByAlias),
@@ -410,45 +412,6 @@ export let editContactRig = (function (globals) {
             )
 
             editContact.close()
-
-            return;
-          }
-
-          if (fde?.intent === 'scan_new_contact') {
-            appDialogs.scanContact.render(
-              {
-                wallet,
-              },
-              'afterend',
-            )
-
-            let showScan = await appDialogs.scanContact.showModal()
-
-            if (showScan !== 'cancel') {
-              parsedAddr = parseAddressField(showScan)
-              let {
-                address,
-                xpub,
-                xprv,
-                name,
-                preferred_username,
-                sub,
-              } = parsedAddr
-
-              let xkey = xprv || xpub
-
-              let xkeyOrAddr = xkey || address
-
-              if (xkeyOrAddr) {
-                event.target.contactAddr.value = xkeyOrAddr
-              }
-              if (name) {
-                event.target.contactName.value = name
-              }
-              if (preferred_username) {
-                event.target.contactAlias.value = preferred_username
-              }
-            }
 
             return;
           }
@@ -470,12 +433,12 @@ export let editContactRig = (function (globals) {
           }
 
           // let storedContact = await store.contacts.getItem(
-          //   state.account.xkeyId,
+          //   state.shareAccount.xkeyId,
           // )
 
           let pairedContact = await store.contacts.setItem(
             // state.wallet.id,
-            state.account.xkeyId,
+            state.shareAccount.xkeyId,
             {
               ...storedContact,
               info: {
@@ -509,12 +472,12 @@ export let editContactRig = (function (globals) {
               if (res) {
                 appState.contacts = res
 
-                updateAllFunds(state.account, walletFunds)
+                updateAllFunds(state.shareAccount, walletFunds)
                   .then(funds => {
                     // walletFunds.balance = funds
                     console.log('updateAllFunds then funds', funds)
                   })
-                  .catch(err => console.error('catch updateAllFunds', err, state.account))
+                  .catch(err => console.error('catch updateAllFunds', err, state.shareAccount))
 
                 return contactsList.restate({
                   contacts: res?.sort(sortContactsByAlias),
@@ -527,7 +490,7 @@ export let editContactRig = (function (globals) {
           console.log('pairedContact', pairedContact)
 
           // let initialized
-          // wallet = state.account
+          // wallet = state.shareAccount
 
           // if (!wallets?.[appState.selectedAlias]) {
           //   initialized = await initWallet(

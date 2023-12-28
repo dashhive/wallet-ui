@@ -10,7 +10,8 @@ export let sendOrRequestRig = (function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, store,
-    wallet, wallets, accounts, createTx, deriveWalletData,
+    createTx, deriveWalletData, getAddrsWithFunds,
+    wallet, wallets, accounts,
   } = globals
 
   let inputAmount = setupInputAmount(mainApp)
@@ -278,8 +279,15 @@ export let sendOrRequestRig = (function (globals) {
             }
 
             if (amount > 0) {
+              let fundingAddrs = await getAddrsWithFunds(
+                state.wallet,
+              )
+              fundingAddrs = Object.values(
+                fundingAddrs || {}
+              )
               tx = await createTx(
                 state.wallet,
+                fundingAddrs,
                 address,
                 amount,
               )
@@ -299,6 +307,7 @@ export let sendOrRequestRig = (function (globals) {
             appDialogs.sendConfirm.render(
               {
                 wallet: state.wallet,
+                // wallet: sendWallet,
                 contact,
                 to,
                 amount,
