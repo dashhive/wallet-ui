@@ -340,13 +340,13 @@ export async function updateAllFunds(wallet, walletFunds) {
       accountIndex,
       addressIndex,
     } = $addr
-    console.log(
-      'checkWalletFunds $addr',
-      $addr,
-      walletId,
-      wallet?.id,
-      walletId === wallet?.id
-    )
+    // console.log(
+    //   'checkWalletFunds $addr',
+    //   $addr,
+    //   walletId,
+    //   wallet?.id,
+    //   walletId === wallet?.id
+    // )
 
     if (walletId === wallet?.id) {
       $addr = {
