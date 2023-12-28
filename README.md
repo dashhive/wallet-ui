@@ -26,11 +26,11 @@ A Graphical User Interface (GUI) for
     - QR Code (uses the Dash URI from above)
   - [x] Add a Contact
   - [x] List
-  - [ ] Edit
+  - [x] Edit
   - [ ] Remove
-- [ ] Funding
-  - [ ] Request
-  - [ ] Send
+- [x] Funding
+  - [x] Request
+  - [x] Send
 - [ ] Backup Wallet & Contacts
 - [ ] Encrypt wallet data in local storage
   - [x] Recovery Phrase
