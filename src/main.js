@@ -42,11 +42,13 @@ import walletEncryptRig from './rigs/wallet-encrypt.js'
 import walletDecryptRig from './rigs/wallet-decrypt.js'
 import addContactRig from './rigs/add-contact.js'
 import editContactRig from './rigs/edit-contact.js'
+import confirmDeleteRig from './rigs/confirm-delete.js'
 import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
 import sendOrRequestRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
+import pairQrRig from './rigs/pair-qr.js'
 
 // Example Dash URI's
 
@@ -399,6 +401,11 @@ async function main() {
     mainApp, wallet, userInfo, contactsList,
   })
 
+  appDialogs.confirmDelete = confirmDeleteRig({
+    mainApp, setupDialog, appDialogs, appState,
+    store, userInfo, contactsList,
+  })
+
   appDialogs.editContact = editContactRig({
     setupDialog, updateAllFunds,
     appDialogs, appState, store, walletFunds,
@@ -426,6 +433,11 @@ async function main() {
 
   appDialogs.requestQr = requestQrRig({
     mainApp, setupDialog,
+  })
+
+  appDialogs.pairQr = pairQrRig({
+    setupDialog,
+    mainApp, wallet, userInfo,
   })
 
   svgSprite.render()

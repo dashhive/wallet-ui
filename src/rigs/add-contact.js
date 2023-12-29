@@ -28,7 +28,9 @@ export let addContactRig = (function (globals) {
     updateAllFunds, walletFunds,
   } = globals;
 
-  let debounceField = debounce(async ([field, localName], state, event) => {
+  let debounceField = debounce(async (
+    [field, localName], state, event
+  ) => {
     let infoField
     let { info } = state.contact
     if (info) {
@@ -316,11 +318,25 @@ export let addContactRig = (function (globals) {
               }
             }
           }
-          if (event.target?.name === 'contactAlias') {
-            debounceField(['preferred_username', 'alias'], state, event)
+          if (
+            event.target?.name === 'contactAlias' &&
+            !event?.target?.validity?.patternMismatch
+          ) {
+            debounceField(
+              ['preferred_username', 'alias'],
+              state,
+              event
+            )
           }
-          if (event.target?.name === 'contactName') {
-            debounceField(['name'], state, event)
+          if (
+            event.target?.name === 'contactName' &&
+            !event?.target?.validity?.patternMismatch
+          ) {
+            debounceField(
+              ['name'],
+              state,
+              event
+            )
           }
         },
         handleClick: state => async event => {

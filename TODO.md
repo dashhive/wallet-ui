@@ -24,7 +24,8 @@
        - [x] Changing alias field removes wallet from localForage contact
        - [x] `Finish pairing` contact in contacts list after save
      - [x] Send & Request Funds to / from Contact
-     - [ ] Remove Contact confirmation dialog
+     - [x] Remove Contact confirmation dialog
+     - [x] Show Pairing Information from Edit Contact dialog
    - [ ] Fiat balance from:
      - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
      - symbol=DASH${symbol}

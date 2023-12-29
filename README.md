@@ -10,7 +10,7 @@ A Graphical User Interface (GUI) for
 - [x] Implementation of `DashHd` & `DashPhrase` modules
   - [x] To generate a new wallet
   - [x] To restore an existing wallet via recovery phrase
-- [ ] Contacts
+- [x] Contacts
   - [x] Share Pairing Contact Info
     - Dash URI
       - [DIP: aj-contact-scanback](https://github.com/dashhive/DIPs/blob/aj-contact-scanback/aj-contact-scanback.md#1-contact-exchange)
@@ -27,7 +27,7 @@ A Graphical User Interface (GUI) for
   - [x] Add a Contact
   - [x] List
   - [x] Edit
-  - [ ] Remove
+  - [x] Remove
 - [x] Funding
   - [x] Request
   - [x] Send

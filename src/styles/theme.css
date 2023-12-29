@@ -315,6 +315,14 @@ th {
 }
 
 
+.dark-hover:not(:disabled):hover,
+.dark {
+  color: var(--d);
+}
+.light-hover:not(:disabled):hover,
+.light {
+  color: var(--l);
+}
 .info {
   color: var(--info);
 }
@@ -343,9 +351,11 @@ th {
 .bg-note {
   background-color: var(--note);
 }
+.bg-warn-hover:not(:disabled):hover,
 .bg-warn {
   background-color: var(--warn);
 }
+.bg-dang-hover:not(:disabled):hover,
 .bg-dang {
   background-color: var(--dang);
 }

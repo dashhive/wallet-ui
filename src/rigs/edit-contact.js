@@ -29,7 +29,9 @@ export let editContactRig = (function (globals) {
     updateAllFunds, walletFunds,
   } = globals;
 
-  let debounceField = debounce(async ([field, localName], state, event) => {
+  let debounceField = debounce(async (
+    [field, localName], state, event
+  ) => {
     let infoField
     let { info } = state.contact
     if (info) {
@@ -307,46 +309,32 @@ export let editContactRig = (function (globals) {
           }
         },
         handleClick: state => async event => {
-          let shareAside = state.elements?.dialog?.querySelector(
-            'fieldset.share > aside'
+          let storedContact = await store.contacts.getItem(
+            state.shareAccount.xkeyId,
           )
+          let contactCard = state.elements?.dialog?.querySelector(
+            'fieldset.contact > section > article:first-of-type'
+          )
+
           if (
-            shareAside?.contains(event.target)
+            event.target !== contactCard &&
+            contactCard?.contains(event.target)
           ) {
-            if (
-              event.target?.nodeName.toLowerCase() === 'input' &&
-              event.target?.readOnly
-            ) {
-              event.preventDefault()
-              event.stopPropagation()
+            appDialogs.pairQr.render(
+              {
+                name: `Pairing info for @${storedContact.alias}`,
+                // wallet: state.wallet,
+                // account: appState.account,
+                wallet: state.shareAccount,
+                contact: storedContact,
+                userInfo,
+                footer: state => html`<footer class="center"><sub>Share this QR code or URI with @${storedContact.alias}</sub></footer>`,
+              },
+              'afterend',
+            )
 
-              event.target.select()
-            }
-            if (
-              event.target?.classList?.contains('copy') ||
-              event.target?.classList?.contains('icon-copy')
-            ) {
-              event.preventDefault()
-              event.stopPropagation()
-
-              setClipboard(event)
-            }
-            if (
-              event.target?.nodeName.toLowerCase() === 'svg'
-            ) {
-              event.preventDefault()
-              event.stopPropagation()
-
-              openBlobSVG(event.target)
-            }
-            if (
-              event.target?.parentElement?.nodeName.toLowerCase() === 'svg'
-            ) {
-              event.preventDefault()
-              event.stopPropagation()
-
-              openBlobSVG(event.target?.parentElement)
-            }
+            let showPairQR = await appDialogs.pairQr.showModal()
+            return;
           }
         },
         handleRender: state => {},
@@ -354,18 +342,19 @@ export let editContactRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          // event.target.contactAlias.setCustomValidity('')
-          // event.target.contactAlias.reportValidity()
-
-          console.log('ADD CONTACT!', state, event)
+          console.log('EDIT CONTACT!', state, event)
 
           let fde = formDataEntries(event)
-          let parsedAddr
+
           let storedContact = await store.contacts.getItem(
             state.shareAccount.xkeyId,
           )
 
-          console.log('edit contact intent', fde?.intent, storedContact)
+          console.log(
+            'edit contact intent',
+            fde?.intent,
+            storedContact,
+          )
 
           if (['send','request'].includes(String(fde?.intent))) {
 
@@ -384,34 +373,13 @@ export let editContactRig = (function (globals) {
           }
 
           if (fde?.intent === 'delete_contact') {
-            let removedContact = await store.contacts.removeItem(
-              state.shareAccount.xkeyId,
-            )
-
-            console.log('delete contact', storedContact, removedContact)
-
-            loadStore(
-              store.contacts,
-              res => {
-                if (res) {
-                  appState.contacts = res
-
-                  updateAllFunds(state.shareAccount, walletFunds)
-                    .then(funds => {
-                      // walletFunds.balance = funds
-                      console.log('updateAllFunds then funds', funds)
-                    })
-                    .catch(err => console.error('catch updateAllFunds', err, state.shareAccount))
-
-                  return contactsList.restate({
-                    contacts: res?.sort(sortContactsByAlias),
-                    userInfo,
-                  })
-                }
-              }
-            )
-
-            editContact.close()
+            appDialogs.confirmDelete.render({
+              shareAccount: state.shareAccount,
+              userInfo,
+              contacts: appState.contacts,
+              contact: storedContact,
+            })
+            appDialogs.confirmDelete.showModal()
 
             return;
           }
@@ -431,79 +399,6 @@ export let editContactRig = (function (globals) {
             event.target.reportValidity()
             return;
           }
-
-          // let storedContact = await store.contacts.getItem(
-          //   state.shareAccount.xkeyId,
-          // )
-
-          let pairedContact = await store.contacts.setItem(
-            // state.wallet.id,
-            state.shareAccount.xkeyId,
-            {
-              ...storedContact,
-              info: {
-                // ...OIDC_CLAIMS,
-                ...(storedContact.info || {}),
-                // @ts-ignore
-                sub: parsedAddr?.sub || '',
-                name: event.target.contactName.value,
-              },
-              uri: event.target.contactAddr.value,
-              alias: event.target.contactAlias.value,
-            }
-          )
-
-          // let contactExists = appState.contacts.findIndex(
-          //   c => c.info?.preferred_username === pairedContact.info?.preferred_username
-          // )
-          // if (contactExists > -1) {
-          //   appState.contacts[contactExists] = pairedContact
-          // } else {
-          //   appState.contacts.push(pairedContact)
-          // }
-
-          // appState.contacts.sort(sortContactsByAlias);
-
-          // contactsList.render(appState.contacts)
-
-          loadStore(
-            store.contacts,
-            res => {
-              if (res) {
-                appState.contacts = res
-
-                updateAllFunds(state.shareAccount, walletFunds)
-                  .then(funds => {
-                    // walletFunds.balance = funds
-                    console.log('updateAllFunds then funds', funds)
-                  })
-                  .catch(err => console.error('catch updateAllFunds', err, state.shareAccount))
-
-                return contactsList.restate({
-                  contacts: res?.sort(sortContactsByAlias),
-                  userInfo,
-                })
-              }
-            }
-          )
-
-          console.log('pairedContact', pairedContact)
-
-          // let initialized
-          // wallet = state.shareAccount
-
-          // if (!wallets?.[appState.selectedAlias]) {
-          //   initialized = await initWallet(
-          //     appState.encryptionPassword,
-          //     wallet,
-          //     0,
-          //     0,
-          //     {
-          //       preferred_username: appState.selectedAlias,
-          //     }
-          //   )
-          //   wallets = initialized.wallets
-          // }
 
           editContact.close()
         },
