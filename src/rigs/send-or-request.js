@@ -104,6 +104,17 @@ export let sendOrRequestRig = (function (globals) {
                         contact.info?.name || contact.alias
                       }</option>`
                     })
+                    // Adds multiple entries for
+                    // outgoing wallets per contact
+                    //
+                    // ).map(contact =>
+                    //   Object.values(contact.outgoing).map(co => {
+                    //     return html`<option value="@${
+                    //       contact.alias
+                    //     }#${co?.xkeyId}">${
+                    //       contact.info?.name || contact.alias
+                    //     }</option>`
+                    // }))
                 }
               </datalist>
             </div>
