@@ -14,6 +14,8 @@ import {
 
 // @ts-ignore
 import blake from 'blakejs'
+// @ts-ignore
+import { keccak_256 } from '@noble/hashes/sha3'
 
 // @ts-ignore
 let dashsight = DashSight.create({
@@ -235,19 +237,23 @@ export async function decryptPhraseFromKeystore(
 
   // console.log('decryptPhrase derivedBits', derivedBytes)
 
-  const calculatedMAC = blake256([
+  const bMAC = blake256([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
     ...Cryptic.toBytes(ciphertext),
   ])
+  const kMAC = Cryptic.toHex(keccak_256(new Uint8Array([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ciphertext),
+  ])));
 
   // console.log(
-  //   'decryptPhrase mac === calculatedMAC',
+  //   'decryptPhrase mac === bMAC',
   //   // mac,
-  //   // calculatedMAC,
-  //   mac === calculatedMAC
+  //   // bMAC,
+  //   mac === bMAC
   // )
 
-  if (mac !== calculatedMAC) {
+  if (mac && ![bMAC, kMAC].includes(mac)) {
     throw new Error('Invalid password')
   }
 
@@ -313,19 +319,23 @@ export async function decryptPhraseFromKeystoreBytes(
 
   // console.log('decryptPhrase derivedBits', derivedBytes)
 
-  const calculatedMAC = blake256([
+  const bMAC = blake256([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
     ...Cryptic.toBytes(ciphertext),
   ])
+  const kMAC = Cryptic.toHex(keccak_256(new Uint8Array([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ciphertext),
+  ])));
 
   // console.log(
-  //   'decryptPhrase mac === calculatedMAC',
+  //   'decryptPhrase mac === bMAC',
   //   // mac,
-  //   // calculatedMAC,
-  //   mac === calculatedMAC
+  //   // bMAC,
+  //   mac === bMAC
   // )
 
-  if (mac !== calculatedMAC) {
+  if (mac && ![bMAC, kMAC].includes(mac)) {
     throw new Error('Invalid password')
   }
 
@@ -353,6 +363,128 @@ export async function decryptPhraseFromKeystoreBytes(
     console.error('crypto deriveBits fail', err)
     throw new Error('Unable to decrypt')
   }
+}
+
+export async function encryptKeystore(
+  encryptionPassword,
+  recoveryPhrase,
+) {
+  let ks = {
+    crypto: {
+        cipher: "aes-128-ctr",
+        ciphertext: '',
+        cipherparams: {
+          iv: '',
+        },
+        kdf: "pbkdf2",
+        kdfparams: {
+            c: 262144,
+            dklen: 32,
+            prf: "hmac-sha256",
+            salt: '',
+        },
+        mac: '',
+    },
+    id: crypto.randomUUID(),
+    meta: 'dash-incubator-keystore',
+    version: 3,
+  }
+  // const {
+  //   ciphertext, cipherLength, cipherAlgorithm,
+  //   derivationAlgorithm, hashingAlgorithm, // iv,
+  //   mac, iterations, ivBuffer, salt, numBits,
+  // } = getKeystoreData(ks)
+
+  const [
+    cipherAlgorithm,
+    cipherLength,
+  ] = KS_CIPHER[ks.crypto.cipher]
+
+  // Cryptic.setConfig('name', cipherAlgorithm)
+  // Cryptic.setConfig('length', cipherLength)
+  // Cryptic.setConfig('pbkdfName', 'PBKDF2')
+  // Cryptic.setConfig(
+  //   'iterations',
+  //   // @ts-ignore
+  //   ks.crypto.kdfparams.c,
+  // )
+
+  const salt = Cryptic.randomBytes(32)
+  const iv = Cryptic.randomBytes(16)
+
+  ks.crypto.kdfparams.salt = Cryptic.bufferToHex(salt)
+  ks.crypto.cipherparams.iv = Cryptic.bufferToHex(iv)
+
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    Cryptic.stringToBuffer(encryptionPassword),
+    ks.crypto.kdf.toUpperCase(),
+    false,
+    ['deriveBits', 'deriveKey'],
+  )
+
+  const keyLength = ks.crypto.kdfparams.dklen / 2
+  // const numBits = (keyLength + Cryptic.bufferToHex(iv).length) * 8
+  const numBits = (keyLength + iv.length) * 8
+
+  const derivedBytes = await crypto.subtle.deriveBits(
+    {
+      name: ks.crypto.kdf.toUpperCase(),
+      salt,
+      iterations: ks.crypto.kdfparams.c,
+      hash: KS_PRF[ks.crypto.kdfparams.prf],
+    },
+    keyMaterial,
+    numBits,
+  );
+
+  const derivedKey = await crypto.subtle.deriveKey(
+    {
+      name: ks.crypto.kdf.toUpperCase(),
+      salt,
+      iterations: ks.crypto.kdfparams.c,
+      hash: KS_PRF[ks.crypto.kdfparams.prf],
+    },
+    keyMaterial,
+    {
+      name: cipherAlgorithm,
+      length: cipherLength
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  )
+
+  let enc = await crypto.subtle.encrypt(
+    {
+      name: cipherAlgorithm,
+      counter: iv,
+      length: cipherLength,
+    },
+    derivedKey,
+    Cryptic.stringToBuffer(recoveryPhrase),
+  )
+  ks.crypto.ciphertext = Cryptic.bufferToHex(enc)
+
+  const bMAC = blake256([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ks.crypto.ciphertext),
+  ])
+  const kMAC = Cryptic.toHex(keccak_256(new Uint8Array([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ks.crypto.ciphertext),
+  ])));
+
+  ks.crypto.mac = bMAC
+
+  // console.log(
+  //   'encrypted keystore', ks,
+  //   [
+  //     bMAC,
+  //     kMAC,
+  //   ]
+  // )
+
+  return ks
 }
 
 export async function initWallet(

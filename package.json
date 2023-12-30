@@ -38,7 +38,7 @@
     "@dashincubator/ripemd160": "^3.0.0",
     "@dashincubator/secp256k1": "^1.7.1-5",
     "@zxing/library": "^0.20.0",
-    "crypticstorage": "^0.0.1-1",
+    "crypticstorage": "dashhive/CrypticStorage#feat/keystore",
     "dashhd": "^3.3.0",
     "dashkeys": "^1.1.0",
     "dashphrase": "^1.4.0",
