@@ -7,7 +7,13 @@ import {
 } from '../imports.js'
 import { DatabaseSetup } from './db.js'
 import { deriveWalletData } from './utils.js'
-import { STOREAGE_SALT, OIDC_CLAIMS } from './constants.js'
+import {
+  STOREAGE_SALT, OIDC_CLAIMS,
+  KS_CIPHER, KS_PRF,
+} from './constants.js'
+
+// @ts-ignore
+import blake from 'blakejs'
 
 // @ts-ignore
 let dashsight = DashSight.create({
@@ -145,6 +151,208 @@ export async function decryptWallet(
   const cw = Cryptic.encryptString(keystorePassword, keystoreSalt);
 
   return await cw.decrypt(ciphertext, keystoreIV);
+}
+
+export function blake256(data) {
+  if ('string' === typeof data) {
+    data = Cryptic.hexToBuffer(data)
+  }
+  const context = blake.blake2bInit(32, null);
+  blake.blake2bUpdate(context, data);
+  return Cryptic.toHex(blake.blake2bFinal(context));
+}
+
+export function getKeystoreData(keystore) {
+  const {
+    ciphertext,
+    cipher,
+    mac,
+  } = keystore.crypto
+  const [
+    cipherAlgorithm,
+    cipherLength,
+  ] = KS_CIPHER[cipher]
+
+  const derivationAlgorithm = keystore.crypto.kdf.toUpperCase()
+  const hashingAlgorithm = KS_PRF[keystore.crypto.kdfparams.prf]
+  const derivedKeyLength = keystore?.crypto?.kdfparams?.dklen
+  const iterations = keystore.crypto.kdfparams.c
+  const iv = keystore.crypto.cipherparams.iv
+  const ivBuffer = Cryptic.hexToBuffer(iv)
+  const salt = Cryptic.hexToBuffer(keystore.crypto.kdfparams.salt)
+
+  const keyLength = derivedKeyLength / 2
+  const numBits = (keyLength + iv.length) * 8
+
+  return {
+    cipher,
+    cipherAlgorithm,
+    cipherLength,
+    ciphertext,
+    mac,
+    derivationAlgorithm,
+    hashingAlgorithm,
+    derivedKeyLength,
+    iterations,
+    iv,
+    ivBuffer,
+    salt,
+    keyLength,
+    numBits,
+  }
+}
+
+export async function decryptPhraseFromKeystore(
+  encryptionPassword,
+  keystore,
+) {
+  const {
+    ciphertext, cipherLength, cipherAlgorithm,
+    derivationAlgorithm, hashingAlgorithm, // iv,
+    mac, iterations, ivBuffer, salt, numBits,
+  } = getKeystoreData(keystore)
+
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    Cryptic.stringToBuffer(encryptionPassword),
+    derivationAlgorithm, // defaultConfig.pbkdfName,
+    false,
+    ['deriveBits', 'deriveKey'],
+  )
+
+  // console.log('decryptPhrase keyMaterial', keyMaterial)
+
+  const derivedBytes = await crypto.subtle.deriveBits(
+    {
+      name: derivationAlgorithm,
+      salt,
+      iterations,
+      hash: hashingAlgorithm,
+    },
+    keyMaterial,
+    numBits,
+  );
+
+  // console.log('decryptPhrase derivedBits', derivedBytes)
+
+  const calculatedMAC = blake256([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ciphertext),
+  ])
+
+  // console.log(
+  //   'decryptPhrase mac === calculatedMAC',
+  //   // mac,
+  //   // calculatedMAC,
+  //   mac === calculatedMAC
+  // )
+
+  if (mac !== calculatedMAC) {
+    throw new Error('Invalid password')
+  }
+
+  const derivedKey = await crypto.subtle.deriveKey(
+    {
+      name: derivationAlgorithm,
+      salt,
+      iterations,
+      hash: hashingAlgorithm,
+    },
+    keyMaterial,
+    {
+      name: cipherAlgorithm,
+      length: cipherLength
+    },
+    true,
+    ['encrypt', 'decrypt'],
+  )
+
+  // console.log('decryptPhrase derivedKey', derivedKey)
+
+  return crypto.subtle.decrypt(
+    {
+      name: cipherAlgorithm,
+      counter: ivBuffer,
+      length: cipherLength,
+    },
+    derivedKey,
+    Cryptic.hexToBuffer(ciphertext),
+  )
+}
+
+export async function decryptPhraseFromKeystoreBytes(
+  encryptionPassword,
+  keystore,
+) {
+  const {
+    ciphertext, cipherLength, cipherAlgorithm,
+    derivationAlgorithm, hashingAlgorithm, keyLength, // iv,
+    mac, iterations, ivBuffer, salt, numBits,
+  } = getKeystoreData(keystore)
+
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw',
+    Cryptic.stringToBuffer(encryptionPassword),
+    derivationAlgorithm, // defaultConfig.pbkdfName,
+    false,
+    ['deriveBits', 'deriveKey'],
+  )
+
+  // console.log('decryptPhrase keyMaterial', keyMaterial)
+
+  const derivedBytes = await crypto.subtle.deriveBits(
+    {
+      name: derivationAlgorithm,
+      salt,
+      iterations,
+      hash: hashingAlgorithm,
+    },
+    keyMaterial,
+    numBits,
+  );
+
+  // console.log('decryptPhrase derivedBits', derivedBytes)
+
+  const calculatedMAC = blake256([
+    ...new Uint8Array(derivedBytes.slice(16, 32)),
+    ...Cryptic.toBytes(ciphertext),
+  ])
+
+  // console.log(
+  //   'decryptPhrase mac === calculatedMAC',
+  //   // mac,
+  //   // calculatedMAC,
+  //   mac === calculatedMAC
+  // )
+
+  if (mac !== calculatedMAC) {
+    throw new Error('Invalid password')
+  }
+
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      derivedBytes.slice(0, keyLength),
+      cipherAlgorithm,
+      false,
+      ['encrypt', 'decrypt'],
+    )
+
+    // console.log('decryptPhrase key', key)
+
+    return await crypto.subtle.decrypt(
+      {
+        name: cipherAlgorithm,
+        counter: ivBuffer,
+        length: cipherLength,
+      },
+      key,
+      Cryptic.hexToBuffer(ciphertext),
+    )
+  } catch (err) {
+    console.error('crypto deriveBits fail', err)
+    throw new Error('Unable to decrypt')
+  }
 }
 
 export async function initWallet(

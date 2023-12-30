@@ -1,5 +1,46 @@
-
 export const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
+
+export const KS_PRF = {
+  'hmac-sha256': 'SHA-256',
+}
+export const KS_CIPHER = {
+  'aes-128-ctr': [
+    'AES-CTR',
+    128
+  ],
+  'aes-192-ctr': [
+    'AES-CTR',
+    192
+  ],
+  'aes-256-ctr': [
+    'AES-CTR',
+    256
+  ],
+  'aes-128-cbc': [
+    'AES-CBC',
+    128
+  ],
+  'aes-192-cbc': [
+    'AES-CBC',
+    192
+  ],
+  'aes-256-cbc': [
+    'AES-CBC',
+    256
+  ],
+  'aes-128-gcm': [
+    'AES-GCM',
+    128
+  ],
+  'aes-192-gcm': [
+    'AES-GCM',
+    192
+  ],
+  'aes-256-gcm': [
+    'AES-GCM',
+    256
+  ],
+}
 
 export const DUFFS = 100000000;
 
