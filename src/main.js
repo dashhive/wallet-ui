@@ -59,7 +59,7 @@ import pairQrRig from './rigs/pair-qr.js'
 let accounts
 let wallets
 let wallet
-let userInfo
+
 let appState = envoy(
   {
     phrase: null,
@@ -80,6 +80,28 @@ let appState = envoy(
   //     )
   //   }
   // }
+)
+let userInfo = envoy(
+  {
+    ...OIDC_CLAIMS,
+  },
+  async (state, oldState, prop) => {
+    if (state[prop] !== oldState[prop]) {
+      let $aliases = await store.aliases.getItem(
+        appState.selectedAlias,
+      )
+      store.aliases.setItem(
+        appState.selectedAlias,
+        {
+          ...$aliases,
+          info: {
+            ...$aliases.info,
+            [prop]: state[prop],
+          },
+        }
+      )
+    }
+  }
 )
 
 // rigs
@@ -308,29 +330,14 @@ async function getUserInfo() {
     )
     wallets = $wallets
 
-    userInfo = envoy(
-      {
-        ...OIDC_CLAIMS,
-        ...($userInfo?.info || {}),
-      },
-      async (state, oldState, prop) => {
-        if (state[prop] !== oldState[prop]) {
-          let $aliases = await store.aliases.getItem(
-            appState.selectedAlias,
-          )
-          store.aliases.setItem(
-            appState.selectedAlias,
-            {
-              ...$aliases,
-              info: {
-                ...$aliases.info,
-                [prop]: state[prop],
-              },
-            }
-          )
-        }
-      }
-    )
+    Object.entries(($userInfo?.info || {}))
+      .forEach(
+        ([k,v]) => userInfo[k] = v
+      )
+    // userInfo = {
+    //   // ...OIDC_CLAIMS,
+    //   ...($userInfo?.info || {}),
+    // }
   }
 }
 

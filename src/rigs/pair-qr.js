@@ -68,6 +68,10 @@ export let pairQrRig = (function (globals) {
       fields: html``,
       events: {
         handleClick: state => async event => {
+          if (event.target === state.elements.dialog) {
+            return state.elements.dialog.close('cancel')
+          }
+
           let shareAside = state.elements?.dialog?.querySelector(
             'fieldset.share > aside'
           )

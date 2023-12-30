@@ -1,41 +1,43 @@
 ## Todo
- - [ ] Data Structure
-   - [x] Recovery Phrase (Key Store)
-   - [x] Alias
-   - [ ] Contacts
- - [x] On Load
-   - [x] Wallets from new structure
-   - [x] Update & cache balances
- - [ ] UI Components
-   - [x] Wallet balance from DashSight.js
-   - [x] Buttons
-     - [x] Send
-     - [x] Request
-     - [x] New Contact
-   - [ ] Dialogs
-     - [x] Send
-     - [x] Request
-     - [x] QR Code
-       - [x] Share
-       - [x] Scan
-         - [ ] Upload QR image
-     - [x] Add a Contact
-       - [x] Share QR Code not getting up to date name for Profile
-       - [x] Changing alias field removes wallet from localForage contact
-       - [x] `Finish pairing` contact in contacts list after save
-     - [x] Send & Request Funds to / from Contact
-     - [x] Remove Contact confirmation dialog
-     - [x] Show Pairing Information from Edit Contact dialog
-   - [ ] Fiat balance from:
-     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
-     - symbol=DASH${symbol}
-   - [ ] Styled Drop Down List
-   - [ ] Type Ahead Input Field
-   - [x] Contacts List
-     - [x] Contact Item
-       - [x] Avatar
-       - [x] Alias
-       - [ ] Send Btn
-       - [ ] Request Btn
-     - [ ] Connect to Dialogs on Click
-   - [ ] Display Recovery Phrase in Edit Profile
+- [ ] Data Structure
+  - [x] Recovery Phrase (Key Store)
+  - [x] Alias
+  - [ ] Contacts
+- [x] On Load
+  - [x] Wallets from new structure
+  - [x] Update & cache balances
+- [ ] UI Components
+  - [x] Wallet balance from DashSight.js
+  - [x] Buttons
+    - [x] Send
+    - [x] Request
+    - [x] New Contact
+  - [ ] Dialogs
+    - [x] Send
+    - [x] Request
+    - [x] QR Code
+      - [x] Share
+      - [x] Scan
+        - [ ] Upload QR image
+    - [x] Add a Contact
+      - [x] Share QR Code not getting up to date name for Profile
+      - [x] Changing alias field removes wallet from localForage contact
+      - [x] `Finish pairing` contact in contacts list after save
+    - [x] Send & Request Funds to / from Contact
+    - [x] Remove Contact confirmation dialog
+    - [x] Show Pairing Information from Edit Contact dialog
+  - [ ] Fiat balance from:
+    - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
+    - symbol=DASH${symbol}
+  - [ ] Styled Drop Down List
+  - [ ] Type Ahead Input Field
+  - [x] Contacts List
+    - [x] Contact Item
+      - [x] Avatar
+      - [x] Alias
+      - [ ] Send Btn
+      - [ ] Request Btn
+    - [ ] Connect to Dialogs on Click
+  - [ ] Display Recovery Phrase in Edit Profile
+  - [ ] Logout / Clear Wallet & Contacts
+  - [ ] Enforce Alias uniqueness on pairing & editing contact

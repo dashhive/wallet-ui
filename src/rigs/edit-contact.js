@@ -309,6 +309,10 @@ export let editContactRig = (function (globals) {
           }
         },
         handleClick: state => async event => {
+          if (event.target === state.elements.dialog) {
+            return state.elements.dialog.close('cancel')
+          }
+
           let storedContact = await store.contacts.getItem(
             state.shareAccount.xkeyId,
           )
@@ -327,7 +331,8 @@ export let editContactRig = (function (globals) {
                 // account: appState.account,
                 wallet: state.shareAccount,
                 contact: storedContact,
-                userInfo,
+                userInfo: state.userInfo,
+                // userInfo,
                 footer: state => html`<footer class="center"><sub>Share this QR code or URI with @${storedContact.alias}</sub></footer>`,
               },
               'afterend',
