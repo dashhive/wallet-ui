@@ -31,11 +31,11 @@ A Graphical User Interface (GUI) for
 - [x] Funding
   - [x] Request
   - [x] Send
-- [ ] Backup Wallet & Contacts
-- [ ] Encrypt wallet data in local storage
+- [ ] Modify CrypticStorage.js Keystore code to be Xchain compatible
+- [ ] Encrypt wallet data in LocalStorage / IndexedDB
   - [x] Recovery Phrase
   - [ ] Contact Data
-  - [ ] Make Keystore Xchain Compatible
+- [ ] Backup Wallet & Contacts
 
 ### Stage 2
  - [ ] Transactions view
