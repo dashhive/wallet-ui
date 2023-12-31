@@ -31,7 +31,7 @@ A Graphical User Interface (GUI) for
 - [x] Funding
   - [x] Request
   - [x] Send
-- [ ] Modify CrypticStorage.js Keystore code to be Xchain compatible
+- [x] Modify CrypticStorage.js Keystore code to be Xchain compatible
 - [ ] Encrypt wallet data in LocalStorage / IndexedDB
   - [x] Recovery Phrase
   - [ ] Contact Data
