@@ -230,17 +230,6 @@ export let editProfileRig = (function (globals) {
           state.userInfo.name = String(fde.profileName)
           state.userInfo.preferred_username = String(fde.profileAlias)
 
-          let storedWallet = await store.wallets.getItem(
-            appState.selectedWallet,
-          )
-
-          let updatedWallet = await store.wallets.setItem(
-            appState.selectedWallet,
-            {
-              ...storedWallet,
-              alias: String(fde.profileAlias),
-            }
-          )
           bodyNav.render({
             data: {
               alias: appState.selectedAlias
@@ -249,7 +238,7 @@ export let editProfileRig = (function (globals) {
 
           console.log(
             'Edit Profile Updated!',
-            removedAlias, updatedAlias, updatedWallet
+            removedAlias, updatedAlias,
           )
 
           editProfile.close()

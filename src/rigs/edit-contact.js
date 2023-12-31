@@ -55,8 +55,6 @@ export let editContactRig = (function (globals) {
     }
 
     let modifyContact = await store.contacts.setItem(
-      // state.wallet.id,
-      // state.account.xkeyId,
       state.shareAccount.xkeyId,
       contact,
     )
@@ -327,8 +325,6 @@ export let editContactRig = (function (globals) {
             appDialogs.pairQr.render(
               {
                 name: `Pairing info for @${storedContact.alias}`,
-                // wallet: state.wallet,
-                // account: appState.account,
                 wallet: state.shareAccount,
                 contact: storedContact,
                 userInfo: state.userInfo,

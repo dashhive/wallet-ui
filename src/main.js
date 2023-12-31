@@ -261,9 +261,6 @@ let contactsList = await setupContactsList(
                 createdAt: created,
                 accountIndex,
                 addressIndex: shareAccount.addressIndex,
-                xprv: shareAccount.xprv,
-                xpub: shareAccount.xpub,
-                // walletId: appState.selectedWallet,
                 walletId: shareAccount.id,
                 xkeyId: shareAccount.xkeyId,
                 addressKeyId: shareAccount.addressKeyId,
@@ -429,7 +426,7 @@ async function main() {
   })
 
   appDialogs.sendOrRequest = sendOrRequestRig({
-    mainApp, setupDialog, appDialogs, store,
+    mainApp, setupDialog, appDialogs, appState, store,
     wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds,
   })
 

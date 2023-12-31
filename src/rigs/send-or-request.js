@@ -9,7 +9,7 @@ export let sendOrRequestRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, store,
+    mainApp, setupDialog, appDialogs, appState, store,
     createTx, deriveWalletData, getAddrsWithFunds,
     wallet, wallets, accounts,
   } = globals
@@ -278,11 +278,11 @@ export let sendOrRequestRig = (function (globals) {
             )
 
             if (outWallet) {
-              addressIndex = outWallet?.addressIndex + 1
+              outWallet.addressIndex = outWallet.addressIndex + 1
               sendWallet = await deriveWalletData(
                 outWallet?.xpub,
-                0,
-                addressIndex,
+                outWallet.accountIndex,
+                outWallet.addressIndex,
               )
               address = sendWallet.address
             } else {
@@ -340,15 +340,15 @@ export let sendOrRequestRig = (function (globals) {
                 state.wallet?.addressIndex || 0
               ) + 1
               receiveWallet = await deriveWalletData(
-                state.wallet.xpub,
-                0,
+                appState.phrase,
+                state.wallet.accountIndex,
                 state.wallet.addressIndex,
               )
             } else {
               inWallet.addressIndex = inWallet.addressIndex + 1
               receiveWallet = await deriveWalletData(
-                inWallet.xpub,
-                0,
+                appState.phrase,
+                inWallet.accountIndex,
                 inWallet.addressIndex,
               )
 

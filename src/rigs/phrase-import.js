@@ -136,8 +136,6 @@ export let phraseImportRig = (function (globals) {
               createdAt: (new Date()).toISOString(),
               accountIndex: wallet.accountIndex,
               addressIndex: wallet.addressIndex,
-              xprv: wallet.xprv,
-              xpub: wallet.xpub,
               walletId: wallet.id,
               xkeyId: wallet.xkeyId,
               addressKeyId: wallet.addressKeyId,

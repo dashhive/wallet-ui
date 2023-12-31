@@ -551,7 +551,6 @@ export async function initWallet(
     `${id}`,
     {
       id,
-      alias,
       accountIndex,
       addressIndex: addrs?.finalAddressIndex || addressIndex,
       keystore: {
