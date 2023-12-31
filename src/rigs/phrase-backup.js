@@ -78,8 +78,6 @@ export let phraseBackupRig = (function (globals) {
 
           let { wallet } = state
 
-          let fde = formDataEntries(event)
-
           phraseBackup.close()
 
           appDialogs.walletEncrypt.render(

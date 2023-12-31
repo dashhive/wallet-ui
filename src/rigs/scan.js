@@ -79,13 +79,7 @@ export let scanContactRig = (function (globals) {
                 scanContact.close(decodedText)
               }
             },
-            // (decodedText, decodedResult) => {
-            //   // console.error(decodedText, decodedResult)
-            // },
           )
-
-          // let testScanFile = state.qrCodeScanner.scanFileV2(
-          // )
         },
         handleClose: (
           state,
@@ -94,14 +88,6 @@ export let scanContactRig = (function (globals) {
         ) => async event => {
           event.preventDefault()
           state.removeAllListeners()
-
-          // console.log(
-          //   'handle dialog close',
-          //   event,
-          //   // event.target === state.elements.dialog,
-          //   // state.elements.dialog.returnValue,
-          //   state.qrCodeScanner,
-          // )
 
           if (state.qrCodeScanner?.isScanning) {
             state.qrCodeScanner.stop()
@@ -121,37 +107,6 @@ export let scanContactRig = (function (globals) {
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-
-          // event.target.pass.setCustomValidity('')
-          // event.target.pass.reportValidity()
-
-          // console.log('ENCRYPT OVERRIDE!', state, event)
-
-          // let fde = formDataEntries(event)
-
-          // if (!fde.pass) {
-          //   event.target.pass.setCustomValidity(
-          //     'An encryption password is required'
-          //   )
-          //   event.target.reportValidity()
-          //   return;
-          // }
-
-          // let initialized
-          // wallet = state.wallet
-
-          // if (!wallets?.[appState.selectedAlias]) {
-          //   initialized = await initWallet(
-          //     appState.encryptionPassword,
-          //     wallet,
-          //     0,
-          //     0,
-          //     {
-          //       preferred_username: appState.selectedAlias,
-          //     }
-          //   )
-          //   wallets = initialized.wallets
-          // }
 
           scanContact.close()
         },

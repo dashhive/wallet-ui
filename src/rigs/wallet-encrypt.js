@@ -156,6 +156,7 @@ export let walletEncryptRig = (function (globals) {
             initialized = await initWallet(
               fde.pass,
               wallet,
+              false,
               0,
               0,
               {

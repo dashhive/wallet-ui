@@ -19,7 +19,7 @@ import {
   initDashSocket,
   batchAddressGenerate,
   updateAllFunds,
-  decryptWallet,
+  decryptKeystore,
   loadWalletsForAlias,
   store,
   createTx,
@@ -377,22 +377,22 @@ async function main() {
 
   appDialogs.walletDecrypt = walletDecryptRig({
     setupDialog, appDialogs, appState, mainApp,
-    wallets, decryptWallet, getUserInfo,
+    wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
   })
 
   appDialogs.phraseBackup = phraseBackupRig({
-    mainApp, setupDialog, appDialogs,
+    mainApp, wallets, setupDialog, appDialogs,
   })
 
   appDialogs.phraseGenerate = phraseGenerateRig({
     setupDialog, appDialogs, appState,
-    mainApp, wallet, store,
+    mainApp, wallet, wallets, store,
     deriveWalletData, generateWalletData,
   })
 
   appDialogs.phraseImport = phraseImportRig({
     setupDialog, appDialogs, appState, store,
-    mainApp, wallet, deriveWalletData,
+    mainApp, wallet, wallets, deriveWalletData,
   })
 
   appDialogs.onboard = onboardRig({
@@ -504,11 +504,9 @@ async function main() {
 
   if (appState.encryptionPassword) {
     try {
-      appState.phrase = await decryptWallet(
+      appState.phrase = await decryptKeystore(
         appState.encryptionPassword,
-        ks_iv,
-        ks_salt,
-        ks_phrase
+        wallets?.[appState.selectedWallet]?.keystore,
       )
     } catch(err) {
       console.error(

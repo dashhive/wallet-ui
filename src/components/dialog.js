@@ -16,6 +16,7 @@ const initialState = {
   rendered: null,
   responsive: true,
   delay: 500,
+  render () {},
   addListener () {},
   addListeners () {},
   removeAllListeners (targets) {},
@@ -101,6 +102,12 @@ const initialState = {
       //   'handle input focus',
       //   event,
       // )
+    },
+    handleDrop: state => event => {
+      event.preventDefault()
+    },
+    handleDragOver: state => event => {
+      event.preventDefault()
     },
     handleChange: state => event => {
       event.preventDefault()
@@ -279,6 +286,16 @@ export function setupDialog(
     )
     addListener(
       form,
+      'drop',
+      state.events.handleDrop(state),
+    )
+    addListener(
+      form,
+      'dragover',
+      state.events.handleDragOver(state),
+    )
+    addListener(
+      form,
       'input',
       state.events.handleInput(state),
     )
@@ -309,6 +326,45 @@ export function setupDialog(
 
   state.removeAllListeners = removeAllListeners
 
+  async function render(
+    renderState = {},
+    position = 'afterend',
+  ) {
+    let oldState = state
+
+    state = {
+      ...oldState,
+      ...renderState,
+      slugs: {
+        ...oldState.slugs,
+        ...renderState.slugs,
+      },
+      events: {
+        ...oldState.events,
+        ...renderState.events,
+      },
+      elements: {
+        ...oldState.elements,
+        ...renderState.elements,
+      }
+    }
+
+    dialog.id = state.slugs.dialog
+    form.name = `${state.slugs.form}`
+    form.innerHTML = state.content(state)
+
+    // console.log('DIALOG RENDER', state, position, state.slugs.dialog)
+
+    if (!state.rendered) {
+      el.insertAdjacentElement(position, dialog)
+      state.rendered = dialog
+    }
+
+    state.events.handleRender(state)
+  }
+
+  state.render = render
+
   return {
     element: dialog,
     show: () => new Promise((resolve, reject) => {
@@ -322,42 +378,7 @@ export function setupDialog(
       dialog.showModal()
     }),
     close: returnVal => dialog.close(returnVal),
-    render: async (
-      renderState = {},
-      position = 'afterend',
-    ) => {
-      let oldState = state
-
-      state = {
-        ...oldState,
-        ...renderState,
-        slugs: {
-          ...oldState.slugs,
-          ...renderState.slugs,
-        },
-        events: {
-          ...oldState.events,
-          ...renderState.events,
-        },
-        elements: {
-          ...oldState.elements,
-          ...renderState.elements,
-        }
-      }
-
-      dialog.id = state.slugs.dialog
-      form.name = `${state.slugs.form}`
-      form.innerHTML = state.content(state)
-
-      // console.log('DIALOG RENDER', state, position, state.slugs.dialog)
-
-      if (!state.rendered) {
-        el.insertAdjacentElement(position, dialog)
-        state.rendered = dialog
-      }
-
-      state.events.handleRender(state)
-    }
+    render,
   }
 }
 

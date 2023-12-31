@@ -509,22 +509,6 @@ export let addContactRig = (function (globals) {
 
           console.log('pairedContact', pairedContact)
 
-          // let initialized
-          // wallet = state.wallet
-
-          // if (!wallets?.[appState.selectedAlias]) {
-          //   initialized = await initWallet(
-          //     appState.encryptionPassword,
-          //     wallet,
-          //     0,
-          //     0,
-          //     {
-          //       preferred_username: appState.selectedAlias,
-          //     }
-          //   )
-          //   wallets = initialized.wallets
-          // }
-
           addContact.close()
         },
       },

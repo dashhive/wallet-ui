@@ -630,6 +630,15 @@ form[name="network"] {
   gap: 1.5rem;
   margin-bottom: 2.5rem;
   cursor: pointer;
+  text-transform: none;
+}
+.updrop input[type=file] {
+  width: 0.1px;
+  height: 0.1px;
+  opacity: 0;
+  overflow: hidden;
+  position: absolute;
+  z-index: -1;
 }
 .updrop svg {
   color: var(--dark-500);
@@ -640,6 +649,14 @@ form[name="network"] {
 }
 .updrop span button {
   padding: 0;
+}
+.updrop[for="keystore"] {
+  margin-bottom: 0;
+  min-height: 60px;
+  height: 6rem;
+}
+.updrop[for="keystore"] span {
+  max-width: inherit;
 }
 
 

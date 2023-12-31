@@ -12,8 +12,28 @@ export let phraseImportRig = (function (globals) {
 
   let {
     setupDialog, appDialogs, appState, store,
-    mainApp, wallet, deriveWalletData,
+    mainApp, wallet, wallets, deriveWalletData,
   } = globals;
+
+  function readFile(file, state) {
+    let reader = new FileReader();
+    let result
+
+    reader.addEventListener('load', () => {
+      try {
+        // @ts-ignore
+        result = JSON.parse(reader?.result || '{}');
+
+        console.log('parse loaded keystore', result);
+
+        state.keystoreData = result
+      } catch(err) {
+        throw new Error(`failed to parse JSON data from ${file.name}`)
+      }
+    });
+
+    reader.readAsText(file);
+  }
 
   let phraseImport = setupDialog(
     mainApp,
@@ -40,10 +60,46 @@ export let phraseImportRig = (function (globals) {
           </button>
         </footer>
       `,
+      upload: state => {
+        if (state.keystoreFile) {
+          return ''
+        }
+        return html`
+          <svg class="upload" width="40" height="40" viewBox="0 0 40 40">
+            <use xlink:href="#icon-upload"></use>
+          </svg>
+          <span>Drag and drop a keystore file or click to <strong><u>upload</u></strong></span>
+        `
+      },
+      showFileName: state => {
+        if (!state.keystoreFile) {
+          return ''
+        }
+        return html`
+          ${state.keystoreFile}
+        `
+      },
+      updrop: state => html`
+        <label for="keystore" class="updrop">
+          <input
+            type="file"
+            id="keystore"
+            name="ksfile"
+            enctype="multipart/form-data"
+          />
+          ${state.showFileName(state)}
+          ${state.upload(state)}
+        </label>
+      `,
       content: state => html`
         ${state.header(state)}
 
         <fieldset>
+          <article>
+            ${state.updrop(state)}
+
+            <div class="error"></div>
+          </article>
           <article>
             <label for="phrase">
               Recovery Phrase
@@ -55,7 +111,6 @@ export let phraseImportRig = (function (globals) {
                 name="pass"
                 placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
                 pattern="${PHRASE_REGEX.source}"
-                required
                 spellcheck="false"
               />
               <label title="Show/Hide Phrase">
@@ -99,15 +154,67 @@ export let phraseImportRig = (function (globals) {
       `,
       fields: html``,
       events: {
+        handleDragOver: state => async event => {
+          event.preventDefault()
+          event.stopPropagation()
+          // console.log(
+          //   'PHRASE IMPORT DRAG OVER',
+          //   state, event.target,
+          //   event?.dataTransfer?.items,
+          //   event.target.files
+          // )
+        },
+        handleDrop: state => async event => {
+          event.preventDefault()
+          event.stopPropagation()
+          console.log(
+            'PHRASE IMPORT DROP',
+            state, event.target,
+            event?.dataTransfer?.items,
+            event.target.files
+          )
+
+          if (event.dataTransfer.items) {
+            // Use DataTransferItemList interface to access the file(s)
+            [...event.dataTransfer.items].forEach((item, i) => {
+              // If dropped items aren't files, reject them
+              if (item.kind === "file") {
+                const file = item.getAsFile();
+                // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
+                readFile(file, state)
+                state.keystoreFile = file.name
+                state.render(state)
+              }
+            });
+          } else {
+            // Use DataTransfer interface to access the file(s)
+            [...event.dataTransfer.files].forEach((file, i) => {
+              // console.log(`FILES file[${i}].name = ${file.name}`, file);
+              readFile(file, state)
+              state.keystoreFile = file.name
+              state.render(state)
+            });
+          }
+        },
+        handleChange: state => async event => {
+          event.preventDefault()
+          event.stopPropagation()
+
+          if (event.target.files?.length > 0) {
+            readFile(event.target.files[0], state)
+            state.keystoreFile = event.target.files[0].name
+            state.render(state)
+          }
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
 
           let fde = formDataEntries(event)
 
-          if (!fde.pass) {
+          if (!fde.pass && (!fde.ksfile || !state.keystoreData)) {
             event.target.pass.setCustomValidity(
-              'A recovery phrase is required'
+              'A recovery phrase or keystore is required'
             )
             event.target.reportValidity()
             return;
@@ -120,15 +227,21 @@ export let phraseImportRig = (function (globals) {
             return;
           }
 
+          appState.selectedAlias = `${fde.alias}`
+          localStorage.selectedAlias = appState.selectedAlias
+
+          if (state.keystoreData) {
+            appDialogs.walletDecrypt.render({ keystore: state.keystoreData })
+            await appDialogs.walletDecrypt.showModal()
+            return;
+          }
+
           appState.phrase = `${fde.pass}`
 
           wallet = await deriveWalletData(appState.phrase)
 
-          appState.selectedAlias = `${fde.alias}`
           appState.selectedWallet = wallet.id
-
           localStorage.selectedWallet = appState.selectedWallet
-          localStorage.selectedAlias = appState.selectedAlias
 
           let newAccount = await store.accounts.setItem(
             wallet.xkeyId,
@@ -144,8 +257,6 @@ export let phraseImportRig = (function (globals) {
           )
 
           appState.account = newAccount
-
-          // console.log('IMPORT wallet!', wallet)
 
           phraseImport.close()
 

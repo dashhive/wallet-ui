@@ -2,13 +2,17 @@ import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
 } from '../helpers/utils.js'
+import {
+  initWallet,
+} from '../helpers/wallet.js'
 
 export let walletDecryptRig = (function (globals) {
   'use strict';
 
   let {
     setupDialog, appDialogs, appState, mainApp,
-    wallets, decryptWallet, getUserInfo,
+    wallets, decryptKeystore, getUserInfo,
+    store, deriveWalletData,
   } = globals;
 
   let walletDecrypt = setupDialog(
@@ -117,14 +121,8 @@ export let walletDecryptRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          let ks_phrase = wallets?.[appState.selectedWallet]
-            ?.keystore?.crypto?.ciphertext || ''
-          let ks_iv = wallets?.[appState.selectedWallet]
-            ?.keystore?.crypto?.cipherparams?.iv || ''
-          let ks_salt = wallets?.[appState.selectedWallet]
-            ?.keystore?.crypto?.kdfparams?.salt || ''
-
           let decryptedRecoveryPhrase
+          let ks = wallets?.[appState.selectedWallet]?.keystore || state.keystore
           let fde = formDataEntries(event)
 
           if (!fde.pass) {
@@ -134,14 +132,57 @@ export let walletDecryptRig = (function (globals) {
             event.target.reportValidity()
             return;
           }
+          if (!ks) {
+            console.error('no keystore found')
+            return;
+          }
+
+          let wallet, initialized
 
           try {
-            decryptedRecoveryPhrase = await decryptWallet(
+            decryptedRecoveryPhrase = await decryptKeystore(
               fde.pass,
-              ks_iv,
-              ks_salt,
-              ks_phrase
+              ks,
             )
+
+            appState.phrase = decryptedRecoveryPhrase
+            appState.encryptionPassword = fde.pass
+
+            if (await store.accounts.length() === 0) {
+              wallet = await deriveWalletData(appState.phrase)
+
+              appState.selectedWallet = wallet.id
+
+              localStorage.selectedWallet = appState.selectedWallet
+
+              initialized = await initWallet(
+                fde.pass,
+                wallet,
+                ks,
+                0,
+                0,
+                {
+                  preferred_username: appState.selectedAlias,
+                }
+              )
+
+              wallets = initialized.wallets
+
+              let newAccount = await store.accounts.setItem(
+                wallet.xkeyId,
+                {
+                  createdAt: (new Date()).toISOString(),
+                  accountIndex: wallet.accountIndex,
+                  addressIndex: wallet.addressIndex,
+                  walletId: wallet.id,
+                  xkeyId: wallet.xkeyId,
+                  addressKeyId: wallet.addressKeyId,
+                  address: wallet.address,
+                }
+              )
+
+              appState.account = newAccount
+            }
           } catch(err) {
             console.error('[fail] unable to decrypt recovery phrase', err)
             event.target.pass.setCustomValidity(
@@ -151,15 +192,14 @@ export let walletDecryptRig = (function (globals) {
             return;
           }
 
-          appState.phrase = decryptedRecoveryPhrase
-          appState.encryptionPassword = fde.pass
-
           await getUserInfo()
 
           if (fde.remember) {
             sessionStorage.encryptionPassword = window.btoa(String(appState.encryptionPassword))
           }
 
+          appDialogs.phraseImport?.close()
+          appDialogs.onboard?.close()
           appDialogs.walletDecrypt.close()
         },
       },
