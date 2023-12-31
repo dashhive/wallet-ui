@@ -42,7 +42,7 @@
     "dashhd": "^3.3.0",
     "dashkeys": "^1.1.0",
     "dashphrase": "^1.4.0",
-    "dashsight": "dashhive/DashSight.js#feat/bulk-balances",
+    "dashsight": "^1.6.1",
     "dashtx": "^0.13.2",
     "dashwallet": "^0.6.0",
     "html5-qrcode": "^2.3.8",
