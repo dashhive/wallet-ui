@@ -286,7 +286,7 @@ export let sendOrRequestRig = (function (globals) {
               )
               address = sendWallet.address
             } else {
-              address = state.to
+              address = to
             }
 
             if (amount > 0) {
