@@ -601,10 +601,6 @@ export function generatePaymentRequestURI(
   let addr = state.wallet?.address || ''
   let claims = []
 
-  // dash:XmPNH5bMkwwc1kjVGwxWxTs86C3ZsgjdSX?amount=0.0001
-  // dash:XktddCruaWEMDqqiciagWPXCfqc1jfY6zf?amount=0.0001
-  // dash:XtXnZkocKvrqGDxW7mhBvoR6yCAD99mnau?amount=0.0001
-
   if (state.userInfo) {
     let filteredInfo = Array.from(
       Object.entries(state.userInfo)
@@ -658,41 +654,37 @@ export function generatePaymentRequestURI(
   return res
 }
 
-// export function generatePaymentRequestURI(state) {
-//   let shareUri = `dash:${state.wallet?.address || ''}?`
-//   let shareParams = []
-
-//   if (state.amount > 0) {
-//     shareParams.push(`amount=${state.amount}`)
-//   }
-
-//   if (state.label) {
-//     shareParams.push(`label=${state.label}`)
-//   }
-
-//   if (state.message) {
-//     shareParams.push(`message=${state.message}`)
-//   }
-
-//   if (shareParams.length > 0) {
-//     shareUri += `?${shareParams.join('&')}`
-//   }
-
-//   return shareUri
-// }
-
-export async function loadStore(store, callback) {
-  // let storeLen = await store.length()
+export async function getStoreData(
+  store,
+  callback,
+  iterableCallback = res => async (v, k, i) => res.push(v)
+) {
   let result = []
 
-  return await store.iterate((v, k, i) => {
-    result.push(v)
+  return await store.keys().then(async function(keys) {
+    for (let k of keys) {
+      let v = await store.getItem(k)
+      await iterableCallback(result)(v, k)
+    }
 
-    // if (i === storeLen) {
-    //   return result
-    // }
-  })
-  .then(() => callback(result))
+    callback?.(result)
+
+    return result
+  }).catch(function(err) {
+    console.error('getStoreData', err)
+    return null
+  });
+}
+
+export async function loadStore(
+  store,
+  callback,
+  iterableCallback = res => v => res.push(v)
+) {
+  let result = []
+
+  return await store.iterate(iterableCallback(result))
+  .then(() => callback?.(result))
   .catch(err => {
     console.error('loadStore', err)
     return null

@@ -102,11 +102,11 @@ const initialState = {
     // },
     handleClick: state => event => {
       event.preventDefault()
-      console.log(
-        'handle contacts click',
-        event,
-        state,
-      )
+      // console.log(
+      //   'handle contacts click',
+      //   event,
+      //   state,
+      // )
     },
     handleContactsChange: (newState, oldState) => {
       if (newState.contacts !== oldState.contacts) {

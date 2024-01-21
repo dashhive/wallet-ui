@@ -32,10 +32,11 @@ A Graphical User Interface (GUI) for
   - [x] Request
   - [x] Send
 - [x] Modify CrypticStorage.js Keystore code to be Xchain compatible
-- [ ] Encrypt wallet data in LocalStorage / IndexedDB
+- [x] Encrypt wallet data in LocalStorage / IndexedDB
   - [x] Recovery Phrase
-  - [ ] Contact Data
-- [ ] Backup Wallet & Contacts
+  - [x] Aliases Data
+  - [x] Contact Data
+- [ ] Backup/Restore Wallet & Contacts
 
 ### Stage 2
  - [ ] Transactions view
@@ -54,7 +55,7 @@ A Graphical User Interface (GUI) for
    - [ ] SMS
    - [ ] Email
    - [ ] QR Image
- - [ ] Set Fund Denomination for Send & Request  payments
+ - [ ] Set Fund Denomination for Send & Request payments
 
 ### Stage 3
  - [ ] Cash Drawer to display coins separated by denomination

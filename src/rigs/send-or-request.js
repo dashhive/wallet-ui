@@ -9,7 +9,7 @@ export let sendOrRequestRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, appState, store,
+    mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds,
     wallet, wallets, accounts,
   } = globals
@@ -352,7 +352,8 @@ export let sendOrRequestRig = (function (globals) {
                 inWallet.addressIndex,
               )
 
-              await store.contacts.setItem(
+              await appTools.storedData.encryptItem(
+                store.contacts,
                 inWallet.xkeyId,
                 {
                   ...contact,
@@ -364,7 +365,8 @@ export let sendOrRequestRig = (function (globals) {
                       addressIndex: receiveWallet.addressIndex,
                     }
                   },
-                }
+                },
+                false,
               )
 
               inWallet.address = receiveWallet.address

@@ -20,11 +20,15 @@ import {
   batchAddressGenerate,
   updateAllFunds,
   decryptKeystore,
+  loadWallets,
   loadWalletsForAlias,
   store,
   createTx,
   sendTx,
   getAddrsWithFunds,
+  // encryptData,
+  // decryptData,
+  storedData,
 } from './helpers/wallet.js'
 
 import setupNav from './components/nav.js'
@@ -71,15 +75,11 @@ let appState = envoy(
     sentTransactions: {},
     account: {},
   },
-  // (state, oldState) => {
-  //   if (state.contacts !== oldState.contacts) {
-  //     console.log(
-  //       'state.contacts !== oldState.contacts on push',
-  //       oldState.contacts,
-  //       state.contacts,
-  //     )
-  //   }
-  // }
+)
+let appTools = envoy(
+  {
+    storedData: {},
+  },
 )
 let userInfo = envoy(
   {
@@ -87,18 +87,21 @@ let userInfo = envoy(
   },
   async (state, oldState, prop) => {
     if (state[prop] !== oldState[prop]) {
-      let $aliases = await store.aliases.getItem(
+      let decryptedAlias = await appTools.storedData.decryptItem(
+        store.aliases,
         appState.selectedAlias,
       )
-      store.aliases.setItem(
+      appTools.storedData.encryptItem(
+        store.aliases,
         appState.selectedAlias,
         {
-          ...$aliases,
+          ...decryptedAlias,
           info: {
-            ...$aliases.info,
+            ...decryptedAlias.info,
             [prop]: state[prop],
           },
-        }
+        },
+        false,
       )
     }
   }
@@ -144,11 +147,11 @@ let contactsList = await setupContactsList(
     events: {
       handleClick: state => async event => {
         event.preventDefault()
-        console.warn(
-          'handle contacts click',
-          event.target,
-          state,
-        )
+        // console.log(
+        //   'handle contacts click',
+        //   event.target,
+        //   state,
+        // )
 
         let contactArticle = event.target?.closest('article')
 
@@ -157,7 +160,8 @@ let contactsList = await setupContactsList(
           contactArticle !== null
         ) {
           let contactID = contactArticle.dataset.id
-          let contactData = await store.contacts.getItem(
+          let contactData = await appTools.storedData.decryptItem(
+            store.contacts,
             contactID,
           )
           let contactAccountID = Object.values(contactData.incoming)?.[0]?.accountIndex
@@ -269,8 +273,8 @@ let contactsList = await setupContactsList(
             )
             let { createdAt, ...contactAcct } = newAccount
 
-            newContact = await store.contacts.setItem(
-              // shareAccount.id,
+            newContact = await appTools.storedData.encryptItem(
+              store.contacts,
               shareAccount.xkeyId,
               {
                 createdAt,
@@ -279,7 +283,8 @@ let contactsList = await setupContactsList(
                     ...contactAcct,
                   }
                 }
-              }
+              },
+              false,
             )
 
             appState.contacts.push(newContact)
@@ -287,11 +292,6 @@ let contactsList = await setupContactsList(
             contactsList.render(
               appState.contacts.sort(sortContactsByAlias)
             )
-
-            // await loadStore(
-            //   store.contacts,
-            //   res => contactsList.render(res)
-            // )
 
             console.log(
               'share qr new contact',
@@ -316,25 +316,33 @@ let contactsList = await setupContactsList(
 )
 
 async function getUserInfo() {
-  if (appState.selectedAlias) {
-    console.log(
-      'getUserInfo selectedAlias',
-      appState.selectedAlias,
-      // appState
-    )
-    let { $wallets, ...$userInfo } = await loadWalletsForAlias(
-      appState.selectedAlias
-    )
-    wallets = $wallets
+  let w = await store.wallets.getItem(appState.selectedWallet)
+  let ks = w?.keystore
 
-    Object.entries(($userInfo?.info || {}))
-      .forEach(
-        ([k,v]) => userInfo[k] = v
+  if (appState.selectedAlias && ks) {
+    appTools.storedData = await storedData(
+      appState.encryptionPassword,
+      ks,
+    )
+    // console.log(
+    //   'getUserInfo selectedAlias',
+    //   appState.selectedAlias,
+    // )
+    await appTools.storedData?.decryptItem(
+      store.aliases,
+      appState.selectedAlias,
+    )
+    .then(async $alias => {
+      let { $wallets, ...$userInfo } = await loadWalletsForAlias(
+        $alias
       )
-    // userInfo = {
-    //   // ...OIDC_CLAIMS,
-    //   ...($userInfo?.info || {}),
-    // }
+      wallets = $wallets
+
+      Object.entries(($userInfo?.info || {}))
+        .forEach(
+          ([k,v]) => userInfo[k] = v
+        )
+    })
   }
 }
 
@@ -401,24 +409,24 @@ async function main() {
 
   appDialogs.addContact = addContactRig({
     setupDialog, updateAllFunds,
-    appDialogs, appState, store, walletFunds,
+    appDialogs, appState, appTools, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
   })
 
   appDialogs.confirmDelete = confirmDeleteRig({
-    mainApp, setupDialog, appDialogs, appState,
+    mainApp, setupDialog, appDialogs, appState, appTools,
     store, userInfo, contactsList,
   })
 
   appDialogs.editContact = editContactRig({
     setupDialog, updateAllFunds,
-    appDialogs, appState, store, walletFunds,
+    appDialogs, appState, appTools, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
   })
 
   appDialogs.editProfile = editProfileRig({
     mainApp, setupDialog, store,
-    appState, bodyNav,
+    appState, appTools, bodyNav,
   })
 
   appDialogs.scanContact = scanContactRig({
@@ -426,12 +434,12 @@ async function main() {
   })
 
   appDialogs.sendOrRequest = sendOrRequestRig({
-    mainApp, setupDialog, appDialogs, appState, store,
+    mainApp, setupDialog, appDialogs, appState, appTools, store,
     wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
-    mainApp, setupDialog, appDialogs, appState,
+    mainApp, setupDialog, appDialogs, appState, appTools,
     deriveWalletData, createTx, sendTx, getAddrsWithFunds, store, userInfo, contactsList,
   })
 
@@ -495,19 +503,41 @@ async function main() {
     }
   })
 
-  let ks_phrase = wallets?.[appState.selectedWallet]
-    ?.keystore?.crypto?.ciphertext || ''
-  let ks_iv = wallets?.[appState.selectedWallet]
-    ?.keystore?.crypto?.cipherparams?.iv || ''
-  let ks_salt = wallets?.[appState.selectedWallet]
-    ?.keystore?.crypto?.kdfparams?.salt || ''
+  let ks = wallets?.[appState.selectedWallet]
+    ?.keystore
+  let ks_phrase = ks?.crypto?.ciphertext || ''
+  let ks_iv = ks?.crypto?.cipherparams?.iv || ''
+  let ks_salt = ks?.crypto?.kdfparams?.salt || ''
 
-  if (appState.encryptionPassword) {
+  if (appState.encryptionPassword && ks) {
     try {
       appState.phrase = await decryptKeystore(
         appState.encryptionPassword,
-        wallets?.[appState.selectedWallet]?.keystore,
+        ks,
       )
+
+      // const { encryptItem, encryptData, decryptItem } =
+      // appTools.storedData = await storedData(
+      //   appState.encryptionPassword,
+      //   ks,
+      // )
+
+      // let $alias = await store.aliases.getItem(
+      //   `${appState.selectedAlias}`
+      // )
+
+      // let decryptedAlias = await appTools.storedData.decryptItem(
+      //   store.aliases,
+      //   `${appState.selectedAlias}`,
+      // )
+
+      // let encryptedAlias = await appTools.storedData.encryptData(
+      //   store.aliases,
+      //   `${appState.selectedAlias}`,
+      // )
+      // console.log('alias foo', {
+      //   $alias, decryptedAlias, encryptedAlias
+      // })
     } catch(err) {
       console.error(
         '[fail] unable to decrypt recovery phrase',
@@ -574,7 +604,7 @@ async function main() {
   })
   mainFtr.render()
 
-  await loadStore(
+  loadStore(
     store.contacts,
     res => {
       if (res) {
@@ -585,6 +615,11 @@ async function main() {
           userInfo,
         })
       }
+    },
+    res => async v => {
+      res.push(await appTools.storedData.decryptData(v))
+      // appTools.storedData.decryptData(v)
+      //   .then(ev => res.push(ev))
     }
   )
 
@@ -603,34 +638,6 @@ async function main() {
     if (id === 'nav-alias') {
       event.preventDefault()
       event.stopPropagation()
-
-      let shareAccount
-
-      if (appState.phrase) {
-        console.log(
-          'share qr current wallet',
-          accountIndex,
-          wallet?.xkeyId,
-          wallet,
-        )
-        // if (!wallet) {
-        //   wallet = await deriveWalletData(appState.phrase)
-        // }
-
-        // accountIndex += 1
-
-        // shareAccount = await deriveWalletData(
-        //   appState.phrase,
-        //   accountIndex
-        // )
-
-        // console.log(
-        //   'share qr derived wallet',
-        //   accountIndex,
-        //   shareAccount?.xkeyId,
-        //   shareAccount,
-        // )
-      }
 
       await getUserInfo()
 
@@ -676,18 +683,6 @@ async function main() {
     onMessage: async function (evname, data) {
       let updates = {}
       let txUpdates = {}
-      // console.log('onMessage check for', addr, evname, data)
-      // let result;
-      // try {
-      //   result = await find(evname, data);
-      // } catch (e) {
-      //   reject(e);
-      //   return;
-      // }
-
-      // if (result) {
-      //   resolve(result);
-      // }
 
       if (![
           // "tx",

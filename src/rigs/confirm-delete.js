@@ -9,7 +9,7 @@ export let confirmDeleteRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, appState,
+    mainApp, setupDialog, appDialogs, appState, appTools,
     store, userInfo, contactsList,
   } = globals
 
@@ -89,10 +89,6 @@ export let confirmDeleteRig = (function (globals) {
 
           let fde = formDataEntries(event)
 
-          // let storedContact = await store.contacts.getItem(
-          //   state.shareAccount.xkeyId,
-          // )
-
           if (fde?.intent === 'delete') {
             let removedContact = await store.contacts.removeItem(
               state.shareAccount.xkeyId,
@@ -111,6 +107,9 @@ export let confirmDeleteRig = (function (globals) {
                     userInfo,
                   })
                 }
+              },
+              res => async v => {
+                res.push(await appTools.storedData.decryptData(v))
               }
             )
 

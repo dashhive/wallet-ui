@@ -18,7 +18,7 @@ export let editProfileRig = (function (globals) {
 
   let {
     mainApp, setupDialog, store,
-    appState, bodyNav,
+    appState, appTools, bodyNav,
   } = globals;
 
   let editProfile = setupDialog(
@@ -185,14 +185,6 @@ export let editProfileRig = (function (globals) {
 
           let fde = formDataEntries(event)
 
-          // if (!String(fde.profileName)?.trim()) {
-          //   event.target.profileName.setCustomValidity(
-          //     'Name must be Alphanumeric'
-          //   )
-          //   event.target.reportValidity()
-          //   return;
-          // }
-
           if (!String(fde.profileAlias)?.trim()) {
             event.target.profileAlias.setCustomValidity(
               'An alias is required'
@@ -201,7 +193,8 @@ export let editProfileRig = (function (globals) {
             return;
           }
 
-          let storedAlias = await store.aliases.getItem(
+          let storedAlias = await appTools.storedData.decryptItem(
+            store.aliases,
             appState.selectedAlias,
           )
           let removedAlias
@@ -214,8 +207,8 @@ export let editProfileRig = (function (globals) {
             localStorage.selectedAlias = fde.profileAlias
           }
 
-          let updatedAlias = await store.aliases.setItem(
-            // state.wallet.id,
+          let updatedAlias = await appTools.storedData.encryptItem(
+            store.aliases,
             appState.selectedAlias,
             {
               ...storedAlias,
@@ -224,7 +217,8 @@ export let editProfileRig = (function (globals) {
                 name: String(fde.profileName),
                 preferred_username: String(fde.profileAlias),
               },
-            }
+            },
+            false,
           )
 
           state.userInfo.name = String(fde.profileName)

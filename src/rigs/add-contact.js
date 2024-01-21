@@ -23,7 +23,7 @@ export let addContactRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, appDialogs, appState, store,
+    setupDialog, appDialogs, appState, appTools, store,
     mainApp, wallet, userInfo, contactsList,
     updateAllFunds, walletFunds,
   } = globals;
@@ -53,10 +53,11 @@ export let addContactRig = (function (globals) {
       contact[localName] = fieldValue
     }
 
-    let newContact = await store.contacts.setItem(
-      // state.wallet.id,
-      state.wallet.xkeyId,
-      contact,
+    let newContact = await appTools.storedData.encryptItem(
+      store.contacts,
+        state.wallet.xkeyId,
+        contact,
+      false,
     )
 
     state.contact = newContact
@@ -74,6 +75,9 @@ export let addContactRig = (function (globals) {
             userInfo,
           })
         }
+      },
+      res => async v => {
+        res.push(await appTools.storedData.decryptData(v))
       }
     )
   }, 1000)
@@ -265,8 +269,8 @@ export let addContactRig = (function (globals) {
                 xkey,
               )
 
-              let newContact = await store.contacts.setItem(
-                // state.wallet.id,
+              let newContact = await appTools.storedData.encryptItem(
+                store.contacts,
                 state.wallet.xkeyId,
                 {
                   ...state.contact,
@@ -288,7 +292,8 @@ export let addContactRig = (function (globals) {
                   },
                   alias: preferred_username,
                   uri: event.target.value,
-                }
+                },
+                false,
               )
 
               loadStore(
@@ -302,6 +307,9 @@ export let addContactRig = (function (globals) {
                       userInfo,
                     })
                   }
+                },
+                res => async v => {
+                  res.push(await appTools.storedData.decryptData(v))
                 }
               )
 
@@ -452,12 +460,12 @@ export let addContactRig = (function (globals) {
             return;
           }
 
-          let storedContact = await store.contacts.getItem(
+          let storedContact = await appTools.storedData.decryptItem(
+            store.contacts,
             state.wallet.xkeyId,
           )
-
-          let pairedContact = await store.contacts.setItem(
-            // state.wallet.id,
+          let pairedContact = appTools.storedData.encryptItem(
+            store.contacts,
             state.wallet.xkeyId,
             {
               ...storedContact,
@@ -470,21 +478,9 @@ export let addContactRig = (function (globals) {
               },
               uri: event.target.contactAddr.value,
               alias: event.target.contactAlias.value,
-            }
+            },
+            false,
           )
-
-          // let contactExists = appState.contacts.findIndex(
-          //   c => c.info?.preferred_username === pairedContact.info?.preferred_username
-          // )
-          // if (contactExists > -1) {
-          //   appState.contacts[contactExists] = pairedContact
-          // } else {
-          //   appState.contacts.push(pairedContact)
-          // }
-
-          // appState.contacts.sort(sortContactsByAlias);
-
-          // contactsList.render(appState.contacts)
 
           loadStore(
             store.contacts,
@@ -494,7 +490,6 @@ export let addContactRig = (function (globals) {
 
                 updateAllFunds(state.wallet, walletFunds)
                   .then(funds => {
-                    // walletFunds.balance = funds
                     console.log('updateAllFunds then funds', funds)
                   })
                   .catch(err => console.error('catch updateAllFunds', err, state.wallet))
@@ -504,6 +499,9 @@ export let addContactRig = (function (globals) {
                   userInfo,
                 })
               }
+            },
+            res => async v => {
+              res.push(await appTools.storedData.decryptData(v))
             }
           )
 

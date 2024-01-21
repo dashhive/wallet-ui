@@ -9,7 +9,7 @@ export let sendConfirmRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, appState,
+    mainApp, setupDialog, appDialogs, appState, appTools,
     sendTx, store, userInfo, contactsList,
   } = globals
 
@@ -113,20 +113,8 @@ export let sendConfirmRig = (function (globals) {
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          // event.target.to.setCustomValidity(
-          //   ''
-          // )
-          // event.target.to.reportValidity()
 
           let fde = formDataEntries(event)
-
-          // if (fde.intent === 'send' && !fde.to) {
-          //   event.target.to.setCustomValidity(
-          //     'You must specify a contact or address to send to'
-          //   )
-          //   event.target.to.reportValidity()
-          //   return;
-          // }
 
           let outWallet, inWallet, address, addressIndex, txRes
           let sendWallet = {}
@@ -139,11 +127,6 @@ export let sendConfirmRig = (function (globals) {
           if (fde.intent === 'send') {
             if (outWallet) {
               addressIndex = (outWallet?.addressIndex || 0) + 1
-              // sendWallet = await deriveWalletData(
-              //   outWallet?.xpub,
-              //   0,
-              //   addressIndex,
-              // )
             }
 
             if (state.tx) {
@@ -153,24 +136,29 @@ export let sendConfirmRig = (function (globals) {
             }
 
             if (txRes && addressIndex !== undefined) {
-              store.contacts
-                .getItem(inWallet.xkeyId)
-                .then(async c => {
-                  await store.contacts.setItem(
-                    inWallet.xkeyId,
-                    {
-                      ...c,
-                      outgoing: {
-                        ...c.outgoing,
-                        [outWallet.xkeyId]: {
-                          ...c.outgoing[outWallet.xkeyId],
-                          addressIndex,
-                        }
+              appTools.storedData.decryptItem(
+                store.contacts,
+                inWallet.xkeyId,
+              ).then(async c => {
+                await appTools.storedData.encryptItem(
+                  store.contacts,
+                  inWallet.xkeyId,
+                  {
+                    ...c,
+                    outgoing: {
+                      ...c.outgoing,
+                      [outWallet.xkeyId]: {
+                        ...c.outgoing[outWallet.xkeyId],
+                        addressIndex,
                       }
                     }
-                  )
+                  },
+                  false,
+                )
 
-                  loadStore(store.contacts, res => {
+                loadStore(
+                  store.contacts,
+                  res => {
                     if (res) {
                       appState.contacts = res
 
@@ -179,8 +167,12 @@ export let sendConfirmRig = (function (globals) {
                         userInfo,
                       })
                     }
-                  })
-                })
+                  },
+                  res => async v => {
+                    res.push(await appTools.storedData.decryptData(v))
+                  }
+                )
+              })
             }
 
             appState.sentTransactions = {
@@ -197,18 +189,6 @@ export let sendConfirmRig = (function (globals) {
               `Ð ${state.amount || 0}`,
               state.contact,
               txRes,
-              // {
-              //   xkeyId: outWallet?.xkeyId,
-              //   addressKeyId: outWallet?.addressKeyId,
-              //   addressIndex: outWallet?.addressIndex,
-              //   address: outWallet?.address,
-              // },
-              // {
-              //   xkeyId: sendWallet?.xkeyId,
-              //   addressKeyId: sendWallet?.addressKeyId,
-              //   addressIndex: sendWallet?.addressIndex,
-              //   address,
-              // },
             )
           }
 

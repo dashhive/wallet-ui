@@ -114,8 +114,7 @@ export async function findAllInStore(targStore, query = {}) {
   })
 }
 
-export async function loadWalletsForAlias(alias) {
-  let $alias = await store.aliases.getItem(alias)
+export async function loadWalletsForAlias($alias) {
   $alias.$wallets = {}
 
   if ($alias?.wallets) {
@@ -220,15 +219,16 @@ export function getKeystoreData(keystore) {
   }
 }
 
-export async function decryptKeystore(
+export async function setupCryptic(
   encryptionPassword,
   keystore,
 ) {
+  const ks = getKeystoreData(keystore)
   const {
-    ciphertext, cipherLength, cipherAlgorithm,
+    cipherLength, cipherAlgorithm,
     derivationAlgorithm, hashingAlgorithm, iv,
-    mac, iterations, salt, numBits,
-  } = getKeystoreData(keystore)
+    iterations, salt,
+  } = ks
 
   Cryptic.setConfig({
     cipherAlgorithm,
@@ -243,32 +243,157 @@ export async function decryptKeystore(
     salt,
   );
 
-  const derivedBytes = await cryptic.deriveBits(numBits, salt)
+  return {
+    Cryptic,
+    cryptic,
+    ks,
+  }
+}
+
+export async function encryptData(
+  encryptionPassword,
+  keystore,
+  data,
+) {
+  const { cryptic, ks } = await setupCryptic(
+    encryptionPassword,
+    keystore,
+  )
+
+  return await cryptic.encrypt(data, ks.iv);
+}
+
+export async function decryptData(
+  encryptionPassword,
+  keystore,
+  data,
+) {
+  const { cryptic, ks } = await setupCryptic(
+    encryptionPassword,
+    keystore,
+  )
+
+  return await cryptic.decrypt(data, ks.iv)
+}
+
+export async function storedData(
+  encryptionPassword, keystore,
+) {
+  const SD = {}
+
+  SD.decryptData = async function(data) {
+    if (data && 'string' === typeof data && data.length > 0) {
+      data = JSON.parse(await decryptData(
+        encryptionPassword,
+        keystore,
+        data
+      ))
+    }
+
+    return data
+  }
+
+  SD.decryptItem = async function(targetStore, item,) {
+    let data = await targetStore.getItem(
+      item,
+    )
+
+    data = await SD.decryptData(data)
+
+    return data
+  }
+
+  /**
+   *
+   * @param {*} targetStore
+   * @param {*} item
+   * @param {*} data
+   * @param {*} extend
+   * @returns {Promise<[String,Object]>}
+   */
+  SD.encryptData = async function(
+    targetStore, item, data = {}, extend = true
+  ) {
+    let encryptedData = ''
+    let storedData = {}
+    let jsonData = {}
+    if (extend) {
+      // storedData = await targetStore.getItem(
+      //   item,
+      // )
+      storedData = await SD.decryptItem(
+        targetStore,
+        item
+      )
+    }
+
+    if (data) {
+      jsonData = {
+        ...storedData,
+        ...data,
+      }
+      encryptedData = await encryptData(
+        encryptionPassword,
+        keystore,
+        JSON.stringify(jsonData)
+      )
+    }
+
+    return [
+      encryptedData,
+      jsonData,
+    ]
+  }
+
+  SD.encryptItem = async function(
+    targetStore, item, data = {}, extend = true
+  ) {
+    let encryptedData = ''
+    let encryptedResult = ''
+    let result = {}
+
+    if (data || extend) {
+      let d = await SD.encryptData(targetStore, item, data, extend)
+      encryptedResult = d[0]
+      result = d[1]
+      encryptedData = await targetStore.setItem(
+        item,
+        encryptedResult
+      )
+    }
+
+    return result || data || encryptedData
+    // return encryptedData
+  }
+
+  return SD
+}
+
+export async function decryptKeystore(
+  encryptionPassword,
+  keystore,
+) {
+  const { Cryptic, cryptic, ks } = await setupCryptic(
+    encryptionPassword,
+    keystore,
+  )
+
+  const derivedBytes = await cryptic.deriveBits(ks.numBits, ks.salt)
 
   const bMAC = blake256([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
-    ...Cryptic.toBytes(ciphertext),
+    ...Cryptic.toBytes(ks.ciphertext),
   ])
   const kMAC = Cryptic.toHex(keccak_256(new Uint8Array([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
-    ...Cryptic.toBytes(ciphertext),
+    ...Cryptic.toBytes(ks.ciphertext),
   ])));
 
-  // console.log(
-  //   'decryptPhrase mac === bMAC',
-  //   {
-  //     mac,
-  //     bMAC,
-  //     kMAC,
-  //   },
-  //   mac === bMAC
-  // )
-
-  if (mac && ![bMAC, kMAC].includes(mac)) {
+  if (ks.mac && ![bMAC, kMAC].includes(ks.mac)) {
     throw new Error('Invalid password')
   }
 
-  return await cryptic.decrypt(ciphertext, iv)
+  return await cryptic.decrypt(ks.ciphertext, ks.iv)
 }
 
 export function genKeystore(
@@ -305,43 +430,27 @@ export async function encryptKeystore(
   encryptionPassword,
   recoveryPhrase,
 ) {
-  let ks = genKeystore()
-  const {
-    cipherLength, cipherAlgorithm,
-    derivationAlgorithm, hashingAlgorithm,
-    iterations, iv, salt, numBits,
-  } = getKeystoreData(ks)
-
-  Cryptic.setConfig({
-    cipherAlgorithm,
-    cipherLength,
-    hashingAlgorithm,
-    derivationAlgorithm,
-    iterations,
-  })
-
-  const cryptic = Cryptic.create(
+  let keystore = genKeystore()
+  const { Cryptic, cryptic, ks } = await setupCryptic(
     encryptionPassword,
-    salt,
-  );
+    keystore,
+  )
 
-  // const keyMaterial = await cryptic.keyMaterial
-  // const derivedKey = await cryptic.derivedKey
-  const derivedBytes = await cryptic.deriveBits(numBits, salt)
-  const encryptedPhrase = await cryptic.encrypt(recoveryPhrase, iv);
+  const derivedBytes = await cryptic.deriveBits(ks.numBits, ks.salt)
+  const encryptedPhrase = await cryptic.encrypt(recoveryPhrase, ks.iv);
 
-  ks.crypto.ciphertext = encryptedPhrase
+  keystore.crypto.ciphertext = encryptedPhrase
 
   const bMAC = blake256([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
-    ...Cryptic.toBytes(ks.crypto.ciphertext),
+    ...Cryptic.toBytes(keystore.crypto.ciphertext),
   ])
   const kMAC = Cryptic.toHex(keccak_256(new Uint8Array([
     ...new Uint8Array(derivedBytes.slice(16, 32)),
-    ...Cryptic.toBytes(ks.crypto.ciphertext),
+    ...Cryptic.toBytes(keystore.crypto.ciphertext),
   ])));
 
-  ks.crypto.mac = bMAC
+  keystore.crypto.mac = bMAC
 
   // console.log(
   //   'encrypted keystore',
@@ -358,7 +467,7 @@ export async function encryptKeystore(
   //   },
   // )
 
-  return ks
+  return keystore
 }
 
 export async function initWallet(
@@ -410,16 +519,23 @@ export async function initWallet(
       id,
       accountIndex,
       addressIndex: addrs?.finalAddressIndex || addressIndex,
-      keystore: keystore || await encryptKeystore(encryptionPassword, recoveryPhrase),
+      keystore: keystore || await encryptKeystore(
+        encryptionPassword,
+        recoveryPhrase
+      ),
     }
   )
 
   let storedAlias = await store.aliases.setItem(
     `${alias}`,
-    {
-      wallets,
-      info,
-    }
+    await encryptData(
+      encryptionPassword,
+      storeWallet.keystore,
+      JSON.stringify({
+        wallets,
+        info,
+      })
+    )
   )
 
   // console.log(

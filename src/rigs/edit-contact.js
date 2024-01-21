@@ -24,7 +24,7 @@ export let editContactRig = (function (globals) {
   'use strict';
 
   let {
-    setupDialog, appDialogs, appState, store,
+    setupDialog, appDialogs, appState, appTools, store,
     mainApp, wallet, userInfo, contactsList,
     updateAllFunds, walletFunds,
   } = globals;
@@ -54,9 +54,11 @@ export let editContactRig = (function (globals) {
       contact[localName] = fieldValue
     }
 
-    let modifyContact = await store.contacts.setItem(
+    let modifyContact = await appTools.storedData.encryptItem(
+      store.contacts,
       state.shareAccount.xkeyId,
       contact,
+      false,
     )
 
     state.contact = modifyContact
@@ -74,6 +76,9 @@ export let editContactRig = (function (globals) {
             userInfo,
           })
         }
+      },
+      res => async v => {
+        res.push(await appTools.storedData.decryptData(v))
       }
     )
   }, 1000)
@@ -246,8 +251,8 @@ export let editContactRig = (function (globals) {
                 xkey,
               )
 
-              let modifyContact = await store.contacts.setItem(
-                // state.wallet.id,
+              let modifyContact = await appTools.storedData.encryptItem(
+                store.contacts,
                 state.shareAccount.xkeyId,
                 {
                   ...state.contact,
@@ -269,7 +274,8 @@ export let editContactRig = (function (globals) {
                   },
                   alias: preferred_username,
                   uri: event.target.value,
-                }
+                },
+                false,
               )
 
               loadStore(
@@ -283,6 +289,9 @@ export let editContactRig = (function (globals) {
                       userInfo,
                     })
                   }
+                },
+                res => async v => {
+                  res.push(await appTools.storedData.decryptData(v))
                 }
               )
 
@@ -311,7 +320,8 @@ export let editContactRig = (function (globals) {
             return state.elements.dialog.close('cancel')
           }
 
-          let storedContact = await store.contacts.getItem(
+          let storedContact = await appTools.storedData.decryptItem(
+            store.contacts,
             state.shareAccount.xkeyId,
           )
           let contactCard = state.elements?.dialog?.querySelector(
@@ -347,7 +357,8 @@ export let editContactRig = (function (globals) {
 
           let fde = formDataEntries(event)
 
-          let storedContact = await store.contacts.getItem(
+          let storedContact = await appTools.storedData.decryptItem(
+            store.contacts,
             state.shareAccount.xkeyId,
           )
 

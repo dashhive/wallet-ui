@@ -1,8 +1,8 @@
 ## Todo
-- [ ] Data Structure
+- [x] Data Structure
   - [x] Recovery Phrase (Key Store)
   - [x] Alias
-  - [ ] Contacts
+  - [x] Contacts
 - [x] On Load
   - [x] Wallets from new structure
   - [x] Update & cache balances
