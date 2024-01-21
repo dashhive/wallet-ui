@@ -36,7 +36,7 @@ A Graphical User Interface (GUI) for
   - [x] Recovery Phrase
   - [x] Aliases Data
   - [x] Contact Data
-- [ ] Backup/Restore Wallet & Contacts
+- [x] Backup/Restore Wallet & Contacts
 
 ### Stage 2
  - [ ] Transactions view

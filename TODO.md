@@ -31,7 +31,9 @@
       - [x] All Wallet Data
       - [ ] Keystore
     - [x] Disconnect / Logout / Clear Wallet & Contacts
+      - [ ] Add confirmation dialog
     - [x] Lock Wallet (require re-entering decryption password)
+      - [ ] Add confirmation dialog
   - [ ] Fiat balance from:
     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
     - symbol=DASH${symbol}
@@ -46,3 +48,4 @@
     - [ ] Connect to Dialogs on Click
 - [ ] Enforce Alias uniqueness on pairing & editing contact
 - [ ] On Pairing check if XkeyID exists in contacts
+- [ ] Investigate why Github Action fails to deploy for `master` branch
