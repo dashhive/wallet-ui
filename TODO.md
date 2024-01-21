@@ -41,3 +41,5 @@
   - [ ] Display Recovery Phrase in Edit Profile
   - [ ] Logout / Clear Wallet & Contacts
   - [ ] Enforce Alias uniqueness on pairing & editing contact
+  - [ ] On Pairing check if XkeyID exists in contacts
+  - [ ] Lock Wallet (require re-entering decryption password)

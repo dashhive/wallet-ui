@@ -9,7 +9,7 @@ import {
   // sortContactsByName,
   parseAddressField,
   generateContactPairingURI,
-  loadStore,
+  getStoreData,
   debounce,
   // nobounce,
 } from '../helpers/utils.js'
@@ -64,7 +64,7 @@ export let addContactRig = (function (globals) {
 
     console.log('debounceField', field, localName, newContact)
 
-    loadStore(
+    getStoreData(
       store.contacts,
       res => {
         if (res) {
@@ -296,7 +296,7 @@ export let addContactRig = (function (globals) {
                 false,
               )
 
-              loadStore(
+              getStoreData(
                 store.contacts,
                 res => {
                   if (res) {
@@ -482,7 +482,7 @@ export let addContactRig = (function (globals) {
             false,
           )
 
-          loadStore(
+          getStoreData(
             store.contacts,
             res => {
               if (res) {

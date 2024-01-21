@@ -9,7 +9,7 @@ import {
   // sortContactsByName,
   parseAddressField,
   generateContactPairingURI,
-  loadStore,
+  getStoreData,
   debounce,
   // nobounce,
   getAvatar,
@@ -65,7 +65,7 @@ export let editContactRig = (function (globals) {
 
     console.log('debounceField', field, localName, modifyContact)
 
-    loadStore(
+    getStoreData(
       store.contacts,
       res => {
         if (res) {
@@ -278,7 +278,7 @@ export let editContactRig = (function (globals) {
                 false,
               )
 
-              loadStore(
+              getStoreData(
                 store.contacts,
                 res => {
                   if (res) {

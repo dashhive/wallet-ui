@@ -1,7 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
-  loadStore,
+  getStoreData,
   sortContactsByAlias,
 } from '../helpers/utils.js'
 
@@ -156,7 +156,7 @@ export let sendConfirmRig = (function (globals) {
                   false,
                 )
 
-                loadStore(
+                getStoreData(
                   store.contacts,
                   res => {
                     if (res) {

@@ -6,7 +6,7 @@ import {
   formDataEntries,
   envoy,
   sortContactsByAlias,
-  loadStore,
+  getStoreData,
 } from './helpers/utils.js'
 
 import {
@@ -604,7 +604,7 @@ async function main() {
   })
   mainFtr.render()
 
-  loadStore(
+  getStoreData(
     store.contacts,
     res => {
       if (res) {
