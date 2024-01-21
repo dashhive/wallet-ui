@@ -11,7 +11,27 @@ const initialState = {
         <use xlink:href="#icon-logo"></use>
       </svg>
     </a>
-    <a id="nav-alias" class="alias" href="/#me">@${state.data?.alias}</a>
+    <menu>
+      <li>
+        <a id="nav-alias" class="alias" href="/#me">
+          @${state.data?.alias}
+        </a>
+        <menu class="user hidden">
+          <li><a id="nav-edit-profile" class="profile" href="/#me">
+            Edit Profile
+          </a></li>
+          <li><a id="nav-backup" class="backup" href="/#backup">
+            Backup Wallet
+          </a></li>
+          <li><a id="nav-lock" class="lock" href="/#lock">
+            Lock
+          </a></li>
+          <li><a id="nav-disconnect" class="disconnect" href="/#disconnect">
+            Disconnect
+          </a></li>
+        </menu>
+      </li>
+    </menu>
   `,
   elements: {
     nav: document.createElement('nav'),

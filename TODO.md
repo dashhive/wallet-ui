@@ -26,6 +26,12 @@
     - [x] Send & Request Funds to / from Contact
     - [x] Remove Contact confirmation dialog
     - [x] Show Pairing Information from Edit Contact dialog
+    - [ ] Backup
+      - [x] Display Recovery Phrase
+      - [x] All Wallet Data
+      - [ ] Keystore
+    - [x] Disconnect / Logout / Clear Wallet & Contacts
+    - [x] Lock Wallet (require re-entering decryption password)
   - [ ] Fiat balance from:
     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
     - symbol=DASH${symbol}
@@ -38,8 +44,5 @@
       - [ ] Send Btn
       - [ ] Request Btn
     - [ ] Connect to Dialogs on Click
-  - [ ] Display Recovery Phrase in Edit Profile
-  - [ ] Logout / Clear Wallet & Contacts
-  - [ ] Enforce Alias uniqueness on pairing & editing contact
-  - [ ] On Pairing check if XkeyID exists in contacts
-  - [ ] Lock Wallet (require re-entering decryption password)
+- [ ] Enforce Alias uniqueness on pairing & editing contact
+- [ ] On Pairing check if XkeyID exists in contacts

@@ -702,7 +702,8 @@ export async function loadStoreObject(store, callback) {
     //   return result
     // }
   })
-  .then(() => callback(result))
+  .then(() => callback?.(result))
+  .then(() => result)
   .catch(err => {
     console.error('loadStoreObject', err)
     return null
@@ -872,4 +873,25 @@ export function getAvatar(c) {
   // }
 
   return `${avStr}">${initials}</div>`
+}
+
+export function readFile(file, callback) {
+  let reader = new FileReader();
+  let result
+
+  reader.addEventListener('load', () => {
+    try {
+      // @ts-ignore
+      result = JSON.parse(reader?.result || '{}');
+
+      console.log('parse loaded json', result);
+      callback?.(result)
+
+      // state[key] = result
+    } catch(err) {
+      throw new Error(`failed to parse JSON data from ${file.name}`)
+    }
+  });
+
+  reader.readAsText(file);
 }

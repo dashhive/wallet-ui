@@ -657,6 +657,12 @@ form[name="network"] {
 }
 .updrop[for="keystore"] span {
   max-width: inherit;
+  text-align: center;
+  flex: 1 1 auto;
+}
+.updrop[for="keystore"] span strong {
+  font-size: 1rem;
+  line-height: 2;
 }
 
 

@@ -1,6 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
+  readFile,
 } from '../helpers/utils.js'
 import {
   ALIAS_REGEX,
@@ -15,24 +16,26 @@ export let phraseImportRig = (function (globals) {
     mainApp, wallet, wallets, deriveWalletData,
   } = globals;
 
-  function readFile(file, state) {
-    let reader = new FileReader();
-    let result
+  const processFile = (state, event) => res => {
+    if (res?.aliases) {
+      console.log('backup file', res)
+      state.walletImportData = res
 
-    reader.addEventListener('load', () => {
-      try {
-        // @ts-ignore
-        result = JSON.parse(reader?.result || '{}');
+      appState.selectedAlias = Object.keys(
+        res.aliases
+      )?.[0]
+      localStorage.selectedAlias = appState.selectedAlias
 
-        console.log('parse loaded keystore', result);
+      state.elements.form.alias.value = appState.selectedAlias
 
-        state.keystoreData = result
-      } catch(err) {
-        throw new Error(`failed to parse JSON data from ${file.name}`)
-      }
-    });
-
-    reader.readAsText(file);
+      appState.selectedWallet = Object.keys(
+        res.wallets
+      )?.[0]
+      localStorage.selectedWallet = appState.selectedWallet
+    } else {
+      console.log('kestore file', res)
+      state.keystoreData = res
+    }
   }
 
   let phraseImport = setupDialog(
@@ -64,11 +67,18 @@ export let phraseImportRig = (function (globals) {
         if (state.keystoreFile) {
           return ''
         }
+        // <span>Drag and drop a Keystore file <br/> or Incubator Wallet backup file <br/> or click to <strong><u>upload</u></strong></span>
         return html`
           <svg class="upload" width="40" height="40" viewBox="0 0 40 40">
             <use xlink:href="#icon-upload"></use>
           </svg>
-          <span>Drag and drop a keystore file or click to <strong><u>upload</u></strong></span>
+          <span>
+            Select a <br/>
+            <strong>
+              <u>Keystore</u> or <u>Backup</u>
+            </strong><br/>
+            file
+          </span>
         `
       },
       showFileName: state => {
@@ -181,7 +191,10 @@ export let phraseImportRig = (function (globals) {
               if (item.kind === "file") {
                 const file = item.getAsFile();
                 // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
-                readFile(file, state)
+                readFile(
+                  file,
+                  processFile(state, event),
+                )
                 state.keystoreFile = file.name
                 state.render(state)
               }
@@ -190,7 +203,10 @@ export let phraseImportRig = (function (globals) {
             // Use DataTransfer interface to access the file(s)
             [...event.dataTransfer.files].forEach((file, i) => {
               // console.log(`FILES file[${i}].name = ${file.name}`, file);
-              readFile(file, state)
+              readFile(
+                file,
+                processFile(state, event),
+              )
               state.keystoreFile = file.name
               state.render(state)
             });
@@ -201,7 +217,10 @@ export let phraseImportRig = (function (globals) {
           event.stopPropagation()
 
           if (event.target.files?.length > 0) {
-            readFile(event.target.files[0], state)
+            readFile(
+              event.target.files[0],
+              processFile(state, event),
+            )
             state.keystoreFile = event.target.files[0].name
             state.render(state)
           }
@@ -212,7 +231,20 @@ export let phraseImportRig = (function (globals) {
 
           let fde = formDataEntries(event)
 
-          if (!fde.pass && (!fde.ksfile || !state.keystoreData)) {
+          if (state.walletImportData) {
+            appDialogs.walletDecrypt.render({
+              walletImportData: state.walletImportData
+            })
+            await appDialogs.walletDecrypt.showModal()
+            return;
+          }
+
+          if (
+            !fde.pass && (
+              !fde.ksfile ||
+              !state.keystoreData
+            )
+          ) {
             event.target.pass.setCustomValidity(
               'A recovery phrase or keystore is required'
             )
@@ -231,7 +263,9 @@ export let phraseImportRig = (function (globals) {
           localStorage.selectedAlias = appState.selectedAlias
 
           if (state.keystoreData) {
-            appDialogs.walletDecrypt.render({ keystore: state.keystoreData })
+            appDialogs.walletDecrypt.render({
+              keystore: state.keystoreData
+            })
             await appDialogs.walletDecrypt.showModal()
             return;
           }

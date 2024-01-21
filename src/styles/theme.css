@@ -297,6 +297,9 @@ nav a.active {
 nav .alias {
   color: var(--nav-a);
 }
+nav menu menu {
+  background-color: var(--dark-600);
+}
 
 table {
   border: 1px solid var(--tblbrd);

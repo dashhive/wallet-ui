@@ -5,7 +5,9 @@ import {
   DashSocket,
   Cryptic,
 } from '../imports.js'
-import { DatabaseSetup } from './db.js'
+import {
+  DatabaseSetup,
+} from './db.js'
 import { deriveWalletData } from './utils.js'
 import {
   STOREAGE_SALT, OIDC_CLAIMS,
@@ -276,7 +278,7 @@ export async function decryptData(
   return await cryptic.decrypt(data, ks.iv)
 }
 
-export async function storedData(
+export function storedData(
   encryptionPassword, keystore,
 ) {
   const SD = {}

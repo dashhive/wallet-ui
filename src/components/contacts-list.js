@@ -56,6 +56,16 @@ const initialState = {
     ${state.footer(state)}
   `,
   item: c => {
+    // console.warn('contact list item', c)
+    if ('string' === typeof c) {
+      return html`
+        <article>
+          <address>
+            <h4>Encrypted Contact</h4>
+          </address>
+        </article>
+      `
+    }
     let paired = Object.keys(c?.outgoing || {}).length > 0
     let created = c.createdAt
       ? timeago(Date.now() - (new Date(c.createdAt)).getTime())
@@ -65,7 +75,7 @@ const initialState = {
       : ''
     let user = c.alias || c.info?.preferred_username
     let name = c.info?.name || created
-    let inId = Object.keys(c.incoming)[0].split('/')[1]
+    let inId = Object.keys(c?.incoming || {})?.[0]?.split('/')[1]
 
     let itemAlias = user
       ? `@${user}${ !paired ? ' - ' : '' }${finishPairing}`

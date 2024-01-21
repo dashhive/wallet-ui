@@ -367,15 +367,17 @@ export function setupDialog(
 
   return {
     element: dialog,
-    show: () => new Promise((resolve, reject) => {
+    show: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
       dialog.show()
+      callback?.()
     }),
-    showModal: () => new Promise((resolve, reject) => {
+    showModal: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
       dialog.showModal()
+      callback?.()
     }),
     close: returnVal => dialog.close(returnVal),
     render,

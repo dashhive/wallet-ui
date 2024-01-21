@@ -12,7 +12,7 @@ export let walletDecryptRig = (function (globals) {
   let {
     setupDialog, appDialogs, appState, mainApp,
     wallets, decryptKeystore, getUserInfo,
-    store, deriveWalletData,
+    store, deriveWalletData, importFromJson,
   } = globals;
 
   let walletDecrypt = setupDialog(
@@ -121,8 +121,18 @@ export let walletDecryptRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
+          let ks
+
+          if (state.walletImportData) {
+            ks = Object.values(
+              state.walletImportData.wallets
+            )?.[0]?.keystore
+          }
+
           let decryptedRecoveryPhrase
-          let ks = wallets?.[appState.selectedWallet]?.keystore || state.keystore
+          ks = ks || wallets?.[
+            appState.selectedWallet
+          ]?.keystore || state.keystore
           let fde = formDataEntries(event)
 
           if (!fde.pass) {
@@ -144,6 +154,10 @@ export let walletDecryptRig = (function (globals) {
               fde.pass,
               ks,
             )
+
+            if (state.walletImportData) {
+              await importFromJson(store, state.walletImportData)
+            }
 
             appState.phrase = decryptedRecoveryPhrase
             appState.encryptionPassword = fde.pass

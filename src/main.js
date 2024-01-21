@@ -3,7 +3,6 @@ import { lit as html } from './helpers/lit.js'
 import {
   generateWalletData,
   deriveWalletData,
-  formDataEntries,
   envoy,
   sortContactsByAlias,
   getStoreData,
@@ -26,10 +25,14 @@ import {
   createTx,
   sendTx,
   getAddrsWithFunds,
-  // encryptData,
-  // decryptData,
   storedData,
 } from './helpers/wallet.js'
+import {
+  localForageBaseCfg,
+  importFromJson,
+  exportToJson,
+  exportWalletData,
+} from './helpers/db.js'
 
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
@@ -44,6 +47,7 @@ import phraseBackupRig from './rigs/phrase-backup.js'
 import phraseImportRig from './rigs/phrase-import.js'
 import walletEncryptRig from './rigs/wallet-encrypt.js'
 import walletDecryptRig from './rigs/wallet-decrypt.js'
+import walletBackupRig from './rigs/wallet-backup.js'
 import addContactRig from './rigs/add-contact.js'
 import editContactRig from './rigs/edit-contact.js'
 import confirmDeleteRig from './rigs/confirm-delete.js'
@@ -53,11 +57,6 @@ import sendOrRequestRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
-
-// Example Dash URI's
-
-// let testDashReqUri = `dash:XYZdashAddressZYX?amount=0.50000000&label=test&message=give me monies`
-// let testDashExtUri = `web+dash://?xpub=xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz&sub=01H5KG2NGES5RVMA85YB3M6G0G&nickname=Prime%208&profile=https://imgur.com/gallery/y6sSvCr.json&picture=https://i.imgur.com/y6sSvCr.jpeg&scope=sub,nickname,profile,xpub&redirect_uri=https://`
 
 // app/data state
 let accounts
@@ -160,11 +159,17 @@ let contactsList = await setupContactsList(
           contactArticle !== null
         ) {
           let contactID = contactArticle.dataset.id
-          let contactData = await appTools.storedData.decryptItem(
+          if (!contactID) {
+            return;
+          }
+          let contactData = await appTools.storedData?.decryptItem?.(
             store.contacts,
             contactID,
           )
-          let contactAccountID = Object.values(contactData.incoming)?.[0]?.accountIndex
+          if (!contactData.incoming) {
+            return;
+          }
+          let contactAccountID = Object.values(contactData?.incoming || {})?.[0]?.accountIndex
           console.log('contact click data', contactData)
 
           let shareAccount = await deriveWalletData(
@@ -316,11 +321,12 @@ let contactsList = await setupContactsList(
 )
 
 async function getUserInfo() {
-  let w = await store.wallets.getItem(appState.selectedWallet)
-  let ks = w?.keystore
+  let ks = wallets?.[appState.selectedWallet]?.keystore
 
-  if (appState.selectedAlias && ks) {
-    appTools.storedData = await storedData(
+  if (
+    appState.encryptionPassword && appState.selectedAlias && ks
+  ) {
+    appTools.storedData = storedData(
       appState.encryptionPassword,
       ks,
     )
@@ -354,7 +360,13 @@ async function main() {
   appState.selectedAlias = localStorage?.selectedAlias || ''
   appState.selectedAccount = localStorage?.selectedAccount || ''
 
-  await getUserInfo()
+  wallets = await loadWallets()
+
+  console.log('main wallets', wallets)
+
+  if (appState.encryptionPassword) {
+    await getUserInfo()
+  }
 
   accounts = await findAllInStore(
     store.accounts,
@@ -384,8 +396,13 @@ async function main() {
   })
 
   appDialogs.walletDecrypt = walletDecryptRig({
-    setupDialog, appDialogs, appState, mainApp,
+    setupDialog, appDialogs, appState, mainApp, importFromJson,
     wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
+  })
+
+  appDialogs.walletBackup = walletBackupRig({
+    mainApp, wallets, setupDialog, appDialogs,
+    exportWalletData, exportToJson, localForageBaseCfg,
   })
 
   appDialogs.phraseBackup = phraseBackupRig({
@@ -516,28 +533,10 @@ async function main() {
         ks,
       )
 
-      // const { encryptItem, encryptData, decryptItem } =
-      // appTools.storedData = await storedData(
-      //   appState.encryptionPassword,
-      //   ks,
-      // )
-
-      // let $alias = await store.aliases.getItem(
-      //   `${appState.selectedAlias}`
-      // )
-
-      // let decryptedAlias = await appTools.storedData.decryptItem(
-      //   store.aliases,
-      //   `${appState.selectedAlias}`,
-      // )
-
-      // let encryptedAlias = await appTools.storedData.encryptData(
-      //   store.aliases,
-      //   `${appState.selectedAlias}`,
-      // )
-      // console.log('alias foo', {
-      //   $alias, decryptedAlias, encryptedAlias
-      // })
+      appTools.storedData = storedData(
+        appState.encryptionPassword,
+        ks,
+      )
     } catch(err) {
       console.error(
         '[fail] unable to decrypt recovery phrase',
@@ -604,6 +603,17 @@ async function main() {
   })
   mainFtr.render()
 
+  wallets = wallets || await loadWallets()
+
+  await getUserInfo()
+
+  // appTools.storedData = storedData(
+  //   appState.encryptionPassword,
+  //   ks,
+  // )
+
+  console.log('appTools.storedData', appTools.storedData)
+
   getStoreData(
     store.contacts,
     res => {
@@ -617,7 +627,7 @@ async function main() {
       }
     },
     res => async v => {
-      res.push(await appTools.storedData.decryptData(v))
+      res.push(await appTools.storedData?.decryptData?.(v) || v)
       // appTools.storedData.decryptData(v)
       //   .then(ev => res.push(ev))
     }
@@ -633,11 +643,26 @@ async function main() {
     let {
       // @ts-ignore
       id,
+      // @ts-ignore
+      nextElementSibling,
     } = event?.target
 
     if (id === 'nav-alias') {
       event.preventDefault()
       event.stopPropagation()
+
+      console.log('click alias', [event.target])
+
+      nextElementSibling.classList.toggle('hidden')
+
+      // event.target.next
+    }
+    if (id === 'nav-edit-profile') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      // @ts-ignore
+      event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
       await getUserInfo()
 
@@ -650,6 +675,59 @@ async function main() {
       )
 
       appDialogs.editProfile.showModal()
+    }
+    if (id === 'nav-backup') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      // @ts-ignore
+      event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
+
+      appDialogs.walletBackup.render(
+        {
+          wallet,
+        },
+        'afterend',
+      )
+      appDialogs.walletBackup.showModal(
+        () => exportWalletData(localForageBaseCfg.name)
+      )
+    }
+    if (id === 'nav-lock') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      // @ts-ignore
+      event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
+
+      sessionStorage.clear()
+      window.location.reload()
+    }
+    if (id === 'nav-disconnect') {
+      event.preventDefault()
+      event.stopPropagation()
+
+      // @ts-ignore
+      event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
+
+      localStorage.clear()
+      sessionStorage.clear()
+      // @ts-ignore
+      store.wallets.dropInstance({
+        name: localForageBaseCfg.name
+      })
+      // for (let k of Object.keys(store)) {
+      //   await store[k].clear()
+      // }
+      // indexedDB.deleteDatabase(localForageBaseCfg.name)
+
+      window.location.reload()
+    }
+
+    // @ts-ignore
+    // event.target?.closest?.('menu menu:not(.hidden)')?.classList?.add('hidden')
+    if (!id || !id.startsWith('nav-')) {
+      document.querySelector('menu.user:not(.hidden)')?.classList?.add('hidden')
     }
   })
 
