@@ -38,7 +38,7 @@
     "@dashincubator/ripemd160": "^3.0.0",
     "@dashincubator/secp256k1": "^1.7.1-5",
     "@zxing/library": "^0.20.0",
-    "crypticstorage": "github:dashhive/CrypticStorage#feat/keystore",
+    "crypticstorage": "^0.0.2",
     "dashhd": "^3.3.0",
     "dashkeys": "^1.1.0",
     "dashphrase": "^1.4.0",
@@ -46,11 +46,11 @@
     "dashtx": "^0.13.2",
     "dashwallet": "^0.6.0",
     "html5-qrcode": "^2.3.8",
-    "idb": "^7.1.1",
+    "idb": "^8.0.0",
     "localforage": "^1.10.0",
     "qrcode-svg": "^1.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.9.2"
+    "@types/node": "^20.11.5"
   }
 }
