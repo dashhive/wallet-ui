@@ -13,7 +13,9 @@ import {
 import { join, extname, } from 'node:path';
 
 const SRC = 'src/'
+const PUB = 'public/'
 const DIST = './dist/'
+const FAV = 'favicon.png'
 
 const walk = async (
   dirPath,
@@ -40,6 +42,10 @@ const fixOrCopy = async (
       [
         '<base href="/src/" />',
         `<base href="/${BASE_HREF}" />`
+      ],
+      [
+        '../public/favicon.png',
+        '/favicon.png',
       ],
       [
         '../node_modules/',
@@ -89,11 +95,16 @@ try {
 
   allFiles.forEach(e => {
     let fixDir = e?.startsWith(SRC)
+    let fixFavicon = e?.endsWith(FAV)
     let splitDir = e?.split(SRC)
+
+    if (fixFavicon){
+      splitDir = e?.split(PUB)
+    }
 
     // console.log('fixDir', fixDir, dirname(e), basename(e))
 
-    if (fixDir) {
+    if (fixDir || fixFavicon) {
       fixOrCopy(
         e,
         join(DIST, splitDir[1]),
@@ -103,6 +114,10 @@ try {
             [
               '<base href="/src/" />',
               `<base href="/${BASE_HREF}" />`
+            ],
+            [
+              '../public/favicon.png',
+              '/favicon.png',
             ],
             [
               '../node_modules/',
