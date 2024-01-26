@@ -14,7 +14,7 @@ export let walletBackupRig = (function (globals) {
   let walletBackup = setupDialog(
     mainApp,
     {
-      name: 'New Wallet',
+      name: 'Backup Wallet',
       submitTxt: 'I backed up this Recovery Phrase',
       submitAlt: 'Confirm Recovery Phrase backup',
       cancelTxt: 'Cancel',
