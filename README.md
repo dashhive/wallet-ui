@@ -38,40 +38,56 @@ A Graphical User Interface (GUI) for
   - [x] Contact Data
 - [x] Backup/Restore Wallet & Contacts
 
+### Stage 1 - QA
+- [ ] User testing of wallet and all processes
+  - [ ] Fix any bugs that arise
+
 ### Stage 2
- - [ ] Transactions view
-   - [ ] Table with filter/sort
-   - [ ] Select & Copy as CSV
- - [ ] Display Wallet balance in desired fiat currency
- - [ ] Settings
-   - [ ] Select Wallet (multiple accounts)
-   - [ ] Set Alias for selected wallet
-   - [ ] Preferred fiat Currency
-     - USD
-     - GBP
-     - EUR
-     - etc
- - [ ] Contact/Payment Share Features
-   - [ ] SMS
-   - [ ] Email
-   - [ ] QR Image
- - [ ] Set Fund Denomination for Send & Request payments
+- [ ] Display Wallet balance in desired fiat currency
+- [ ] Settings
+  - [ ] Preferred fiat Currency (USD, GBP, EUR, etc)
+- [ ] Add Memo to Send Dialog
+- [ ] Integrations
+  - [ ] Save
+    - [ ] CrowdNode
+    - [ ] Maya
+  - [ ] Spend - Gift Cards
+    - [ ] DashSpend (CTX)
+    - [ ] BitRefill
+  - [ ] Earn
+- [ ] Contact/Payment Share Features
+  - [ ] QR Image / Button Fixes
+- [ ] System Wrappers
+  - [ ] Desktop / Tauri Wrapper
+  - [ ] Mobile / Capacitor App
+
+### Stage 2 - QA
+- [ ]
 
 ### Stage 3
- - [ ] Cash Drawer to display coins separated by denomination
- - [ ] View & manage addresses associated with Wallet
- - [ ] Add side-by-side view for contacts to display the XPubs that represent both you & the contact in the connection
- - [ ] Gift card integration
-   - [ ] DashDirect
-   - [ ] BitRefill
+- [ ] Contact/Payment Share Features
+  - [ ] SMS (sms:)
+  - [ ] Email (mailto:)
+- [ ] Transactions view
+  - [ ] Table with filter/sort
+  - [ ] Select & Copy as CSV
+- [ ] View & manage addresses associated with Wallet
+- [ ] Coin Control
+  - [ ] Set Fund Denomination for Send & Request payments
+  - [ ] Cash Drawer to display coins separated by denomination
+- [ ] Theme: Light version
+
+### Stage 3 - QA
+- [ ]
 
 ### Stage 4
- - [ ] Savings account (Investing) Integration
-   - [ ] CrowdNode
-   - [ ] THORChain / Maya
- - [ ] Subscriptions
- - [ ] If possible, automate `befriend` process with blockchain messaging.
+- [ ] Localization for multiple languages
+- [ ] Subscriptions
+- [ ] If possible, automate `befriend` process with blockchain messaging.
+- [ ] Settings
+  - [ ] Select Wallet (multiple accounts)
+  - [ ] Set Alias for selected wallet
+- [ ] Add side-by-side view for contacts to display the XPubs that represent both you & the contact in the connection
 
-### Stage 5
- - [ ] Tauri Wrapper
- - [ ] Mobile App
+### Stage 4 - QA
+- [ ]
