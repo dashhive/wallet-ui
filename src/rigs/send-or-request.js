@@ -22,6 +22,7 @@ export let sendOrRequestRig = (function (globals) {
       name: 'Send or Request',
       sendTxt: 'Send',
       sendAlt: 'Send Dash',
+      scanAlt: 'Scan a QR Code',
       requestTxt: 'Request',
       requestAlt: 'Request Dash',
       cancelTxt: 'Cancel',
