@@ -228,6 +228,7 @@ form > article > figure figcaption + div {
 form aside > article > figure figcaption + div.big,
 form > article > figure figcaption + div.big {
   font-size: 3.75rem;
+  font-weight: 800;
 }
 form aside > article > figure figcaption + div svg,
 form > article > figure figcaption + div svg {
