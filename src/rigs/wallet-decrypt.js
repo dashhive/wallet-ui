@@ -198,9 +198,9 @@ export let walletDecryptRig = (function (globals) {
               appState.account = newAccount
             }
           } catch(err) {
-            console.error('[fail] unable to decrypt recovery phrase', err)
+            console.error('[fail] unable to decrypt seed phrase', err)
             event.target.pass.setCustomValidity(
-              'Unable to decrypt recovery phrase. Did you type the correct encryption password?'
+              'Unable to decrypt seed phrase. Did you type the correct encryption password?'
             )
             event.target.reportValidity()
             return;

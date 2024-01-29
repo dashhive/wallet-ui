@@ -29,7 +29,7 @@ export let phraseGenerateRig = (function (globals) {
       closeAlt: `Close`,
       footer: state => html`
         <footer class="inline col">
-          <sup>Hit next to generate a new wallet and recovery phrase.</sup>
+          <sup>Hit next to generate a new wallet and seed phrase.</sup>
           <button
             class="rounded"
             type="submit"

@@ -70,7 +70,7 @@ export async function deriveWalletData(
   use = DashHd.RECEIVE
 ) {
   if (!phraseOrXkey) {
-    throw new Error('Recovery phrase or xkey value empty or invalid')
+    throw new Error('Seed phrase or xkey value empty or invalid')
   }
 
   let recoveryPhrase

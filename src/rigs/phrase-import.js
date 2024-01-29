@@ -112,7 +112,7 @@ export let phraseImportRig = (function (globals) {
           </article>
           <article>
             <label for="phrase">
-              Recovery Phrase
+              Seed Phrase
             </label>
             <div class="password">
               <input
@@ -133,7 +133,7 @@ export let phraseImportRig = (function (globals) {
                 </svg>
               </label>
             </div>
-            <p>Import an existing wallet by pasting a 12 word recovery phrase.</p>
+            <p>Import an existing wallet by pasting a 12 word seed phrase.</p>
 
             <div class="error"></div>
           </article>
@@ -246,7 +246,7 @@ export let phraseImportRig = (function (globals) {
             )
           ) {
             event.target.pass.setCustomValidity(
-              'A recovery phrase or keystore is required'
+              'A seed phrase or keystore is required'
             )
             event.target.reportValidity()
             return;

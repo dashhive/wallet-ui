@@ -539,7 +539,7 @@ async function main() {
       )
     } catch(err) {
       console.error(
-        '[fail] unable to decrypt recovery phrase',
+        '[fail] unable to decrypt seed phrase',
         err
       )
       sessionStorage.removeItem('encryptionPassword')

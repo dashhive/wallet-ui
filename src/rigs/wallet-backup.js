@@ -15,8 +15,8 @@ export let walletBackupRig = (function (globals) {
     mainApp,
     {
       name: 'Backup Wallet',
-      submitTxt: 'I backed up this Recovery Phrase',
-      submitAlt: 'Confirm Recovery Phrase backup',
+      submitTxt: 'I backed up this Seed Phrase',
+      submitAlt: 'Confirm Seed Phrase backup',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
       closeTxt: html``,
@@ -27,7 +27,7 @@ export let walletBackupRig = (function (globals) {
             <i class="icon-warning-circle"></i>
             IMPORTANT
           </sub>
-          <sup class="ta-left">Do not lose this recovery phrase. We recommend you write it down or print it out and keep it somewhere safe. THERE ARE NO OTHER BACKUPS.</sup>
+          <sup class="ta-left">Do not lose this seed phrase. We recommend you write it down or print it out and keep it somewhere safe. THERE ARE NO OTHER BACKUPS.</sup>
           <button
             class="rounded"
             type="submit"
@@ -46,7 +46,7 @@ export let walletBackupRig = (function (globals) {
         <fieldset>
           <article>
             <label for="phrase">
-              Recovery Phrase
+              Seed Phrase
             </label>
 
             <section>
@@ -59,7 +59,7 @@ export let walletBackupRig = (function (globals) {
                     state.wallet?.recoveryPhrase
                   )}
                 </div>
-                <button id="phrase" class="pill rounded copy" title="Copy Recovery Phrase">
+                <button id="phrase" class="pill rounded copy" title="Copy Seed Phrase">
                   <i class="icon-copy"></i>
                   Copy
                 </button>

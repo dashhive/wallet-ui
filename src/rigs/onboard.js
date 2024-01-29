@@ -48,7 +48,7 @@ export let onboardRig = (function (globals) {
           <article>
             <div>
               <h3>Generate a New Wallet</h3>
-              <p>This option will give you a brand new wallet and recovery phrase.</p>
+              <p>This option will give you a brand new wallet and seed phrase.</p>
 
               <button
                 class="rounded"
@@ -65,7 +65,7 @@ export let onboardRig = (function (globals) {
             <hr />
             <div>
               <h3>Add an Existing Wallet</h3>
-              <p>Already have a Dash wallet? Click below to add it using your recovery phrase.</p>
+              <p>Already have a Dash wallet? Click below to add it using your seed phrase.</p>
 
               <button
                 class="rounded"
