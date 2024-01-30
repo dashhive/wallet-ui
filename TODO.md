@@ -1,34 +1,10 @@
 ## Todo
-- [x] Data Structure
-  - [x] Recovery Phrase (Key Store)
-  - [x] Alias
-  - [x] Contacts
-- [x] On Load
-  - [x] Wallets from new structure
-  - [x] Update & cache balances
 - [ ] UI Components
-  - [x] Wallet balance from DashSight.js
-  - [x] Buttons
-    - [x] Send
-    - [x] Request
-    - [x] New Contact
   - [ ] Dialogs
-    - [x] Send
-    - [x] Request
     - [x] QR Code
-      - [x] Share
       - [x] Scan
         - [ ] Upload QR image
-    - [x] Add a Contact
-      - [x] Share QR Code not getting up to date name for Profile
-      - [x] Changing alias field removes wallet from localForage contact
-      - [x] `Finish pairing` contact in contacts list after save
-    - [x] Send & Request Funds to / from Contact
-    - [x] Remove Contact confirmation dialog
-    - [x] Show Pairing Information from Edit Contact dialog
     - [ ] Backup
-      - [x] Display Recovery Phrase
-      - [x] All Wallet Data
       - [ ] Keystore
     - [x] Disconnect / Logout / Clear Wallet & Contacts
       - [ ] Add confirmation dialog
@@ -39,13 +15,9 @@
     - symbol=DASH${symbol}
   - [ ] Styled Drop Down List
   - [ ] Type Ahead Input Field
-  - [x] Contacts List
-    - [x] Contact Item
-      - [x] Avatar
-      - [x] Alias
-      - [x] Send Btn
-      - [x] Request Btn
-    - [x] Connect to Dialogs on Click
+- [ ] Add `updatedAt` property to IndexedDB Stores
 - [ ] Enforce Alias uniqueness on pairing & editing contact
 - [ ] On Pairing check if XkeyID exists in contacts
-- [x] Investigate why Github Action fails to deploy for `master` branch
+- [ ] Clicking send with a Zero balance throws an error in console
+  - [ ] Need dialog/error message to indicate what/why it won't send
+- [ ] Make `Remember password for browser session` more secure
