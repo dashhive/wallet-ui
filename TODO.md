@@ -43,9 +43,9 @@
     - [x] Contact Item
       - [x] Avatar
       - [x] Alias
-      - [ ] Send Btn
-      - [ ] Request Btn
-    - [ ] Connect to Dialogs on Click
+      - [x] Send Btn
+      - [x] Request Btn
+    - [x] Connect to Dialogs on Click
 - [ ] Enforce Alias uniqueness on pairing & editing contact
 - [ ] On Pairing check if XkeyID exists in contacts
-- [ ] Investigate why Github Action fails to deploy for `master` branch
+- [x] Investigate why Github Action fails to deploy for `master` branch
