@@ -320,56 +320,83 @@ th {
 
 .dark-hover:not(:disabled):hover,
 .dark {
-  color: var(--d);
+  color: var(--d) !important;
 }
 .light-hover:not(:disabled):hover,
 .light {
-  color: var(--l);
+  color: var(--l) !important;
 }
 .info {
-  color: var(--info);
+  color: var(--info) !important;
 }
 .note {
-  color: var(--note);
+  color: var(--note) !important;
 }
+.warn-hover:not(:disabled):hover,
 .warn {
-  color: var(--warn);
+  color: var(--warn) !important;
 }
+.dang-hover:not(:disabled):hover,
 .dang {
-  color: var(--dang);
+  color: var(--dang) !important;
 }
 .succ {
-  color: var(--succ);
+  color: var(--succ) !important;
 }
 .lite {
-  color: var(--lite);
+  color: var(--lite) !important;
 }
 .live {
-  color: var(--live);
+  color: var(--live) !important;
 }
 
 .bg-info {
-  background-color: var(--info);
+  background-color: var(--info) !important;
 }
 .bg-note {
-  background-color: var(--note);
+  background-color: var(--note) !important;
 }
 .bg-warn-hover:not(:disabled):hover,
 .bg-warn {
-  background-color: var(--warn);
+  background-color: var(--warn) !important;
 }
 .bg-dang-hover:not(:disabled):hover,
 .bg-dang {
-  background-color: var(--dang);
+  background-color: var(--dang) !important;
 }
 .bg-succ {
-  background-color: var(--succ);
+  background-color: var(--succ) !important;
 }
 .bg-lite {
-  background-color: var(--lite);
+  background-color: var(--lite) !important;
 }
 .bg-live {
-  background-color: var(--live);
+  background-color: var(--live) !important;
+}
+
+
+.brd-info {
+  border-color: var(--info) !important;
+}
+.brd-note {
+  border-color: var(--note) !important;
+}
+.brd-warn-hover:not(:disabled):hover,
+.brd-warn {
+  border-color: var(--warn) !important;
+}
+.brd-dang-hover:not(:disabled):hover,
+.brd-dang {
+  border-color: var(--dang) !important;
+}
+.brd-succ {
+  border-color: var(--succ) !important;
+}
+.brd-lite {
+  border-color: var(--lite) !important;
+}
+.brd-live {
+  border-color: var(--live) !important;
 }
 
 

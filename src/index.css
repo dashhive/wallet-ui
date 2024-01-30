@@ -243,6 +243,54 @@ figure h4 {
   padding-top: 1rem;
   padding-bottom: 1rem;
 }
+
+.my-0 {
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.my-1 {
+  margin-top: .25rem;
+  margin-bottom: .25rem;
+}
+.my-2 {
+  margin-top: .75rem;
+  margin-bottom: .75rem;
+}
+.my-3 {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+}
+
+.mx-0 {
+  margin-left: 0;
+  margin-right: 0;
+}
+.mx-1 {
+  margin-left: .25rem;
+  margin-right: .25rem;
+}
+.mx-2 {
+  margin-left: .75rem;
+  margin-right: .75rem;
+}
+.mx-3 {
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+.mx-4 {
+  margin-left: 1.5rem;
+  margin-right: 1.5rem;
+}
+.mx-5 {
+  margin-left: 2rem;
+  margin-right: 2rem;
+}
+.mx-6 {
+  margin-left: 2.5rem;
+  margin-right: 2.5rem;
+}
+
+
 .no-brdr {
   border: 1px solid transparent;
 }

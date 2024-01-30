@@ -52,6 +52,7 @@ import walletDecryptRig from './rigs/wallet-decrypt.js'
 import walletBackupRig from './rigs/wallet-backup.js'
 import addContactRig from './rigs/add-contact.js'
 import editContactRig from './rigs/edit-contact.js'
+import confirmActionRig from './rigs/confirm-action.js'
 import confirmDeleteRig from './rigs/confirm-delete.js'
 import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
@@ -427,6 +428,11 @@ async function main() {
     mainApp, wallet, userInfo, contactsList,
   })
 
+  appDialogs.confirmAction = confirmActionRig({
+    mainApp, setupDialog,
+    appDialogs, appState, appTools,
+  })
+
   appDialogs.confirmDelete = confirmDeleteRig({
     mainApp, setupDialog, appDialogs, appState, appTools,
     store, userInfo, contactsList,
@@ -679,8 +685,21 @@ async function main() {
       // @ts-ignore
       event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
-      sessionStorage.clear()
-      window.location.reload()
+      appDialogs.confirmAction.render({
+        name: 'Confirm Wallet Lock',
+        actionTxt: 'Lock it down!',
+        actionAlt: 'Lock the wallet',
+        action: 'lock',
+        // target: '',
+        // targetFallback: 'this wallet',
+        actionType: 'warn',
+        alert: state => html``,
+        callback: () => {
+          sessionStorage.clear()
+          window.location.reload()
+        },
+      })
+      appDialogs.confirmAction.showModal()
     }
     if (id === 'nav-disconnect') {
       event.preventDefault()
@@ -689,18 +708,36 @@ async function main() {
       // @ts-ignore
       event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
-      localStorage.clear()
-      sessionStorage.clear()
-      // @ts-ignore
-      store.wallets.dropInstance({
-        name: localForageBaseCfg.name
-      })
-      // for (let k of Object.keys(store)) {
-      //   await store[k].clear()
-      // }
-      // indexedDB.deleteDatabase(localForageBaseCfg.name)
+      appDialogs.confirmAction.render({
+        name: 'Confirm Wallet Disconnect',
+        actionTxt: 'Disconnect',
+        actionAlt: 'Clear all wallet data stored in browser',
+        action: 'disconnect',
+        // target: '',
+        // targetFallback: 'this wallet',
+        actionType: 'dang',
+        submitIcon: state => `💣`,
+        alert: state => html`
+          <div class="flex px-3 ta-left col">
+            <sub class="ta-left my-0">
+              <i class="icon-warning-circle"></i>
+              IMPORTANT
+            </sub>
+            <sup class="ta-left">This is an irreversable action which removes all wallet data from your browser, make sure to backup your data first.<br/> <h3>WE RETAIN NO BACKUPS OF YOUR WALLET DATA.</h3></sup>
+          </div>
+        `,
+        callback: () => {
+          localStorage.clear()
+          sessionStorage.clear()
+          // @ts-ignore
+          store.wallets.dropInstance({
+            name: localForageBaseCfg.name
+          })
 
-      window.location.reload()
+          window.location.reload()
+        },
+      })
+      appDialogs.confirmAction.showModal()
     }
 
     // @ts-ignore

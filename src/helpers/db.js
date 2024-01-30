@@ -94,6 +94,7 @@ export function exportToJson(
           .objectStore(storeName)
           .openCursor()
           .addEventListener('success', event => {
+            // @ts-ignore
             const cursor = event.target.result
             // console.log('eidb transaction cursor', cursor)
             if (cursor) {

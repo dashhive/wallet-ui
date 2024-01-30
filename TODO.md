@@ -7,9 +7,9 @@
     - [x] Backup
       - [x] Keystore
     - [x] Disconnect / Logout / Clear Wallet & Contacts
-      - [ ] Add confirmation dialog
+      - [x] Add confirmation dialog
     - [x] Lock Wallet (require re-entering decryption password)
-      - [ ] Add confirmation dialog
+      - [x] Add confirmation dialog
   - [ ] Fiat balance from:
     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
     - symbol=DASH${symbol}

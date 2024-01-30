@@ -23,7 +23,6 @@ export let confirmDeleteRig = (function (globals) {
       cancelAlt: `Cancel`,
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       closeAlt: `Cancel & Close`,
-      amount: 0,
       footer: state => html`
         <footer class="inline row">
           <button
@@ -68,21 +67,6 @@ export let confirmDeleteRig = (function (globals) {
         ${state.footer(state)}
       `,
       events: {
-        handleClose: (
-          state,
-          resolve = res=>{},
-          reject = res=>{},
-        ) => async event => {
-          event.preventDefault()
-          // event.stopPropagation()
-          state.removeAllListeners()
-
-          if (state.elements.dialog.returnValue !== 'cancel') {
-            resolve(state.elements.dialog.returnValue)
-          } else {
-            resolve('cancel')
-          }
-        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
