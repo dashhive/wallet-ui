@@ -63,52 +63,87 @@ export async function initDashSocket(
 
 export const store = await DatabaseSetup()
 
-export async function loadWallets() {
+export async function getStoredItems(targStore) {
   let result = {}
-  let walletsLen = await store.wallets.length()
+  let storeLen = await targStore.length()
 
-  return await store.wallets.iterate((
+  return await targStore.iterate((
     value, key, iterationNumber
   ) => {
-    // console.log('main iteration', iterationNumber, [key, value]);
-
     result[key] = value
 
-    if (iterationNumber === walletsLen) {
+    if (iterationNumber === storeLen) {
       return result
     }
   })
 }
 
-export async function findAllInStore(targStore, query = {}) {
+export async function getFilteredStoreLength(targStore, query = {}) {
+  let resLength = 0
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+
+  console.log('getFilteredStoreLength qs', {
+    storeName: targStore?._config?.storeName,
+    storeLen,
+    qs,
+  })
+
+  if (storeLen === 0) {
+    return 0
+  }
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = true
+
+    // console.log('getFilteredStoreLength qs before each', key, res)
+
+    qs.forEach(([k,v]) => {
+      // console.log('getFilteredStoreLength qs each', k, v, value[k])
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    // console.log('getFilteredStoreLength qs after each', key, res)
+
+    if (res) {
+      resLength += 1
+    }
+
+    if (iterationNumber === storeLen) {
+      return resLength
+    }
+  })
+}
+
+export async function findInStore(targStore, query = {}) {
   let result = {}
   let storeLen = await targStore.length()
   let qs = Object.entries(query)
-  console.log('findAllInStore qs', qs)
+  // console.log('findInStore qs', qs)
 
   return await targStore.iterate((
     value, key, iterationNumber
   ) => {
     let res = value
 
-    console.log('findAllInStore qs before each', key, res)
+    // console.log('findInStore qs before each', key, res)
 
     qs.forEach(([k,v]) => {
-      console.log('findAllInStore qs each', k, v, value[k])
+      // console.log('findInStore qs each', k, v, value[k])
       if (k === 'key' && key !== v || value[k] !== v) {
         res = undefined
       }
     })
 
-    console.log('findAllInStore qs after each', key, res)
+    // console.log('findInStore qs after each', key, res)
 
     if (res) {
       result[key] = res
     }
-
-    // if (value[queryKey] && value[queryKey] === queryVal) {
-    //   result[key] = value
-    // }
 
     if (iterationNumber === storeLen) {
       return result
@@ -132,7 +167,7 @@ export async function loadWalletsForAlias($alias) {
 export async function initWalletsInfo(
   info = {},
 ) {
-  let wallets = await loadWallets()
+  let wallets = await getStoredItems(store.wallets)
 
   info = {
     ...OIDC_CLAIMS,
@@ -606,10 +641,10 @@ export async function checkWalletFunds(addr, wallet = {}) {
 export async function updateAllFunds(wallet, walletFunds) {
   let funds = 0
   let addrKeys = await store.addresses.keys()
-  // console.log(
-  //   'checkWalletFunds wallet',
-  //   wallet,
-  // )
+
+  if (addrKeys.length === 0) {
+    return funds
+  }
 
   console.log(
     'updateAllFunds getInstantBalances for',
@@ -716,7 +751,7 @@ export async function batchAddressGenerate(
   accountIndex = 0,
   addressIndex = 0,
   use = DashHd.RECEIVE,
-  batchSize = 20
+  batchSize = 20,
 ) {
   let batchLimit = addressIndex + batchSize
   let addresses = []
@@ -754,6 +789,64 @@ export async function batchAddressGenerate(
     addresses,
     finalAddressIndex: batchLimit,
   }
+}
+
+export async function batchGenAcctAddrs(
+  wallet,
+  account,
+  batchSize = 20
+) {
+  let acctAddrsLen = await getFilteredStoreLength(
+    store.addresses,
+    {
+      accountIndex: account.accountIndex,
+    }
+  )
+  let addrIdx = account.addressIndex
+  let batSize = batchSize
+
+  if (acctAddrsLen === 0) {
+    addrIdx = 0
+    batSize = account.addressIndex + batchSize
+  }
+
+  if (acctAddrsLen <= account.addressIndex + (batchSize / 2)) {
+    return await batchAddressGenerate(
+      wallet,
+      account.accountIndex,
+      addrIdx,
+      DashHd.RECEIVE,
+      batSize
+    )
+  }
+
+  return null
+}
+
+export async function batchGenAcctsAddrs(
+  wallet,
+  batchSize = 20
+) {
+  let $accts = await getStoredItems(store.accounts)
+  let $acctsArr = Object.values($accts)
+  let accts = {}
+
+  if ($acctsArr.length > 0) {
+    for (let $a of $acctsArr) {
+      accts[`bat__${$a.accountIndex}`] = await batchGenAcctAddrs(
+        wallet,
+        $a,
+        batchSize,
+      )
+    }
+
+    // console.warn(
+    //   'BATCH GENERATED ACCOUNTS',
+    //   accts,
+    // )
+  }
+
+  return accts
 }
 
 export async function forceInsightUpdateForAddress(addr) {

@@ -10,7 +10,7 @@ export let sendOrRequestRig = (function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
-    createTx, deriveWalletData, getAddrsWithFunds,
+    createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
     wallet, wallets, accounts,
   } = globals
 
@@ -216,11 +216,11 @@ export let sendOrRequestRig = (function (globals) {
           event.target.amount.reportValidity()
 
           let fde = formDataEntries(event)
-          console.warn(
-            'FORM INTENT',
-            fde.intent,
-            [event.target],
-          )
+          // console.warn(
+          //   'FORM INTENT',
+          //   fde.intent,
+          //   [event.target],
+          // )
 
           if (fde?.intent === 'scan_new_contact') {
             appDialogs.scanContact.render(
@@ -261,7 +261,7 @@ export let sendOrRequestRig = (function (globals) {
             return;
           }
 
-          let inWallet, outWallet, address, addressIndex, tx, contact
+          let inWallet, outWallet, address, tx, contact
           let to = String(fde.to), amount = Number(fde.amount)
           let receiveWallet = {}, sendWallet = {}
 
@@ -379,7 +379,7 @@ export let sendOrRequestRig = (function (globals) {
               )
 
               // state.wallet =
-              await store.accounts.setItem(
+              let tmpAcct = await store.accounts.setItem(
                 receiveWallet.xkeyId,
                 {
                   ...tmpWallet,
@@ -387,6 +387,14 @@ export let sendOrRequestRig = (function (globals) {
                   addressIndex: receiveWallet.addressIndex,
                 }
               )
+
+              batchGenAcctAddrs(receiveWallet, tmpAcct)
+                // .then(a => {
+                //   console.log(
+                //     `${fde.intent} TO CONTACT BATCH GEN ADDRS`,
+                //     a
+                //   )
+                // })
 
               console.log(
                 `${fde.intent} TO CONTACT`,

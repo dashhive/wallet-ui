@@ -14,12 +14,14 @@ import {
 } from './helpers/constants.js'
 
 import {
-  findAllInStore,
+  findInStore,
   initDashSocket,
   batchAddressGenerate,
+  batchGenAcctAddrs,
+  batchGenAcctsAddrs,
   updateAllFunds,
   decryptKeystore,
-  loadWallets,
+  getStoredItems,
   loadWalletsForAlias,
   store,
   createTx,
@@ -245,23 +247,6 @@ let contactsList = await setupContactsList(
               accountIndex
             )
 
-            let addressIndex = 0
-            let { addresses, finalAddressIndex } = await batchAddressGenerate(
-              shareAccount,
-              accountIndex,
-              addressIndex,
-            )
-
-            console.log(
-              'share qr derived wallet',
-              accountIndex,
-              finalAddressIndex,
-              addresses,
-              // shareAccount?.xkeyId,
-              shareAccount,
-              // wallet,
-            )
-
             let created = (new Date()).toISOString()
 
             newAccount = await store.accounts.setItem(
@@ -277,6 +262,21 @@ let contactsList = await setupContactsList(
               }
             )
             let { createdAt, ...contactAcct } = newAccount
+
+            let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
+              wallet,
+              newAccount,
+            )
+
+            console.log(
+              'share qr derived wallet',
+              accountIndex,
+              finalAddressIndex,
+              addresses,
+              // shareAccount?.xkeyId,
+              shareAccount,
+              // wallet,
+            )
 
             newContact = await appTools.storedData.encryptItem(
               store.contacts,
@@ -360,7 +360,7 @@ async function main() {
   appState.selectedAlias = localStorage?.selectedAlias || ''
   appState.selectedAccount = localStorage?.selectedAccount || ''
 
-  wallets = await loadWallets()
+  wallets = await getStoredItems(store.wallets)
 
   console.log('main wallets', wallets)
 
@@ -368,7 +368,7 @@ async function main() {
     await getUserInfo()
   }
 
-  accounts = await findAllInStore(
+  accounts = await findInStore(
     store.accounts,
     {
       walletId: appState.selectedWallet,
@@ -377,9 +377,6 @@ async function main() {
   )
 
   appState.account = Object.values(accounts || {})?.[0]
-
-  let accountIndex = appState.account
-    ?.accountIndex || 0
 
   bodyNav = await setupNav(
     mainApp,
@@ -452,7 +449,7 @@ async function main() {
 
   appDialogs.sendOrRequest = sendOrRequestRig({
     mainApp, setupDialog, appDialogs, appState, appTools, store,
-    wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds,
+    wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds, batchGenAcctAddrs,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
@@ -575,21 +572,10 @@ async function main() {
     await appDialogs.onboard.show()
   } else {
     wallet = await deriveWalletData(appState.phrase)
-
-    if (store.addresses.length() === 0) {
-      let addressIndex = 0
-      let acctBatch = accountIndex + 5
-      let accts = {}
-
-      for (;accountIndex < acctBatch;accountIndex++) {
-        accts[`bat__${accountIndex}`] = await batchAddressGenerate(
-          wallet,
-          accountIndex,
-          addressIndex,
-        )
-      }
-    }
   }
+
+  batchGenAcctsAddrs(wallet)
+    // .then(data => console.warn('batchGenAcctsAddrs', { data }))
 
   // temp fix, should be handled already
   if (appState.phrase && !wallet) {
@@ -603,14 +589,9 @@ async function main() {
   })
   mainFtr.render()
 
-  wallets = wallets || await loadWallets()
+  wallets = wallets || await getStoredItems(store.wallets)
 
   await getUserInfo()
-
-  // appTools.storedData = storedData(
-  //   appState.encryptionPassword,
-  //   ks,
-  // )
 
   console.log('appTools.storedData', appTools.storedData)
 

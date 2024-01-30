@@ -15,6 +15,7 @@
     - symbol=DASH${symbol}
   - [ ] Styled Drop Down List
   - [ ] Type Ahead Input Field
+- [x] Batch generate IndexedDB store addresses on wallet load and after addressIndex is incremented by requesting funds in Send / Request dialog
 - [ ] Add `updatedAt` property to IndexedDB Stores
 - [ ] Enforce Alias uniqueness on pairing & editing contact
 - [ ] On Pairing check if XkeyID exists in contacts
