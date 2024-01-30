@@ -4,6 +4,8 @@ import {
   setClipboard,
   openBlobSVG,
   generatePaymentRequestURI,
+  fixedDash,
+  roundUsing,
 } from '../helpers/utils.js'
 
 export let requestQrRig = (function (globals) {
@@ -47,12 +49,12 @@ export let requestQrRig = (function (globals) {
         return html`
           <article>
             <figure>
-              <figcaption>Request Amount</figcaption>
+              <figcaption>Amount</figcaption>
               <div class="big">
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${state.amount}
+                ${fixedDash(roundUsing(Math.ceil, state.amount))}
               </div>
             </figure>
           </article>

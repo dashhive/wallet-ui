@@ -454,13 +454,17 @@ async function main() {
   })
 
   appDialogs.sendOrRequest = sendOrRequestRig({
-    mainApp, setupDialog, appDialogs, appState, appTools, store,
-    wallet, account: appState.account, deriveWalletData, createTx, getAddrsWithFunds, batchGenAcctAddrs,
+    mainApp, appDialogs, appState, appTools, store,
+    wallet, account: appState.account, walletFunds,
+    setupDialog, deriveWalletData, createTx,
+    getAddrsWithFunds, batchGenAcctAddrs,
   })
 
   appDialogs.sendConfirm = sendConfirmRig({
-    mainApp, setupDialog, appDialogs, appState, appTools,
-    deriveWalletData, createTx, sendTx, getAddrsWithFunds, store, userInfo, contactsList,
+    mainApp, appDialogs, appState, appTools,
+    store, userInfo, contactsList, walletFunds,
+    setupDialog, deriveWalletData, getAddrsWithFunds,
+    createTx, sendTx,
   })
 
   appDialogs.requestQr = requestQrRig({

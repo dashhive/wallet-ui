@@ -2,6 +2,8 @@ import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
   parseAddressField,
+  fixedDash,
+  roundUsing,
 } from '../helpers/utils.js'
 import setupInputAmount from '../components/input-amount.js'
 
@@ -11,7 +13,7 @@ export let sendOrRequestRig = (function (globals) {
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
-    wallet, wallets, accounts,
+    wallet, wallets, accounts, walletFunds,
   } = globals
 
   let inputAmount = setupInputAmount(mainApp)
@@ -290,6 +292,47 @@ export let sendOrRequestRig = (function (globals) {
               address = to
             }
 
+            if (amount > 0 && walletFunds.balance < amount) {
+              console.log(
+                `INSUFFICIENT FUNDS IN WALLET`,
+                [
+                  `SEND Ð ${amount || 0}`,
+                  `AVAILABLE Ð ${walletFunds?.balance}`,
+                ]
+              )
+              state.wallet.addressIndex = (
+                state.wallet?.addressIndex || 0
+              ) + 1
+              receiveWallet = await deriveWalletData(
+                appState.phrase,
+                state.wallet.accountIndex,
+                state.wallet.addressIndex,
+              )
+              let amountNeeded = fixedDash(roundUsing(Math.ceil, Math.abs(
+                walletFunds.balance - Number(fde.amount)
+              )))
+
+              appDialogs.requestQr.render(
+                {
+                  name: 'Insufficient wallet funds',
+                  wallet: receiveWallet,
+                  // contact,
+                  // to,
+                  amount: amountNeeded,
+                  // footer: state => html`<footer class="center">
+                  //   <sub>Fund this wallet with at least Ð ${fixedDash(state.amount)} to complete this transaction</sub>
+                  // </footer>`,
+                  footer: state => html`<footer class="center">
+                    <sub>Fund this wallet with at least Ð ${state.amount} to complete this transaction</sub>
+                  </footer>`,
+                },
+                'afterend',
+              )
+
+              let showRequestQR = await appDialogs.requestQr.showModal()
+              return
+            }
+
             if (amount > 0) {
               let fundingAddrs = await getAddrsWithFunds(
                 state.wallet,
@@ -409,6 +452,10 @@ export let sendOrRequestRig = (function (globals) {
 
               appDialogs.requestQr.render(
                 {
+                  name: 'Share to receive funds',
+                  footer: state => html`<footer class="center">
+                    <sub>Share this QR code to receive funds</sub>
+                  </footer>`,
                   wallet: receiveWallet,
                   contact,
                   to,

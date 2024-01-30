@@ -239,6 +239,13 @@ export function fixedDash(dash, fix = 8) {
   .toFixed(fix);
 }
 
+// https://stackoverflow.com/a/27946310
+export function roundUsing(func, number, prec = 8) {
+  var tempnumber = number * Math.pow(10, prec);
+  tempnumber = func(tempnumber);
+  return tempnumber / Math.pow(10, prec);
+}
+
 /**
  * @param {Number} duffs - ex: 00000000
  */

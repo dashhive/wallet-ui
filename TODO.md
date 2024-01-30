@@ -16,9 +16,9 @@
   - [ ] Styled Drop Down List
   - [ ] Type Ahead Input Field
 - [x] Batch generate IndexedDB store addresses on wallet load and after addressIndex is incremented by requesting funds in Send / Request dialog
+- [x] Clicking send with a Zero balance throws an error in console
+  - Need dialog/error message to indicate what/why it won't send
 - [ ] Add `updatedAt` property to IndexedDB Stores
 - [ ] Enforce Alias uniqueness on pairing & editing contact
 - [ ] On Pairing check if XkeyID exists in contacts
-- [ ] Clicking send with a Zero balance throws an error in console
-  - [ ] Need dialog/error message to indicate what/why it won't send
 - [ ] Make `Remember password for browser session` more secure
