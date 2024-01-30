@@ -25,6 +25,7 @@ export let walletDecryptRig = (function (globals) {
       cancelAlt: `Cancel Form`,
       closeTxt: html`<i class="icon-x"></i>`,
       closeAlt: `Close`,
+      showRemember: true,
       footer: state => html`
         <footer class="inline col">
           <sup>Temporarily decrypt wallet data stored in the browser.</sup>
@@ -32,13 +33,38 @@ export let walletDecryptRig = (function (globals) {
             class="rounded"
             type="submit"
             name="intent"
-            value="new_wallet"
+            value="load_wallet"
             title="${state.submitAlt}"
           >
             <span>${state.submitTxt}</span>
           </button>
         </footer>
       `,
+      rememberField: state => {
+        if (!state.showRemember) {
+          return ``
+        }
+
+        return html`
+          <article>
+            <div class="switch py-3 pr-3">
+              <label for="rememberPass" class="jc-left">
+                <sub>
+                  Remember password for browser session
+                </sub>
+              </label>
+              <input
+                id="rememberPass"
+                name="remember"
+                type="checkbox"
+              />
+              <label for="rememberPass" class="switch" title="Remember for session"></label>
+            </div>
+
+            <div class="error"></div>
+          </article>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
@@ -68,23 +94,7 @@ export let walletDecryptRig = (function (globals) {
               </label>
             </div>
           </article>
-          <article>
-            <div class="switch py-3 pr-3">
-              <label for="rememberPass" class="jc-left">
-                <sub>
-                  Remember password for browser session
-                </sub>
-              </label>
-              <input
-                id="rememberPass"
-                name="remember"
-                type="checkbox"
-              />
-              <label for="rememberPass" class="switch" title="Remember for session"></label>
-            </div>
-
-            <div class="error"></div>
-          </article>
+          ${state.rememberField(state)}
         </fieldset>
 
         ${state.footer(state)}
@@ -197,6 +207,8 @@ export let walletDecryptRig = (function (globals) {
 
               appState.account = newAccount
             }
+
+            state.elements.dialog.returnValue = String(fde.intent)
           } catch(err) {
             console.error('[fail] unable to decrypt seed phrase', err)
             event.target.pass.setCustomValidity(

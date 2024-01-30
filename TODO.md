@@ -4,8 +4,8 @@
     - [x] QR Code
       - [x] Scan
         - [ ] Upload QR image
-    - [ ] Backup
-      - [ ] Keystore
+    - [x] Backup
+      - [x] Keystore
     - [x] Disconnect / Logout / Clear Wallet & Contacts
       - [ ] Add confirmation dialog
     - [x] Lock Wallet (require re-entering decryption password)

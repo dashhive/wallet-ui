@@ -32,8 +32,8 @@ import {
 import {
   localForageBaseCfg,
   importFromJson,
-  exportToJson,
   exportWalletData,
+  saveJsonToFile,
 } from './helpers/db.js'
 
 import setupNav from './components/nav.js'
@@ -398,8 +398,8 @@ async function main() {
   })
 
   appDialogs.walletBackup = walletBackupRig({
-    mainApp, wallets, setupDialog, appDialogs,
-    exportWalletData, exportToJson, localForageBaseCfg,
+    mainApp, wallet, wallets, setupDialog, appDialogs, appState, store,
+    exportWalletData, saveJsonToFile, localForageBaseCfg,
   })
 
   appDialogs.phraseBackup = phraseBackupRig({
@@ -670,9 +670,7 @@ async function main() {
         },
         'afterend',
       )
-      appDialogs.walletBackup.showModal(
-        () => exportWalletData(localForageBaseCfg.name)
-      )
+      appDialogs.walletBackup.showModal()
     }
     if (id === 'nav-lock') {
       event.preventDefault()

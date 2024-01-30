@@ -71,22 +71,25 @@ export let phraseBackupRig = (function (globals) {
         ${state.footer(state)}
       `,
       fields: html``,
+      runEncryption: true,
       events: {
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
 
-          let { wallet } = state
+          let { wallet, runEncryption } = state
 
           phraseBackup.close()
 
-          appDialogs.walletEncrypt.render(
-            {
-              wallet,
-            },
-            'afterend',
-          )
-          await appDialogs.walletEncrypt.showModal()
+          if (runEncryption) {
+            appDialogs.walletEncrypt.render(
+              {
+                wallet,
+              },
+              'afterend',
+            )
+            await appDialogs.walletEncrypt.showModal()
+          }
         },
         handleClick: state => async event => {
           if (

@@ -1,70 +1,91 @@
 import { lit as html } from '../helpers/lit.js'
 import {
-  phraseToEl,
-  setClipboard,
+  formDataEntries,
 } from '../helpers/utils.js'
 
 export let walletBackupRig = (function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog,
+    mainApp, setupDialog, appDialogs, appState,
+    wallet, wallets,
+    saveJsonToFile, exportWalletData, localForageBaseCfg,
   } = globals;
 
   let walletBackup = setupDialog(
     mainApp,
     {
       name: 'Backup Wallet',
-      submitTxt: 'I backed up this Seed Phrase',
-      submitAlt: 'Confirm Seed Phrase backup',
+      submitTxt: 'Done',
+      submitAlt: 'Confirm backup',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
-      closeTxt: html``,
-      closeAlt: ``,
+      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
+      closeAlt: `Close`,
+      fullBackupDecryptedAlt: `Download a copy of all data stored in the browser`,
+      fullBackupEncryptedAlt: `Download a copy of all data stored in the browser`,
+      keystoreBackupAlt: `Download your keystore as a JSON file`,
+      seedPhraseAlt: `Display your seed phrase to write down`,
       footer: state => html`
         <footer class="inline col">
-          <sub class="ta-left">
-            <i class="icon-warning-circle"></i>
-            IMPORTANT
-          </sub>
-          <sup class="ta-left">Do not lose this seed phrase. We recommend you write it down or print it out and keep it somewhere safe. THERE ARE NO OTHER BACKUPS.</sup>
-          <button
-            class="rounded"
-            type="submit"
-            name="intent"
-            value="backup_wallet"
-            title="${state.submitAlt}"
-          >
-            <span>${state.submitTxt}</span>
-          </button>
         </footer>
       `,
       content: state => {
         return html`
         ${state.header(state)}
 
-        <fieldset>
+        <fieldset class="flex-none">
+          <!-- <article>
+            <button
+              class="rounded outline"
+              type="submit"
+              name="intent"
+              value="full_backup_decrypted"
+              title="${state.fullBackupDecryptedAlt}"
+            >
+              <span>
+                Decrypted Full Backup
+              </span>
+            </button>
+          </article> -->
           <article>
-            <label for="phrase">
-              Seed Phrase
-            </label>
-
-            <section>
-              <article>
-                <div
-                  class="ta-left"
-                  spellcheck="false"
-                >
-                  ${phraseToEl(
-                    state.wallet?.recoveryPhrase
-                  )}
-                </div>
-                <button id="phrase" class="pill rounded copy" title="Copy Seed Phrase">
-                  <i class="icon-copy"></i>
-                  Copy
-                </button>
-              </article>
-            </section>
+            <button
+              class="rounded outline"
+              type="submit"
+              name="intent"
+              value="full_backup_encrypted"
+              title="${state.fullBackupEncryptedAlt}"
+            >
+              <span>
+                Encrypted Full Backup
+              </span>
+            </button>
+          </article>
+          <article>
+            <button
+              class="rounded outline"
+              type="submit"
+              name="intent"
+              value="keystore_backup"
+              title="${state.keystoreBackupAlt}"
+            >
+              <span>
+                Backup Keystore
+              </span>
+            </button>
+          </article>
+          <article>
+            <button
+              class="rounded outline"
+              type="submit"
+              name="intent"
+              value="display_seed_phrase"
+              title="${state.seedPhraseAlt}"
+            >
+              <span>
+                Show Seed Phrase
+              </span>
+            </button>
           </article>
         </fieldset>
 
@@ -77,18 +98,51 @@ export let walletBackupRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
+          let storedWallet = wallets?.[appState.selectedWallet]
+          let ks = storedWallet?.keystore
+          let fde = formDataEntries(event)
+
+          if (fde.intent === 'full_backup_encrypted') {
+            exportWalletData(localForageBaseCfg.name)
+            return;
+          }
+
+          if (fde.intent === 'keystore_backup' && ks) {
+            saveJsonToFile(
+              `incubator_keystore.${
+                storedWallet.id
+              }.${
+                (new Date()).toISOString()
+              }.json`,
+              ks,
+            )
+            return;
+          }
+
+          if (fde.intent === 'display_seed_phrase' && ks) {
+            appDialogs.walletDecrypt.render({
+              name: `Decrypt Seed Phrase`,
+              submitTxt: `Show Decrypted Seed Phrase`,
+              keystore: ks,
+              showRemember: false,
+            })
+            let decryptRes = await appDialogs.walletDecrypt.showModal()
+
+            if (decryptRes !== 'cancel') {
+              appDialogs.phraseBackup.render(
+                {
+                  wallet: state.wallet,
+                  runEncryption: false,
+                },
+                'afterend',
+              )
+              appDialogs.phraseBackup.showModal()
+            }
+            return;
+          }
+
           walletBackup.close()
         },
-        handleClick: state => async event => {
-          if (
-            event.target?.classList?.contains('copy') ||
-            event.target?.classList?.contains('icon-copy')
-          ) {
-            event.preventDefault()
-            event.stopPropagation()
-            setClipboard(event)
-          }
-        }
       },
     }
   )
