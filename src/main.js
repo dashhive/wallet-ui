@@ -691,7 +691,7 @@ async function main() {
 
       appDialogs.confirmAction.render({
         name: 'Confirm Wallet Lock',
-        actionTxt: 'Lock it down!',
+        actionTxt: 'Lock it!',
         actionAlt: 'Lock the wallet',
         action: 'lock',
         // target: '',

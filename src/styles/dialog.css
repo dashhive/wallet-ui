@@ -95,6 +95,9 @@ dialog.responsive {
   /* opacity: 1; */
   padding: 0;
   flex-direction: column;
+
+  margin: 0 auto;
+  height: 100%;
 }
 dialog form {
   box-sizing: border-box;
@@ -152,7 +155,7 @@ dialog > form > header > strong {
   font-size: 1.5rem;
 }
 dialog > form > fieldset {
-  height: 100%;
+  /* height: 100%; */
   overflow: auto;
   padding: 0 1rem;
   min-width: 100%;
@@ -222,6 +225,7 @@ dialog.responsive header {
 }
 dialog.responsive form {
   justify-content: center;
+  justify-content: space-between;
   box-sizing: border-box;
   max-width: calc(100% - 4px);
 }
@@ -444,6 +448,8 @@ dialog.responsive fieldset.contact section article {
 @media (min-width: 650px) {
   dialog.responsive {
     width: fit-content;
+    height: fit-content;
+    margin: auto;
   }
   /* dialog.responsive {
     position: fixed;
