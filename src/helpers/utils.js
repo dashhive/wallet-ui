@@ -13,47 +13,6 @@ import {
   SECONDS, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR,
 } from './constants.js'
 
-// export async function walletSchema(
-//   phrase = 'zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong',
-//   accountIndex = 0
-// ) {
-//   let wallets = {
-//     'jojobyte': {
-//       phrase,
-//       accountIndex,
-//     }
-//   }
-//   let contacts = {
-//     'bob': {
-//       name: 'Bob Jones',
-//       gravatarEmail: 'bob@jones.com',
-//       // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
-//       index: 1,
-//       txIndex: 0,
-//       xpubs: {
-//         'laptop': 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz'
-//       },
-//       xpubsArr: [
-//         {
-//           device: 'laptop',
-//           key: 'xpub6FKUF6P1ULrfvSrhA9DKSS3MA3digsd27MSTMjBxCczsfYz7vcFLnbQwjP9CsAfEJsnD4UwtbU43iZaibv4vnzQNZmQAVcufN4r3pva8kTz',
-//         }
-//       ],
-//     }
-//   }
-//   // contactsArr: [
-//   //   {
-//   //     alias: 'bob',
-//   //     // `m/44'/5'/${accountIndex}'/0/${addressIndex}`;
-//   //     index: 1,
-//   //     txIndex: 0,
-//   //     xpub: ''
-//   //   }
-//   // ],
-
-//   return wallets
-// }
-
 /**
  *
  * @param {String} [phraseOrXkey]
@@ -214,12 +173,6 @@ export async function deriveAddressData(
   let address = await DashHd.toAddr(key.publicKey);
 
   return address
-  // return {
-  //   account,
-  //   xkey,
-  //   key,
-  //   address
-  // }
 }
 
 export async function batchAddressGenerate(
