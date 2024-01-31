@@ -15,6 +15,7 @@ export let onboardRig = (function (globals) {
     {
       name: 'Onboarding Flow',
       placement: 'fullscreen',
+      responsive: false,
       events: {
         handleSubmit: state => async event => {
           event.preventDefault()

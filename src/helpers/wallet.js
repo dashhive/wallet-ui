@@ -543,6 +543,7 @@ export async function initWallet(
     store.addresses.setItem(
       a.address,
       {
+        updatedAt: (new Date()).toISOString(),
         walletId: wallet.id,
         accountIndex: a.accountIndex,
         addressIndex: a.addressIndex,
@@ -554,6 +555,7 @@ export async function initWallet(
     `${id}`,
     {
       id,
+      updatedAt: (new Date()).toISOString(),
       accountIndex,
       addressIndex: addrs?.finalAddressIndex || addressIndex,
       keystore: keystore || await encryptKeystore(
@@ -777,6 +779,7 @@ export async function batchAddressGenerate(
           address,
           {
             ...$addr,
+            updatedAt: (new Date()).toISOString(),
             walletId: wallet.id,
             accountIndex,
             addressIndex: addrIdx,

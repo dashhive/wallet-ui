@@ -98,6 +98,7 @@ export let phraseGenerateRig = (function (globals) {
             wallet.xkeyId,
             {
               createdAt: (new Date()).toISOString(),
+              updatedAt: (new Date()).toISOString(),
               accountIndex: wallet.accountIndex,
               addressIndex: wallet.addressIndex,
               walletId: wallet.id,

@@ -42,6 +42,7 @@ export let editContactRig = (function (globals) {
 
     let contact = {
       ...state.contact,
+      updatedAt: (new Date()).toISOString(),
       info: {
         ...OIDC_CLAIMS,
         ...(state.contact.info || {}),
@@ -256,6 +257,7 @@ export let editContactRig = (function (globals) {
                 state.shareAccount.xkeyId,
                 {
                   ...state.contact,
+                  updatedAt: (new Date()).toISOString(),
                   info: {
                     ...OIDC_CLAIMS,
                     ...(state.contact.info || {}),

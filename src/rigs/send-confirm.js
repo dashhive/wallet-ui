@@ -145,6 +145,7 @@ export let sendConfirmRig = (function (globals) {
                   inWallet.xkeyId,
                   {
                     ...c,
+                    updatedAt: (new Date()).toISOString(),
                     outgoing: {
                       ...c.outgoing,
                       [outWallet.xkeyId]: {

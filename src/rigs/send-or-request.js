@@ -401,6 +401,7 @@ export let sendOrRequestRig = (function (globals) {
                 inWallet.xkeyId,
                 {
                   ...contact,
+                  updatedAt: (new Date()).toISOString(),
                   incoming: {
                     ...contact.incoming,
                     [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
@@ -426,6 +427,7 @@ export let sendOrRequestRig = (function (globals) {
                 receiveWallet.xkeyId,
                 {
                   ...tmpWallet,
+                  updatedAt: (new Date()).toISOString(),
                   address: receiveWallet.address,
                   addressIndex: receiveWallet.addressIndex,
                 }

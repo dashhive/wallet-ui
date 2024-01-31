@@ -98,6 +98,7 @@ let userInfo = envoy(
         appState.selectedAlias,
         {
           ...decryptedAlias,
+          updatedAt: (new Date()).toISOString(),
           info: {
             ...decryptedAlias.info,
             [prop]: state[prop],
@@ -214,6 +215,7 @@ let contactsList = await setupContactsList(
           event.target?.parentNode?.id === 'add_contact'
         ) {
           await getUserInfo()
+
           let selectedWallet = wallets?.[appState.selectedWallet]
           let accountIndex = selectedWallet
             ?.accountIndex || 0
@@ -238,6 +240,7 @@ let contactsList = await setupContactsList(
                 {
                   ...selectedWallet,
                   accountIndex,
+                  updatedAt: (new Date()).toISOString(),
                 }
               )
               wallets[appState.selectedWallet] = upWallet
@@ -254,6 +257,7 @@ let contactsList = await setupContactsList(
               shareAccount.xkeyId,
               {
                 createdAt: created,
+                updatedAt: (new Date()).toISOString(),
                 accountIndex,
                 addressIndex: shareAccount.addressIndex,
                 walletId: shareAccount.id,
@@ -262,7 +266,7 @@ let contactsList = await setupContactsList(
                 address: shareAccount.address,
               }
             )
-            let { createdAt, ...contactAcct } = newAccount
+            let { createdAt, updatedAt, ...contactAcct } = newAccount
 
             let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
               wallet,
@@ -284,6 +288,7 @@ let contactsList = await setupContactsList(
               shareAccount.xkeyId,
               {
                 createdAt,
+                updatedAt,
                 incoming: {
                   [`${contactAcct.walletId}/${contactAcct.xkeyId}`]: {
                     ...contactAcct,

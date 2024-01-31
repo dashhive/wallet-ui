@@ -212,6 +212,7 @@ export let editProfileRig = (function (globals) {
             appState.selectedAlias,
             {
               ...storedAlias,
+              updatedAt: (new Date()).toISOString(),
               info: {
                 ...(storedAlias.info || {}),
                 name: String(fde.profileName),

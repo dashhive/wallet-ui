@@ -41,6 +41,7 @@ export let addContactRig = (function (globals) {
 
     let contact = {
       ...state.contact,
+      updatedAt: (new Date()).toISOString(),
       info: {
         ...OIDC_CLAIMS,
         ...(state.contact.info || {}),
@@ -55,8 +56,8 @@ export let addContactRig = (function (globals) {
 
     let newContact = await appTools.storedData.encryptItem(
       store.contacts,
-        state.wallet.xkeyId,
-        contact,
+      state.wallet.xkeyId,
+      contact,
       false,
     )
 
@@ -274,6 +275,7 @@ export let addContactRig = (function (globals) {
                 state.wallet.xkeyId,
                 {
                   ...state.contact,
+                  updatedAt: (new Date()).toISOString(),
                   info: {
                     ...OIDC_CLAIMS,
                     ...(state.contact.info || {}),
@@ -469,6 +471,7 @@ export let addContactRig = (function (globals) {
             state.wallet.xkeyId,
             {
               ...storedContact,
+              updatedAt: (new Date()).toISOString(),
               info: {
                 // ...OIDC_CLAIMS,
                 ...(storedContact.info || {}),
