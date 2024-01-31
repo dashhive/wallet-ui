@@ -855,3 +855,40 @@ export function readFile(file, callback) {
 
   reader.readAsText(file);
 }
+
+export async function getRandomWords(len = 32) {
+  return await DashPhrase.generate(len)
+}
+
+export function isUniqueAlias(aliases, preferredAlias) {
+  return !aliases[preferredAlias]
+}
+
+export async function getUniqueAlias(aliases, preferredAlias) {
+  let uniqueAlias = preferredAlias
+  let notUnique = !isUniqueAlias(aliases, uniqueAlias)
+
+  if (notUnique) {
+    let aliasArr = uniqueAlias.split('_')
+    let randomWords = (await getRandomWords()).split(' ')
+
+    if (aliasArr.length > 1) {
+      let lastWord = aliasArr.pop()
+      let index = DashPhrase.base2048.indexOf(lastWord);
+
+      if (index < 0) {
+        aliasArr.push(lastWord)
+      } else {
+        aliasArr.push(randomWords[0])
+      }
+    } else {
+      aliasArr.push(randomWords[0])
+    }
+
+    uniqueAlias = aliasArr.join('_')
+
+    return await getUniqueAlias(aliases, uniqueAlias)
+  }
+
+  return uniqueAlias
+}

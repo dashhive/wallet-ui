@@ -4,12 +4,9 @@
     - [x] QR Code
       - [x] Scan
         - [ ] Upload QR image
-    - [x] Backup
-      - [x] Keystore
-    - [x] Disconnect / Logout / Clear Wallet & Contacts
-      - [x] Add confirmation dialog
-    - [x] Lock Wallet (require re-entering decryption password)
-      - [x] Add confirmation dialog
+    - [ ] Break apart `src/rigs/send-or-request.js` into individual dialogs so after you've clicked send or request, you dont see both buttons again.
+      - [ ] Send Dialog
+      - [ ] Request Dialog
   - [ ] Fiat balance from:
     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
     - symbol=DASH${symbol}
@@ -18,7 +15,8 @@
 - [x] Batch generate IndexedDB store addresses on wallet load and after addressIndex is incremented by requesting funds in Send / Request dialog
 - [x] Clicking send with a Zero balance throws an error in console
   - Need dialog/error message to indicate what/why it won't send
-- [ ] Add `updatedAt` property to IndexedDB Stores
-- [ ] Enforce Alias uniqueness on pairing & editing contact
-- [ ] On Pairing check if XkeyID exists in contacts
-- [ ] Make `Remember password for browser session` more secure
+- [ ] On Pairing/Editing contacts:
+  - [x] Enforce unique Aliases
+  - [ ] Check if XkeyID exists
+  - [ ] Should be able to add a contact by normal Dash Address (without Dash URI DIP: aj-contact-scanback features)
+- [x] Add `updatedAt` property to IndexedDB Stores

@@ -131,7 +131,7 @@ const initialState = {
     ) => {
       console.log(
         'handle dialog render',
-        event,
+        state,
       )
     },
     handleClose: (

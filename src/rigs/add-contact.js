@@ -12,6 +12,9 @@ import {
   getStoreData,
   debounce,
   // nobounce,
+  // getRandomWords,
+  getUniqueAlias,
+  isUniqueAlias,
 } from '../helpers/utils.js'
 
 import {
@@ -27,6 +30,8 @@ export let addContactRig = (function (globals) {
     mainApp, wallet, userInfo, contactsList,
     updateAllFunds, walletFunds,
   } = globals;
+
+  let aliases = {}
 
   let debounceField = debounce(async (
     [field, localName], state, event
@@ -255,76 +260,91 @@ export let addContactRig = (function (globals) {
                 preferred_username,
               }
 
-              let {
-                xkeyId,
-                addressKeyId,
-                addressIndex,
-                address: addr,
-              } = await deriveWalletData(
-                xkey,
+              let preferredAlias = await getUniqueAlias(
+                aliases,
+                preferred_username
               )
 
-              console.log(
-                'add contact handleChange parsedAddr',
-                event.target.value,
-                xkey,
-              )
+              // console.log(
+              //   'appState.contacts',
+              //   appState.contacts,
+              //   aliases,
+              //   preferred_username,
+              //   preferredAlias,
+              // )
 
-              let newContact = await appTools.storedData.encryptItem(
-                store.contacts,
-                state.wallet.xkeyId,
-                {
-                  ...state.contact,
-                  updatedAt: (new Date()).toISOString(),
-                  info: {
-                    ...OIDC_CLAIMS,
-                    ...(state.contact.info || {}),
-                    ...info,
-                  },
-                  outgoing: {
-                    ...(state.contact.outgoing || {}),
-                    [xkeyId]: {
-                      addressIndex,
-                      addressKeyId,
-                      address: address || addr,
-                      xkeyId,
-                      xprv,
-                      xpub,
+              if (xkey) {
+                let {
+                  xkeyId,
+                  addressKeyId,
+                  addressIndex,
+                  address: addr,
+                } = await deriveWalletData(
+                  xkey,
+                )
+
+                console.log(
+                  'add contact handleChange parsedAddr',
+                  event.target.value,
+                  xkey,
+                )
+
+                let newContact = await appTools.storedData.encryptItem(
+                  store.contacts,
+                  state.wallet.xkeyId,
+                  {
+                    ...state.contact,
+                    updatedAt: (new Date()).toISOString(),
+                    info: {
+                      ...OIDC_CLAIMS,
+                      ...(state.contact.info || {}),
+                      ...info,
                     },
+                    outgoing: {
+                      ...(state.contact.outgoing || {}),
+                      [xkeyId]: {
+                        addressIndex,
+                        addressKeyId,
+                        address: address || addr,
+                        xkeyId,
+                        xprv,
+                        xpub,
+                      },
+                    },
+                    alias: preferredAlias,
+                    uri: event.target.value,
                   },
-                  alias: preferred_username,
-                  uri: event.target.value,
-                },
-                false,
-              )
+                  false,
+                )
 
-              getStoreData(
-                store.contacts,
-                res => {
-                  if (res) {
-                    appState.contacts = res
+                getStoreData(
+                  store.contacts,
+                  res => {
+                    if (res) {
+                      appState.contacts = res
 
-                    return contactsList.restate({
-                      contacts: res?.sort(sortContactsByAlias),
-                      userInfo,
-                    })
+                      return contactsList.restate({
+                        contacts: res?.sort(sortContactsByAlias),
+                        userInfo,
+                      })
+                    }
+                  },
+                  res => async v => {
+                    res.push(await appTools.storedData.decryptData(v))
                   }
-                },
-                res => async v => {
-                  res.push(await appTools.storedData.decryptData(v))
+                )
+
+                state.contact = newContact
+
+                if (xkeyOrAddr) {
+                  event.target.form.contactAddr.value = xkeyOrAddr
                 }
-              )
-
-              state.contact = newContact
-
-              if (xkeyOrAddr) {
-                event.target.form.contactAddr.value = xkeyOrAddr
-              }
-              if (name) {
-                event.target.form.contactName.value = name
-              }
-              if (preferred_username) {
-                event.target.form.contactAlias.value = preferred_username
+                if (name) {
+                  event.target.form.contactName.value = name
+                }
+                if (preferred_username) {
+                  event.target.form.contactAlias.value = preferredAlias
+                }
               }
             }
           }
@@ -332,6 +352,19 @@ export let addContactRig = (function (globals) {
             event.target?.name === 'contactAlias' &&
             !event?.target?.validity?.patternMismatch
           ) {
+            // console.log(
+            //   'handleInput contactAlias',
+            //   aliases,
+            //   event.target?.value
+            // )
+            if (!isUniqueAlias(aliases, event.target?.value)) {
+              event.target.setCustomValidity(
+                'Alias already used. A unique alias is required.'
+              )
+              event.target.reportValidity()
+              return;
+            }
+
             debounceField(
               ['preferred_username', 'alias'],
               state,
@@ -392,7 +425,15 @@ export let addContactRig = (function (globals) {
             }
           }
         },
-        handleRender: state => {},
+        handleRender: () => {
+          appState.contacts.forEach(
+            ({ alias }) => {
+              if (alias) {
+                aliases[alias] = true
+              }
+            }
+          )
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
@@ -461,6 +502,13 @@ export let addContactRig = (function (globals) {
             event.target.reportValidity()
             return;
           }
+          if (!isUniqueAlias(aliases, String(fde.contactAlias)?.trim())) {
+            event.target.contactAlias.setCustomValidity(
+              'Alias already used. A unique alias is required.'
+            )
+            event.target.reportValidity()
+            return;
+          }
 
           let storedContact = await appTools.storedData.decryptItem(
             store.contacts,
@@ -508,7 +556,7 @@ export let addContactRig = (function (globals) {
             }
           )
 
-          console.log('pairedContact', pairedContact)
+          pairedContact.then(pc => console.log('pairedContact', pc))
 
           addContact.close()
         },
