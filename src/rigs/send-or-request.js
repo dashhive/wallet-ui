@@ -280,7 +280,7 @@ export let sendOrRequestRig = (function (globals) {
               `Ð ${amount || 0}`,
             )
 
-            if (outWallet) {
+            if (outWallet?.addressIndex !== undefined) {
               outWallet.addressIndex = outWallet.addressIndex + 1
               sendWallet = await deriveWalletData(
                 outWallet?.xpub,
@@ -288,6 +288,8 @@ export let sendOrRequestRig = (function (globals) {
                 outWallet.addressIndex,
               )
               address = sendWallet.address
+            } else if(outWallet?.address) {
+              address = outWallet.address
             } else {
               address = to
             }

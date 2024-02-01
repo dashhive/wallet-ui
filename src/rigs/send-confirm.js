@@ -125,7 +125,7 @@ export let sendConfirmRig = (function (globals) {
           }
 
           if (fde.intent === 'send') {
-            if (outWallet) {
+            if (outWallet?.addressIndex !== undefined) {
               addressIndex = (outWallet?.addressIndex || 0) + 1
             }
 

@@ -398,8 +398,8 @@ export async function restate(
 }
 
 export function sortContactsByAlias(a, b) {
-  const aliasA = a.info?.preferred_username?.toUpperCase() || 'zzz';
-  const aliasB = b.info?.preferred_username?.toUpperCase() || 'zzz';
+  const aliasA = a.alias || a.info?.preferred_username?.toUpperCase() || 'zzz';
+  const aliasB = b.alias || b.info?.preferred_username?.toUpperCase() || 'zzz';
 
   if (aliasA < aliasB) {
     return -1;

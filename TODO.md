@@ -17,6 +17,6 @@
   - Need dialog/error message to indicate what/why it won't send
 - [ ] On Pairing/Editing contacts:
   - [x] Enforce unique Aliases
+  - [x] Should be able to add a contact by normal Dash Address (without Dash URI DIP: aj-contact-scanback features)
   - [ ] Check if XkeyID exists
-  - [ ] Should be able to add a contact by normal Dash Address (without Dash URI DIP: aj-contact-scanback features)
 - [x] Add `updatedAt` property to IndexedDB Stores

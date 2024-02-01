@@ -13,6 +13,8 @@ import {
   debounce,
   // nobounce,
   getAvatar,
+  getUniqueAlias,
+  isUniqueAlias,
 } from '../helpers/utils.js'
 
 import {
@@ -28,6 +30,9 @@ export let editContactRig = (function (globals) {
     mainApp, wallet, userInfo, contactsList,
     updateAllFunds, walletFunds,
   } = globals;
+
+  let aliases = {}
+  let startAlias = ''
 
   let debounceField = debounce(async (
     [field, localName], state, event
@@ -237,20 +242,50 @@ export let editContactRig = (function (globals) {
                 preferred_username,
               }
 
-              let {
-                xkeyId,
-                addressKeyId,
-                addressIndex,
-                address: addr,
-              } = await deriveWalletData(
-                xkey,
+              let preferredAlias = await getUniqueAlias(
+                aliases,
+                preferred_username
               )
 
-              console.log(
-                'add contact handleChange parsedAddr',
-                event.target.value,
-                xkey,
-              )
+              let outgoing = {}
+
+              if (!xkey && address) {
+                outgoing = {
+                  ...(state.contact.outgoing || {}),
+                  [address]: {
+                    address,
+                  },
+                }
+              }
+
+              if (xkey) {
+                let {
+                  xkeyId,
+                  addressKeyId,
+                  addressIndex,
+                  address: addr,
+                } = await deriveWalletData(
+                  xkey,
+                )
+
+                console.log(
+                  'add contact handleChange parsedAddr',
+                  event.target.value,
+                  xkey,
+                )
+
+                outgoing = {
+                  ...(state.contact.outgoing || {}),
+                  [xkeyId]: {
+                    addressIndex,
+                    addressKeyId,
+                    address: address || addr,
+                    xkeyId,
+                    xprv,
+                    xpub,
+                  },
+                }
+              }
 
               let modifyContact = await appTools.storedData.encryptItem(
                 store.contacts,
@@ -263,18 +298,8 @@ export let editContactRig = (function (globals) {
                     ...(state.contact.info || {}),
                     ...info,
                   },
-                  outgoing: {
-                    ...(state.contact.outgoing || {}),
-                    [xkeyId]: {
-                      addressIndex,
-                      addressKeyId,
-                      address: address || addr,
-                      xkeyId,
-                      xprv,
-                      xpub,
-                    },
-                  },
-                  alias: preferred_username,
+                  outgoing,
+                  alias: preferredAlias,
                   uri: event.target.value,
                 },
                 false,
@@ -310,10 +335,27 @@ export let editContactRig = (function (globals) {
               }
             }
           }
-          if (event.target?.name === 'contactAlias') {
+          if (
+            event.target?.name === 'contactAlias' &&
+            !event?.target?.validity?.patternMismatch
+          ) {
+            if (
+              startAlias !== event.target?.value &&
+              !isUniqueAlias(aliases, event.target?.value)
+            ) {
+              event.target.setCustomValidity(
+                'Alias already used. A unique alias is required.'
+              )
+              event.target.reportValidity()
+              return;
+            }
+
             debounceField(['preferred_username', 'alias'], state, event)
           }
-          if (event.target?.name === 'contactName') {
+          if (
+            event.target?.name === 'contactName' &&
+            !event?.target?.validity?.patternMismatch
+          ) {
             debounceField(['name'], state, event)
           }
         },
@@ -350,7 +392,17 @@ export let editContactRig = (function (globals) {
             return;
           }
         },
-        handleRender: state => {},
+        handleRender: (state) => {
+          startAlias = state.contact.alias
+
+          appState.contacts.forEach(
+            ({ alias }) => {
+              if (alias) {
+                aliases[alias] = true
+              }
+            }
+          )
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
@@ -371,7 +423,6 @@ export let editContactRig = (function (globals) {
           )
 
           if (['send','request'].includes(String(fde?.intent))) {
-
             editContact.close()
 
             appDialogs.sendOrRequest.render({
@@ -406,9 +457,21 @@ export let editContactRig = (function (globals) {
             return;
           }
 
-          if (!String(fde.contactAlias)?.trim()) {
+          let currentAlias = String(fde.contactAlias)?.trim()
+
+          if (!currentAlias) {
             event.target.contactAlias.setCustomValidity(
               'An alias is required'
+            )
+            event.target.reportValidity()
+            return;
+          }
+          if (
+            startAlias !== currentAlias &&
+            !isUniqueAlias(aliases, currentAlias)
+          ) {
+            event.target.contactAlias.setCustomValidity(
+              'Alias already used. A unique alias is required.'
             )
             event.target.reportValidity()
             return;
