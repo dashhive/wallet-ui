@@ -129,10 +129,10 @@ const initialState = {
       // resolve = res=>{},
       // reject = res=>{},
     ) => {
-      console.log(
-        'handle dialog render',
-        state,
-      )
+      // console.log(
+      //   'handle dialog render',
+      //   state,
+      // )
     },
     handleClose: (
       state,

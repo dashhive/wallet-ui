@@ -513,6 +513,27 @@ async function main() {
         // .catch(console.error)
     }
   })
+  document.addEventListener('input', async event => {
+    let {
+      // @ts-ignore
+      name: fieldName, form,
+    } = event?.target
+
+    if (
+      fieldName === 'show_pass'
+    ) {
+      event.stopPropagation()
+      event.preventDefault()
+
+      let { pass, show_pass, } = form
+
+      if (show_pass?.checked) {
+        pass.type = 'text'
+      } else {
+        pass.type = 'password'
+      }
+    }
+  })
   document.addEventListener('change', async event => {
     let {
       // @ts-ignore
@@ -690,6 +711,7 @@ async function main() {
       appDialogs.walletBackup.render(
         {
           wallet,
+          wallets,
         },
         'afterend',
       )
