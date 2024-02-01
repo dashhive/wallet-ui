@@ -66,20 +66,37 @@ const initialState = {
         </article>
       `
     }
-    let paired = Object.keys(c?.outgoing || {}).length > 0
+    let outgoing = Object.values(c?.outgoing || {})
+    let paired = outgoing.length > 0
+    let out = outgoing?.[0]
     let created = c.createdAt
       ? timeago(Date.now() - (new Date(c.createdAt)).getTime())
       : ''
+    let user = c.alias || c.info?.preferred_username
     let finishPairing = !paired
       ? 'Finish pairing with contact'
       : ''
-    let user = c.alias || c.info?.preferred_username
-    let name = c.info?.name || created
+    let enterContactInfo = !paired || !user
+      ? `Enter contact information for`
+      : ''
+    let name = c.info?.name
+
+    if (
+      !name &&
+      !user &&
+      !out?.xkeyId &&
+      out?.address
+    ) {
+      name = out?.address
+    } else {
+      name = created
+    }
+
     let inId = Object.keys(c?.incoming || {})?.[0]?.split('/')[1]
 
     let itemAlias = user
       ? `@${user}${ !paired ? ' - ' : '' }${finishPairing}`
-      : finishPairing
+      : finishPairing || enterContactInfo
     let itemName = name
       ? `${name}`
       : ''

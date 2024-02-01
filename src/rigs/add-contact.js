@@ -275,7 +275,13 @@ export let addContactRig = (function (globals) {
               // )
               let outgoing = {}
 
+              let existingContacts
+
               if (!xkey && address) {
+                existingContacts = appState.contacts.filter(
+                  c => c.outgoing?.[address]
+                )
+
                 outgoing = {
                   ...(state.contact.outgoing || {}),
                   [address]: {
@@ -294,6 +300,10 @@ export let addContactRig = (function (globals) {
                   xkey,
                 )
 
+                existingContacts = appState.contacts.filter(
+                  c => c.outgoing?.[xkeyId]
+                )
+
                 outgoing = {
                   ...(state.contact.outgoing || {}),
                   [xkeyId]: {
@@ -310,6 +320,19 @@ export let addContactRig = (function (globals) {
                   'add contact handleInput parsedAddr',
                   event.target.value,
                   xkey,
+                )
+              }
+
+              if (existingContacts?.length > 0) {
+                console.warn(
+                  `You've already paired with this contact`,
+                  {
+                    existingContacts,
+                    newContact: {
+                      alias: preferredAlias,
+                      outgoing,
+                    }
+                  }
                 )
               }
 

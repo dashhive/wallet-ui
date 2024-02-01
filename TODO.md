@@ -15,8 +15,8 @@
 - [x] Batch generate IndexedDB store addresses on wallet load and after addressIndex is incremented by requesting funds in Send / Request dialog
 - [x] Clicking send with a Zero balance throws an error in console
   - Need dialog/error message to indicate what/why it won't send
-- [ ] On Pairing/Editing contacts:
+- [x] On Pairing/Editing contacts:
   - [x] Enforce unique Aliases
   - [x] Should be able to add a contact by normal Dash Address (without Dash URI DIP: aj-contact-scanback features)
-  - [ ] Check if XkeyID exists
+  - [x] Check if XkeyID exists
 - [x] Add `updatedAt` property to IndexedDB Stores
