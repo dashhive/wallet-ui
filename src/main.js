@@ -6,6 +6,7 @@ import {
   envoy,
   sortContactsByAlias,
   getStoreData,
+  formDataEntries,
 } from './helpers/utils.js'
 
 import {
@@ -489,11 +490,18 @@ async function main() {
       name: formName, parentElement, form,
     } = event?.target
 
+    let fde = formDataEntries(event)
+
     if (formName === 'send_or_request') {
       event.preventDefault()
       event.stopPropagation()
+      let name = 'Send Funds'
+      if (fde.intent === 'request') {
+        name = 'Request Funds'
+      }
 
       appDialogs.sendOrRequest.render({
+        action: fde.intent,
         wallet,
         account: appState.account,
         // accounts,

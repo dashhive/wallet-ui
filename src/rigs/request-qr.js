@@ -54,7 +54,7 @@ export let requestQrRig = (function (globals) {
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${fixedDash(roundUsing(Math.ceil, state.amount))}
+                ${state.amount}
               </div>
             </figure>
           </article>

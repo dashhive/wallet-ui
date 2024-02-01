@@ -22,45 +22,91 @@ export let sendOrRequestRig = (function (globals) {
     mainApp,
     {
       name: 'Send or Request',
+      sendName: 'Send Funds',
       sendTxt: 'Send',
       sendAlt: 'Send Dash',
       scanAlt: 'Scan a QR Code',
+      requestName: 'Request Funds',
       requestTxt: 'Request',
       requestAlt: 'Request Dash',
+      actionTxt: 'Send',
+      actionAlt: 'Send Dash',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel Form`,
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
       <use xlink:href="#icon-x"></use>
     </svg>`,
       closeAlt: `Close`,
-      footer: state => html`
-        <footer class="inline row">
-          <button
-            class="rounded"
-            type="submit"
-            name="intent"
-            value="send"
-            title="${state.sendAlt}"
-          >
+      action: 'send',
+      submitIcon: state => {
+        const icon = {
+          send: html`
             <svg width="24" height="24" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-up"></use>
             </svg>
-            <span>${state.sendTxt}</span>
-          </button>
+          `,
+          request: html`
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-arrow-circle-down"></use>
+            </svg>
+          `,
+        }
+        return icon[state.action]
+      },
+      actionBtn: state => {
+        if (state.action === 'send') {
+          state.actionTxt = state.sendTxt
+          state.actionAlt = state.sendAlt
+        }
+        if (state.action === 'request') {
+          state.actionTxt = state.requestTxt
+          state.actionAlt = state.requestAlt
+        }
+
+        return html`
           <button
             class="rounded"
             type="submit"
             name="intent"
-            value="request"
-            title="${state.requestAlt}"
+            value="${state.action}"
+            title="${state.actionAlt}"
           >
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <use xlink:href="#icon-arrow-circle-down"></use>
-            </svg>
-            <span>${state.requestTxt}</span>
+            ${state.submitIcon(state)}
+            <span>${state.actionTxt}</span>
           </button>
+        `
+      },
+      footer: state => html`
+        <footer class="inline row">
+          <button
+            class="rounded outline"
+            type="reset"
+            name="intent"
+            value="cancel"
+            title="${state.cancelAlt}"
+          >
+            <span>${state.cancelTxt}</span>
+          </button>
+          ${state.actionBtn(state)}
         </footer>
       `,
+      header: state => {
+        if (state.action === 'send') {
+          state.name = state.sendName
+        }
+        if (state.action === 'request') {
+          state.name = state.requestName
+        }
+
+        return html`
+          <header>
+            <strong>${state.name}</strong>
+            ${
+              state.closeTxt && html`<button class="link" type="reset" value="close" title="${state.closeAlt}"><span>${state.closeTxt}</span></button>`
+            }
+          </header>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
@@ -255,17 +301,23 @@ export let sendOrRequestRig = (function (globals) {
             return;
           }
 
-          if (fde.intent === 'send' && (!fde.amount || Number(fde.amount) === 0)) {
+          let inWallet, outWallet, address, tx, contact
+          let to = String(fde.to), amount = Number(fde.amount)
+          let receiveWallet = {}, sendWallet = {}
+
+          if (
+            fde.intent === 'send' &&
+            (
+              !fde.amount ||
+              amount === 0
+            )
+          ) {
             event.target.amount.setCustomValidity(
               'You must specify an amount to send'
             )
             event.target.amount.reportValidity()
             return;
           }
-
-          let inWallet, outWallet, address, tx, contact
-          let to = String(fde.to), amount = Number(fde.amount)
-          let receiveWallet = {}, sendWallet = {}
 
           if (to.startsWith('@')) {
             contact = state.contacts.find(c => c.alias === to.substring(1))
@@ -444,13 +496,14 @@ export let sendOrRequestRig = (function (globals) {
                 // })
 
               console.log(
-                `${fde.intent} TO CONTACT`,
+                `${fde.intent} FROM CONTACT`,
                 `Ð ${fde.amount || 0}`,
                 {
                   contact,
                   stateWallet: state.wallet,
                   inWallet,
                   receiveWallet,
+                  amount,
                 }
               )
 

@@ -4,9 +4,9 @@
     - [x] QR Code
       - [x] Scan
         - [ ] Upload QR image
-    - [ ] Break apart `src/rigs/send-or-request.js` into individual dialogs so after you've clicked send or request, you dont see both buttons again.
-      - [ ] Send Dialog
-      - [ ] Request Dialog
+    - [x] Modify `src/rigs/send-or-request.js` to toggle between send & request, not show both
+      - [x] Send Dialog
+      - [x] Request Dialog
   - [ ] Fiat balance from:
     - https://rates2.dashretail.org/rates?source=dashretail&%7B%7D=
     - symbol=DASH${symbol}

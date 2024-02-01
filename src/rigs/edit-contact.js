@@ -426,6 +426,7 @@ export let editContactRig = (function (globals) {
             editContact.close()
 
             appDialogs.sendOrRequest.render({
+              action: fde.intent,
               wallet: state.wallet,
               account: appState.account,
               userInfo,
