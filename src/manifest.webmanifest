@@ -1,26 +1,34 @@
 {
   "name": "Dash Incubator Wallet",
-  "short_name": "diwui",
+  "short_name": "Incubator Wallet",
   "description": "A Graphical User Interface (GUI) for DashWallet.js",
-  "start_url": "/wallet-ui/",
-  "scope": "/wallet-ui/",
+  "categories": [
+    "finance",
+    "lifestyle",
+    "productivity",
+    "security",
+    "shopping",
+    "social"
+  ],
+  "start_url": "/",
+  "scope": "/",
   "dir": "auto",
   "lang": "en-US",
   "display": "standalone",
   "orientation": "portrait",
-	"background_color": "#eeeeee",
+	"background_color": "#0c1217",
 	"theme_color": "#111921",
   "icons": [
     {
-      "src": "../public/icons/dash-d-rounded-square-250.png",
-      "sizes": "250x250",
+      "src": "/public/icons/dash-incubator-circle.png",
+      "sizes": "176x176",
       "type": "image/png"
     }
   ],
   "protocol_handlers": [
     {
       "protocol": "web+dash",
-      "url": "/wallet-ui/contact?to=%s"
+      "url": "/contact?to=%s"
     }
   ]
 }
