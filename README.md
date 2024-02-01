@@ -43,6 +43,9 @@ A Graphical User Interface (GUI) for
   - [ ] Fix any bugs that arise
 
 ### Stage 2
+- [ ] PWA Improvements & Fixes
+  - [ ] Fix White Screen of Death
+- [ ] Mobile Improvements
 - [ ] Display Wallet balance in desired fiat currency
 - [ ] Settings
   - [ ] Preferred fiat Currency (USD, GBP, EUR, etc)
