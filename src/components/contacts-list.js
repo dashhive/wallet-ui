@@ -88,7 +88,7 @@ const initialState = {
       out?.address
     ) {
       name = out?.address
-    } else {
+    } else if (!name) {
       name = created
     }
 
