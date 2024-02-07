@@ -74,9 +74,9 @@ export let phraseImportRig = (function (globals) {
           </svg>
           <span>
             Select a <br/>
-            <strong>
-              <u>Keystore</u> or <u>Backup</u>
-            </strong><br/>
+            <strong>Keystore</strong>
+            or
+            <strong>Backup</strong><br/>
             file
           </span>
         `
@@ -122,6 +122,7 @@ export let phraseImportRig = (function (globals) {
                 placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
                 pattern="${PHRASE_REGEX.source}"
                 spellcheck="false"
+                autocomplete="off"
               />
               <label title="Show/Hide Phrase">
                 <input name="show_pass" type="checkbox" />
@@ -152,6 +153,7 @@ export let phraseImportRig = (function (globals) {
                 pattern="${ALIAS_REGEX.source}"
                 required
                 spellcheck="false"
+                autocomplete="off"
               />
             </div>
             <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>

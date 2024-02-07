@@ -92,6 +92,7 @@ export let editProfileRig = (function (globals) {
                   pattern="${ALIAS_REGEX.source}"
                   required
                   spellcheck="false"
+                  autocomplete="off"
                 />
               </div>
               <p>Alias others can call you (similar to a @username)</p>

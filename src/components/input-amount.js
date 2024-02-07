@@ -25,6 +25,7 @@ const initialState = {
         min="0"
         step=".00001"
         spellcheck="false"
+        autocomplete="off"
       />
     </div>
 

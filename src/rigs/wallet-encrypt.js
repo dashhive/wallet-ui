@@ -55,6 +55,7 @@ export let walletEncryptRig = (function (globals) {
                 minlength="1"
                 required
                 spellcheck="false"
+                autocomplete="off"
               />
               <label title="Show/Hide Password">
                 <input name="show_pass" type="checkbox" />

@@ -54,6 +54,7 @@ export let phraseBackupRig = (function (globals) {
                 <div
                   class="ta-left"
                   spellcheck="false"
+                  autocomplete="off"
                 >
                   ${phraseToEl(
                     state.wallet?.recoveryPhrase

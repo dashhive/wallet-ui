@@ -192,6 +192,7 @@ export let editContactRig = (function (globals) {
                   placeholder="your_alias"
                   pattern="${ALIAS_REGEX.source}"
                   spellcheck="false"
+                  autocomplete="off"
                   value="${state.contact?.alias}"
                 />
               </div>

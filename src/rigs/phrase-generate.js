@@ -60,6 +60,7 @@ export let phraseGenerateRig = (function (globals) {
                 pattern="${ALIAS_REGEX.source}"
                 required
                 spellcheck="false"
+                autocomplete="off"
               />
             </div>
 

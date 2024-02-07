@@ -72,6 +72,7 @@ const initialState = {
       placeholder="Do Something"
       minlength="1"
       spellcheck="false"
+      autocomplete="off"
     />
 
     <p>Some instructions</p>

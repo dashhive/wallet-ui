@@ -122,6 +122,7 @@ export let sendOrRequestRig = (function (globals) {
                 name="to"
                 placeholder="enter @alias or dash address"
                 spellcheck="false"
+                autocomplete="off"
                 list="contactAliases"
                 value="${state.to || ''}"
               />
