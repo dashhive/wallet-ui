@@ -2,7 +2,7 @@ name: Deploy static site
 
 on:
   push:
-    branches: ["master","feat/*"]
+    branches: ["master","feat/*","fix/*"]
   workflow_dispatch:
 
 # Allow one concurrent deployment
@@ -32,9 +32,10 @@ jobs:
       - name: Get clean branch name
         id: clean_branch
         env:
-          RM_FEAT: "feat/"
+          REPLACE_SLASH: "/"
+          WITH_DASH: "-"
         run: |
-          export BRANCH=${GITHUB_REF_NAME//$RM_FEAT/}
+          export BRANCH=${GITHUB_REF_NAME//$REPLACE_SLASH/$WITH_DASH}
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
       - name: Deploy via rsync
         uses: bnnanet/github-actions-rsync@master
