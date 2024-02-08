@@ -782,7 +782,7 @@ async function main() {
         // target: '',
         // targetFallback: 'this wallet',
         actionType: 'dang',
-        submitIcon: state => `💣`,
+        submitIcon: state => `🧹`, // `💣`,
         alert: state => html`
           <div class="flex px-3 ta-left col">
             <sub class="ta-left my-0">
