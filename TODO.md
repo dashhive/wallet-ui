@@ -34,7 +34,7 @@
 - [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
 
 #### General
-- [ ] Dialog: Confirm Wallet Lock buttons need `line-height: 1;`
+- [x] Dialog: Confirm Wallet Lock buttons need `line-height: 1;`
 - [x] ~~Backup Keystore & Show Seed Phrase failed on initial load but worked after browser refresh~~
   - should be fixed by <https://github.com/dashhive/wallet-ui/commit/b511813db1f432cb80db8a3ffc5d4fc06a897aee>
 
