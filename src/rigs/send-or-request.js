@@ -234,11 +234,11 @@ export let sendOrRequestRig = (function (globals) {
               console.log(
                 'handleInput parsedAddr',
                 event.target.value,
-                xkey,
+                xkeyOrAddr,
               )
 
-              if (xkeyOrAddr) {
-                event.target.form.to.value = xkeyOrAddr
+              if (address) {
+                event.target.form.to.value = address
               }
 
               if (amount) {
@@ -288,9 +288,17 @@ export let sendOrRequestRig = (function (globals) {
                 showScan,
                 parsedScan,
               )
+              let {
+                address,
+                amount,
+              } = parsedScan
 
-              if (parsedScan?.address) {
-                event.target.to.value = parsedScan.address
+              if (address) {
+                event.target.to.value = address
+              }
+
+              if (amount) {
+                event.target.amount.value = amount
               }
             }
             return;
