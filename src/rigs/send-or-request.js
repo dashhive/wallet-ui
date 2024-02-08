@@ -131,7 +131,7 @@ export let sendOrRequestRig = (function (globals) {
                 class="rounded outline"
                 type="submit"
                 name="intent"
-                value="scan_new_contact"
+                value="scan_qr_code"
                 title="${state.scanAlt}"
               >
                 <span>
@@ -271,7 +271,7 @@ export let sendOrRequestRig = (function (globals) {
           //   [event.target],
           // )
 
-          if (fde?.intent === 'scan_new_contact') {
+          if (fde?.intent === 'scan_qr_code') {
             appDialogs.scanContact.render(
               {
                 wallet: state.wallet,
@@ -280,16 +280,18 @@ export let sendOrRequestRig = (function (globals) {
             )
 
             let showScan = await appDialogs.scanContact.showModal()
-            console.log(
-              'showScan',
-              showScan,
-              // scanContact,
-              // scanContact?.element?.returnValue
-            )
-            let [, addr] = showScan?.split('dash://')
-            if (addr) {
-              // event.target.addr.value = addr
-              event.target.to.value = showScan
+            if (showScan !== 'cancel') {
+              let parsedScan = parseAddressField(showScan)
+
+              console.log(
+                'showScan',
+                showScan,
+                parsedScan,
+              )
+
+              if (parsedScan?.address) {
+                event.target.to.value = parsedScan.address
+              }
             }
             return;
           }
