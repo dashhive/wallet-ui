@@ -110,6 +110,12 @@ const initialState = {
     handleDragOver: state => event => {
       event.preventDefault()
     },
+    handleDragEnd: state => event => {
+      event.preventDefault()
+    },
+    handleDragLeave: state => event => {
+      event.preventDefault()
+    },
     handleChange: state => event => {
       event.preventDefault()
       if (
@@ -296,16 +302,29 @@ export function setupDialog(
       'change',
       state.events.handleChange(state),
     )
-    addListener(
-      form,
-      'drop',
-      state.events.handleDrop(state),
-    )
-    addListener(
-      form,
-      'dragover',
-      state.events.handleDragOver(state),
-    )
+    let updrop = form.querySelector('.updrop')
+    if (updrop) {
+      addListener(
+        updrop,
+        'drop',
+        state.events.handleDrop(state),
+      )
+      addListener(
+        updrop,
+        'dragover',
+        state.events.handleDragOver(state),
+      )
+      addListener(
+        updrop,
+        'dragend',
+        state.events.handleDragEnd(state),
+      )
+      addListener(
+        updrop,
+        'dragleave',
+        state.events.handleDragLeave(state),
+      )
+    }
     addListener(
       form,
       'input',

@@ -90,6 +90,9 @@ export let phraseImportRig = (function (globals) {
         `
       },
       updrop: state => html`
+        <label for="keystore">
+          Keystore or Backup
+        </label>
         <label for="keystore" class="updrop">
           <input
             type="file"
@@ -105,39 +108,45 @@ export let phraseImportRig = (function (globals) {
         ${state.header(state)}
 
         <fieldset>
-          <article>
-            ${state.updrop(state)}
+          <section class="group">
+            <article class="${state.keystoreFile ? 'dropped' : ''}">
+              ${state.updrop(state)}
 
-            <div class="error"></div>
-          </article>
-          <article>
-            <label for="phrase">
-              Seed Phrase
-            </label>
-            <div class="password">
-              <input
-                type="password"
-                id="phrase"
-                name="pass"
-                placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
-                pattern="${PHRASE_REGEX.source}"
-                spellcheck="false"
-                autocomplete="off"
-              />
-              <label title="Show/Hide Phrase">
-                <input name="show_pass" type="checkbox" />
-                <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
-                  <use xlink:href="#icon-eye-open"></use>
-                </svg>
-                <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
-                  <use xlink:href="#icon-eye-closed"></use>
-                </svg>
+              <div class="error"></div>
+            </article>
+
+            <div>OR</div>
+
+            <article class="">
+              <label for="phrase">
+                Seed Phrase
               </label>
-            </div>
-            <p>Import an existing wallet by pasting a 12 word seed phrase.</p>
+              <div class="password">
+                <input
+                  type="password"
+                  id="phrase"
+                  name="pass"
+                  placeholder="zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo zoo wrong"
+                  pattern="${PHRASE_REGEX.source}"
+                  spellcheck="false"
+                  autocomplete="off"
+                  ${state.keystoreFile ? 'disabled' : ''}
+                />
+                <label title="Show/Hide Phrase">
+                  <input name="show_pass" type="checkbox" />
+                  <svg class="open-eye" width="24" height="24" viewBox="0 0 32 32">
+                    <use xlink:href="#icon-eye-open"></use>
+                  </svg>
+                  <svg class="closed-eye" width="24" height="24" viewBox="0 0 24 24">
+                    <use xlink:href="#icon-eye-closed"></use>
+                  </svg>
+                </label>
+              </div>
+              <p>Import an existing wallet by pasting a 12 word seed phrase.</p>
 
-            <div class="error"></div>
-          </article>
+              <div class="error"></div>
+            </article>
+          </section>
           <article>
             <label for="${state.slugs.form}_alias">
               Alias
@@ -171,25 +180,65 @@ export let phraseImportRig = (function (globals) {
           event.stopPropagation()
           // console.log(
           //   'PHRASE IMPORT DRAG OVER',
-          //   state, event.target,
-          //   event?.dataTransfer?.items,
-          //   event.target.files
+          //   // state,
+          //   event.target,
+          //   // event?.dataTransfer?.items,
+          //   // event.target.files,
           // )
+
+          if (
+            event.target.classList.contains('updrop')
+          ) {
+            event.target.classList.add('drag-over')
+          }
+        },
+        handleDragLeave: state => async event => {
+          event.preventDefault()
+          event.stopPropagation()
+          // console.log(
+          //   'PHRASE IMPORT DRAG LEAVE',
+          //   // state,
+          //   event.target,
+          //   // event?.dataTransfer?.items,
+          //   // event.target.files,
+          // )
+
+          if (
+            event.target.classList.contains('updrop')
+          ) {
+            event.target.classList.remove('drag-over')
+          }
+        },
+        handleDragEnd: state => async event => {
+          event.preventDefault()
+          event.stopPropagation()
+          // console.log(
+          //   'PHRASE IMPORT DRAG END',
+          //   // state,
+          //   event.target,
+          //   // event?.dataTransfer?.items,
+          //   // event.target.files,
+          // )
+
+          if (
+            event.target.classList.contains('updrop')
+          ) {
+            event.target.classList.add('dropped')
+          }
         },
         handleDrop: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          console.log(
-            'PHRASE IMPORT DROP',
-            state, event.target,
-            event?.dataTransfer?.items,
-            event.target.files
-          )
+          // console.log(
+          //   'PHRASE IMPORT DROP',
+          //   state, event.target,
+          //   event?.dataTransfer?.items,
+          //   event.target.files
+          // )
+
 
           if (event.dataTransfer.items) {
-            // Use DataTransferItemList interface to access the file(s)
             [...event.dataTransfer.items].forEach((item, i) => {
-              // If dropped items aren't files, reject them
               if (item.kind === "file") {
                 const file = item.getAsFile();
                 // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
@@ -202,9 +251,7 @@ export let phraseImportRig = (function (globals) {
               }
             });
           } else {
-            // Use DataTransfer interface to access the file(s)
             [...event.dataTransfer.files].forEach((file, i) => {
-              // console.log(`FILES file[${i}].name = ${file.name}`, file);
               readFile(
                 file,
                 processFile(state, event),

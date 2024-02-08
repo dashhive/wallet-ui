@@ -244,11 +244,17 @@ dialog.responsive fieldset:last-of-type:not(:first-of-type) {
 dialog.responsive fieldset section {
   padding: 1rem;
 }
+dialog.responsive fieldset section.group {
+  padding: 0;
+}
 dialog.responsive fieldset section article {
   flex-direction: row;
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
+}
+dialog.responsive fieldset section.group article {
+  flex-direction: column;
 }
 
 dialog.responsive button[type="submit"] {

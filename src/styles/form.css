@@ -73,6 +73,7 @@ form fieldset .password {
   flex-direction: row;
   /* border-radius: 6.25rem; */
   align-items: center;
+  width: 100%;
 }
 form fieldset div.input {
   display: flex;
@@ -637,6 +638,14 @@ form[name="network"] {
   cursor: pointer;
   text-transform: none;
 }
+.updrop.drag-over {
+  border-style: solid;
+}
+.dropped .updrop,
+.updrop.dropped {
+  background-color: var(--dark-900);
+  border: 2px solid var(--dark-600);
+}
 .updrop input[type=file] {
   width: 0.1px;
   height: 0.1px;
@@ -644,6 +653,9 @@ form[name="network"] {
   overflow: hidden;
   position: absolute;
   z-index: -1;
+}
+.updrop * {
+  pointer-events: none;
 }
 .updrop svg {
   color: var(--dark-500);
@@ -669,6 +681,10 @@ form[name="network"] {
 .updrop[for="keystore"] span strong {
   font-size: 1rem;
   line-height: 2;
+}
+
+.dropped ~ article {
+  opacity: .35;
 }
 
 
