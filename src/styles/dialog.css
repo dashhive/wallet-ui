@@ -258,6 +258,7 @@ dialog.responsive footer button[type="reset"],
 dialog.responsive footer button[type="submit"] {
   flex: 1 1 50%;
   border: 1px solid transparent;
+  line-height: 1;
 }
 dialog.responsive footer button[type="reset"] {
   border: 1px solid var(--dark-200);
