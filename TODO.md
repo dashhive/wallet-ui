@@ -28,7 +28,7 @@
 - [ ] Copy Buttons don't seem to work reliably
 - [x] ~~Toggle Show/Hide password fields is also sketchy~~
   - should be fixed by <https://github.com/dashhive/wallet-ui/commit/b511813db1f432cb80db8a3ffc5d4fc06a897aee>
-- [ ] Pairing via QR Code looks like it works, yet clicking save ends with an unpaired contact
+- [x] Pairing via QR Code looks like it works, yet clicking save ends with an unpaired contact
 - [ ] Unique Alias Collision with only the one contact you're trying to pair with
 - [ ] Encrypted Full Backup & Backup Keystore fail to open "Save file dialog" in brave on android
 - [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
