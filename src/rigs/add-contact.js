@@ -89,6 +89,144 @@ export let addContactRig = (function (globals) {
     )
   }, 1000)
 
+  async function processURI(state, target, value) {
+    let {
+      address,
+      xpub,
+      xprv,
+      name,
+      preferred_username,
+      sub,
+    } = parseAddressField(value)
+
+    let xkey = xprv || xpub
+
+    let xkeyOrAddr = xkey || address
+
+    let info = {
+      name: name || '',
+      sub,
+      preferred_username,
+    }
+
+    let preferredAlias = await getUniqueAlias(
+      aliases,
+      preferred_username
+    )
+
+    let outgoing = {}
+
+    let existingContacts
+
+    if (!xkey && address) {
+      existingContacts = appState.contacts.filter(
+        c => c.outgoing?.[address]
+      )
+
+      outgoing = {
+        ...(state.contact.outgoing || {}),
+        [address]: {
+          address,
+        },
+      }
+    }
+
+    if (xkey) {
+      let {
+        xkeyId,
+        addressKeyId,
+        addressIndex,
+        address: addr,
+      } = await deriveWalletData(
+        xkey,
+      )
+
+      existingContacts = appState.contacts.filter(
+        c => c.outgoing?.[xkeyId]
+      )
+
+      outgoing = {
+        ...(state.contact.outgoing || {}),
+        [xkeyId]: {
+          addressIndex,
+          addressKeyId,
+          address: address || addr,
+          xkeyId,
+          xprv,
+          xpub,
+        },
+      }
+
+      console.log(
+        'add contact handleInput parsedAddr',
+        value,
+        xkey,
+      )
+    }
+
+    if (existingContacts?.length > 0) {
+      console.warn(
+        `You've already paired with this contact`,
+        {
+          existingContacts,
+          newContact: {
+            alias: preferredAlias,
+            outgoing,
+          }
+        }
+      )
+    }
+
+    let newContact = await appTools.storedData.encryptItem(
+      store.contacts,
+      state.wallet.xkeyId,
+      {
+        ...state.contact,
+        updatedAt: (new Date()).toISOString(),
+        info: {
+          ...OIDC_CLAIMS,
+          ...(state.contact.info || {}),
+          ...info,
+        },
+        outgoing,
+        alias: preferredAlias,
+        uri: value,
+      },
+      false,
+    )
+
+    getStoreData(
+      store.contacts,
+      res => {
+        if (res) {
+          appState.contacts = res
+
+          return contactsList.restate({
+            contacts: res?.sort(sortContactsByAlias),
+            userInfo,
+          })
+        }
+      },
+      res => async v => {
+        res.push(await appTools.storedData.decryptData(v))
+      }
+    )
+
+    state.contact = newContact
+
+    if (xkeyOrAddr) {
+      target.contactAddr.value = xkeyOrAddr
+    }
+    if (name) {
+      target.contactName.value = name
+    }
+    if (preferred_username) {
+      target.contactAlias.value = preferredAlias
+    }
+
+    return
+  }
+
   let addContact = setupDialog(
     mainApp,
     {
@@ -243,146 +381,11 @@ export let addContactRig = (function (globals) {
 
           if (event.target?.name === 'contactAddr') {
             if (event.target?.value) {
-              let {
-                address,
-                xpub,
-                xprv,
-                name,
-                preferred_username,
-                sub,
-              } = parseAddressField(event.target.value)
-
-              let xkey = xprv || xpub
-
-              let xkeyOrAddr = xkey || address
-
-              let info = {
-                name: name || '',
-                sub,
-                preferred_username,
-              }
-
-              let preferredAlias = await getUniqueAlias(
-                aliases,
-                preferred_username
+              processURI(
+                state,
+                event.target.form,
+                event.target.value,
               )
-
-              // console.log(
-              //   'appState.contacts',
-              //   appState.contacts,
-              //   // aliases,
-              //   // preferred_username,
-              //   // preferredAlias,
-              // )
-              let outgoing = {}
-
-              let existingContacts
-
-              if (!xkey && address) {
-                existingContacts = appState.contacts.filter(
-                  c => c.outgoing?.[address]
-                )
-
-                outgoing = {
-                  ...(state.contact.outgoing || {}),
-                  [address]: {
-                    address,
-                  },
-                }
-              }
-
-              if (xkey) {
-                let {
-                  xkeyId,
-                  addressKeyId,
-                  addressIndex,
-                  address: addr,
-                } = await deriveWalletData(
-                  xkey,
-                )
-
-                existingContacts = appState.contacts.filter(
-                  c => c.outgoing?.[xkeyId]
-                )
-
-                outgoing = {
-                  ...(state.contact.outgoing || {}),
-                  [xkeyId]: {
-                    addressIndex,
-                    addressKeyId,
-                    address: address || addr,
-                    xkeyId,
-                    xprv,
-                    xpub,
-                  },
-                }
-
-                console.log(
-                  'add contact handleInput parsedAddr',
-                  event.target.value,
-                  xkey,
-                )
-              }
-
-              if (existingContacts?.length > 0) {
-                console.warn(
-                  `You've already paired with this contact`,
-                  {
-                    existingContacts,
-                    newContact: {
-                      alias: preferredAlias,
-                      outgoing,
-                    }
-                  }
-                )
-              }
-
-              let newContact = await appTools.storedData.encryptItem(
-                store.contacts,
-                state.wallet.xkeyId,
-                {
-                  ...state.contact,
-                  updatedAt: (new Date()).toISOString(),
-                  info: {
-                    ...OIDC_CLAIMS,
-                    ...(state.contact.info || {}),
-                    ...info,
-                  },
-                  outgoing,
-                  alias: preferredAlias,
-                  uri: event.target.value,
-                },
-                false,
-              )
-
-              getStoreData(
-                store.contacts,
-                res => {
-                  if (res) {
-                    appState.contacts = res
-
-                    return contactsList.restate({
-                      contacts: res?.sort(sortContactsByAlias),
-                      userInfo,
-                    })
-                  }
-                },
-                res => async v => {
-                  res.push(await appTools.storedData.decryptData(v))
-                }
-              )
-
-              state.contact = newContact
-
-              if (xkeyOrAddr) {
-                event.target.form.contactAddr.value = xkeyOrAddr
-              }
-              if (name) {
-                event.target.form.contactName.value = name
-              }
-              if (preferred_username) {
-                event.target.form.contactAlias.value = preferredAlias
-              }
             }
           }
           if (
@@ -501,29 +504,11 @@ export let addContactRig = (function (globals) {
             let showScan = await appDialogs.scanContact.showModal()
 
             if (showScan !== 'cancel') {
-              parsedAddr = parseAddressField(showScan)
-              let {
-                address,
-                xpub,
-                xprv,
-                name,
-                preferred_username,
-                sub,
-              } = parsedAddr
-
-              let xkey = xprv || xpub
-
-              let xkeyOrAddr = xkey || address
-
-              if (xkeyOrAddr) {
-                event.target.contactAddr.value = xkeyOrAddr
-              }
-              if (name) {
-                event.target.contactName.value = name
-              }
-              if (preferred_username) {
-                event.target.contactAlias.value = preferred_username
-              }
+              processURI(
+                state,
+                event.target,
+                showScan,
+              )
             }
 
             return;
