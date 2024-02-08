@@ -21,14 +21,14 @@ export let sendOrRequestRig = (function (globals) {
   let sendOrRequest = setupDialog(
     mainApp,
     {
-      name: 'Send or Request',
+      name: 'Send or Receive',
       sendName: 'Send Funds',
       sendTxt: 'Send',
       sendAlt: 'Send Dash',
       scanAlt: 'Scan a QR Code',
-      requestName: 'Request Funds',
-      requestTxt: 'Request',
-      requestAlt: 'Request Dash',
+      requestName: 'Receive Funds',
+      requestTxt: 'Receive',
+      requestAlt: 'Receive Dash',
       actionTxt: 'Send',
       actionAlt: 'Send Dash',
       cancelTxt: 'Cancel',

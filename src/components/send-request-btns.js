@@ -23,13 +23,13 @@ const initialState = {
         type="submit"
         name="intent"
         value="request"
-        title="Request"
+        title="Receive"
       >
         <svg width="24" height="24" viewBox="0 0 24 24">
           <use xlink:href="#icon-arrow-circle-down"></use>
         </svg>
         <span>
-          Request
+          Receive
         </span>
       </button>
     </form>

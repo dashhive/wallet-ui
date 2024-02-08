@@ -20,8 +20,8 @@ export let requestQrRig = (function (globals) {
     {
       name: 'Share to receive funds',
       address: '',
-      submitTxt: html`<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#icon-arrow-circle-down"></use></svg> Request Payment`,
-      submitAlt: 'Request Payment',
+      submitTxt: html`<svg width="24" height="24" viewBox="0 0 24 24"><use xlink:href="#icon-arrow-circle-down"></use></svg> Receive Payment`,
+      submitAlt: 'Receive Payment',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
       placement: 'wide',
@@ -146,7 +146,7 @@ export let requestQrRig = (function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          console.log('Request Payment', state, event)
+          console.log('Receive Payment', state, event)
 
           requestQr.close()
         },

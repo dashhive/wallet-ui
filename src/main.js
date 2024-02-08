@@ -497,7 +497,7 @@ async function main() {
       event.stopPropagation()
       let name = 'Send Funds'
       if (fde.intent === 'request') {
-        name = 'Request Funds'
+        name = 'Receive Funds'
       }
 
       appDialogs.sendOrRequest.render({
