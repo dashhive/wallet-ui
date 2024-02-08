@@ -14,7 +14,7 @@ const initialState = {
     <menu>
       <li>
         <a id="nav-alias" class="alias" href="/#me">
-          @${state.data?.alias}
+          <span>@${state.data?.alias}</span>
         </a>
         <menu class="user hidden">
           <li><a id="nav-edit-profile" class="profile" href="/#me">

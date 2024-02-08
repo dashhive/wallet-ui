@@ -110,6 +110,10 @@ nav .alias {
   padding: 1rem;
   margin-right: 2.5rem;
 }
+nav .alias span {
+  padding: 1rem;
+  border-radius: .25rem;
+}
 
 nav menu {
   position: relative;
@@ -119,9 +123,9 @@ nav menu {
   height: inherit;
 }
 nav .hidden {
-  /* display: none; */
   height: 0;
   opacity: 0;
+  visibility: hidden;
 }
 nav > menu {
   min-width: 15rem;
@@ -145,7 +149,7 @@ nav menu menu {
   right: 2rem;
   flex-direction: column;
   flex: 1 1 auto;
-  margin-top: .25rem;
+  margin-top: -1rem;
   border-radius: .5rem;
   opacity: 1;
   transition: 100ms ease-in-out opacity;
@@ -154,4 +158,12 @@ nav menu menu {
 nav menu menu li,
 nav menu menu li a {
   flex: 1 1 auto;
+}
+nav menu menu:focus,
+nav menu menu:active,
+nav menu menu:hover,
+nav .alias:hover + menu {
+  height: initial;
+  opacity: 1;
+  visibility: visible;
 }

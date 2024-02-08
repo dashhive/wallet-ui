@@ -79,6 +79,7 @@ export let walletEncryptRig = (function (globals) {
                 id="rememberPass"
                 name="remember"
                 type="checkbox"
+                checked
               />
               <label for="rememberPass" class="switch" title="Remember for session"></label>
             </div>

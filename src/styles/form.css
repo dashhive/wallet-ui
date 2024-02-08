@@ -404,16 +404,19 @@ button:not(:disabled):hover {
 button:not(:disabled):focus,
 button:not(:disabled):focus-visible {
   /* outline: 4px auto -webkit-focus-ring-color; */
-  outline: 0 auto -webkit-focus-ring-color;
+  /* outline: 0 auto -webkit-focus-ring-color; */
 }
+button[type=reset]:not(:disabled):focus,
 button[type=reset]:not(:disabled):hover {
   /* background-color: var(--c); */
   color: var(--dang);
   border-color: var(--dang);
 }
+button.pill:not(:disabled):focus,
 button.pill:not(:disabled):hover {
   background-color: var(--dark-600);
 }
+button.outline:not(:disabled):focus,
 button.outline:not(:disabled):hover {
   background-color: var(--brand-blue);
   border: 1px solid var(--brand-blue);
@@ -660,6 +663,7 @@ form[name="network"] {
   max-width: inherit;
   text-align: center;
   flex: 1 1 auto;
+  margin-right: 40px;
 }
 .updrop[for="keystore"] span strong {
   font-size: 1rem;

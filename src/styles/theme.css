@@ -54,6 +54,7 @@
 
   --nav-bg: var(--dark-900);
   --nav-abg: var(--c);
+  --nav-hbg: var(--dark-500);
   --nav-a: var(--a);
 
   --mdlbg: var(--d);
@@ -269,6 +270,8 @@ a {
   color: var(--info);
   text-decoration: none;
 }
+a:active,
+a:focus,
 a:hover {
   color: var(--info);
   text-decoration: dashed;
@@ -289,6 +292,16 @@ nav {
 }
 nav a {
   color: var(--nav-a);
+}
+nav a:focus,
+nav a:active,
+nav a:hover {
+  text-decoration: none;
+}
+nav a:focus span,
+nav a:active span,
+nav a:hover span {
+  background-color: var(--nav-hbg);
 }
 nav a.active {
   background-color: var(--nav-abg);
@@ -429,6 +442,8 @@ th {
 .brand {
   color: var(--brand-blue);
 }
+.brand:active,
+.brand:focus,
 .brand:hover {
   color: var(--brand-blue-highlight);
 }

@@ -664,21 +664,48 @@ async function main() {
   })
   sendRequestBtn.render()
 
+  function getTarget(event, selector) {
+    let {
+      // @ts-ignore
+      id,
+      // @ts-ignore
+      parentElement,
+    } = event?.target
+
+    let target
+
+    if (id === selector) {
+      target = event?.target
+    }
+
+    if (parentElement.id === selector) {
+      target = parentElement
+    }
+
+    return target
+  }
+
   document.addEventListener('click', async event => {
     let {
       // @ts-ignore
       id,
       // @ts-ignore
       nextElementSibling,
+      // @ts-ignore
+      parentElement,
     } = event?.target
 
-    if (id === 'nav-alias') {
+    let aliasTarg = getTarget(event, 'nav-alias')
+
+    if (aliasTarg) {
       event.preventDefault()
       event.stopPropagation()
 
-      console.log('click alias', [event.target])
+      console.log('click alias', [aliasTarg])
 
-      nextElementSibling.classList.toggle('hidden')
+      aliasTarg?.nextElementSibling.classList.toggle('hidden')
+      // @ts-ignore
+      // targ?.closest?.('menu.user')?.classList?.toggle('hidden')
 
       // event.target.next
     }
@@ -781,7 +808,11 @@ async function main() {
 
     // @ts-ignore
     // event.target?.closest?.('menu menu:not(.hidden)')?.classList?.add('hidden')
-    if (!id || !id.startsWith('nav-')) {
+    if ((
+      !id?.startsWith('nav-')
+    ) && (
+      !parentElement?.id?.startsWith('nav-')
+    )) {
       document.querySelector('menu.user:not(.hidden)')?.classList?.add('hidden')
     }
   })
