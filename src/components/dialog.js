@@ -127,13 +127,24 @@ const initialState = {
     },
     handleRender: (
       state,
-      // resolve = res=>{},
-      // reject = res=>{},
     ) => {
       // console.log(
       //   'handle dialog render',
       //   state,
       // )
+    },
+    handleShow: (
+      state,
+    ) => {
+      // console.log(
+      //   'handle dialog show',
+      //   state,
+      // )
+
+      // focus first input
+      state.elements.form.querySelector(
+        'input'
+      )?.focus()
     },
     handleClose: (
       state,
@@ -372,12 +383,14 @@ export function setupDialog(
       removeAllListeners()
       addListeners(resolve, reject)
       dialog.show()
+      state.events.handleShow?.(state)
       callback?.()
     }),
     showModal: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
       dialog.showModal()
+      state.events.handleShow?.(state)
       callback?.()
     }),
     close: returnVal => dialog.close(returnVal),

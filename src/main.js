@@ -157,7 +157,7 @@ let contactsList = await setupContactsList(
         //   state,
         // )
 
-        let contactArticle = event.target?.closest('article')
+        let contactArticle = event.target?.closest('a, article')
 
         if (
           // event.target?.nodeName === 'ARTICLE'

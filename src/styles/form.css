@@ -396,6 +396,7 @@ button:disabled {
   border-color: var(--note);
   cursor: not-allowed;
 }
+button:not(:disabled):focus,
 button:not(:disabled):hover {
   background-color: var(--brand-blue-highlight);
   color: var(--f);

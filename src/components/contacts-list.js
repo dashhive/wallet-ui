@@ -94,24 +94,27 @@ const initialState = {
 
     let inId = Object.keys(c?.incoming || {})?.[0]?.split('/')[1]
 
+    let atUser = user
+      ? `@${user}`
+      : ''
     let itemAlias = user
-      ? `@${user}${ !paired ? ' - ' : '' }${finishPairing}`
+      ? `${atUser}${ !paired ? ' - ' : '' }${finishPairing}`
       : finishPairing || enterContactInfo
     let itemName = name
       ? `${name}`
       : ''
     let itemSub = inId
-      ? `data-id="${inId}"`
+      ? `href="/#!/contact/${atUser || inId}" data-id="${inId}"`
       : ''
 
     return html`
-      <article ${itemSub}>
+      <a ${itemSub}>
         ${getAvatar(c)}
         <address>
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
         </address>
-      </article>
+      </a>
     `
   },
   footer: state => html``,

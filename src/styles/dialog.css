@@ -502,10 +502,11 @@ dialog.responsive fieldset.contact section article {
     flex: 1 1 auto;
   }
   dialog.responsive button[type="reset"]:hover {
-    /* background-color: var(--btnbgh); */
+    background-color: transparent;
     color: var(--dang);
   }
   dialog.responsive button[type="reset"]:focus {
+    background-color: transparent;
     outline: 0;
     /* outline: 1px solid -webkit-focus-ring-color; */
   }
