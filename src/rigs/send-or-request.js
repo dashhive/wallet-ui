@@ -1,13 +1,13 @@
 import { lit as html } from '../helpers/lit.js'
+import { AMOUNT_REGEX } from '../helpers/constants.js'
 import {
   formDataEntries,
   parseAddressField,
   fixedDash,
   roundUsing,
 } from '../helpers/utils.js'
-import setupInputAmount from '../components/input-amount.js'
 
-export let sendOrRequestRig = (function (globals) {
+export let sendOrReceiveRig = (function (globals) {
   'use strict';
 
   let {
@@ -16,9 +16,7 @@ export let sendOrRequestRig = (function (globals) {
     wallet, wallets, accounts, walletFunds,
   } = globals
 
-  let inputAmount = setupInputAmount(mainApp)
-
-  let sendOrRequest = setupDialog(
+  let sendOrReceive = setupDialog(
     mainApp,
     {
       name: 'Send or Receive',
@@ -26,16 +24,14 @@ export let sendOrRequestRig = (function (globals) {
       sendTxt: 'Send',
       sendAlt: 'Send Dash',
       scanAlt: 'Scan a QR Code',
-      requestName: 'Receive Funds',
-      requestTxt: 'Receive',
-      requestAlt: 'Receive Dash',
+      receiveName: 'Receive Funds',
+      receiveTxt: 'Receive',
+      receiveAlt: 'Receive Dash',
       actionTxt: 'Send',
       actionAlt: 'Send Dash',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel Form`,
-      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
-      <use xlink:href="#icon-x"></use>
-    </svg>`,
+      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       closeAlt: `Close`,
       action: 'send',
       submitIcon: state => {
@@ -45,7 +41,7 @@ export let sendOrRequestRig = (function (globals) {
               <use xlink:href="#icon-arrow-circle-up"></use>
             </svg>
           `,
-          request: html`
+          receive: html`
             <svg width="24" height="24" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-down"></use>
             </svg>
@@ -58,9 +54,9 @@ export let sendOrRequestRig = (function (globals) {
           state.actionTxt = state.sendTxt
           state.actionAlt = state.sendAlt
         }
-        if (state.action === 'request') {
-          state.actionTxt = state.requestTxt
-          state.actionAlt = state.requestAlt
+        if (state.action === 'receive') {
+          state.actionTxt = state.receiveTxt
+          state.actionAlt = state.receiveAlt
         }
 
         return html`
@@ -94,8 +90,8 @@ export let sendOrRequestRig = (function (globals) {
         if (state.action === 'send') {
           state.name = state.sendName
         }
-        if (state.action === 'request') {
-          state.name = state.requestName
+        if (state.action === 'receive') {
+          state.name = state.receiveName
         }
 
         return html`
@@ -107,14 +103,32 @@ export let sendOrRequestRig = (function (globals) {
           </header>
         `
       },
+      qrScanBtn: state => {
+        if (state.action !== 'send') {
+          return ''
+        }
+
+        return html`
+          <button
+            class="rounded outline"
+            type="submit"
+            name="intent"
+            value="scan_qr_code"
+            title="${state.scanAlt}"
+          >
+            <span>
+              <svg class="qr-code" width="24" height="24" viewBox="0 0 24 24">
+                <use xlink:href="#icon-qr-code"></use>
+              </svg>
+            </span>
+          </button>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
         <fieldset>
           <article>
-            <!-- <label for="to">
-              To
-            </label> -->
             <div class="input">
               <input
                 type="text"
@@ -127,19 +141,7 @@ export let sendOrRequestRig = (function (globals) {
                 value="${state.to || ''}"
               />
 
-              <button
-                class="rounded outline"
-                type="submit"
-                name="intent"
-                value="scan_qr_code"
-                title="${state.scanAlt}"
-              >
-                <span>
-                  <svg class="qr-code" width="24" height="24" viewBox="0 0 24 24">
-                    <use xlink:href="#icon-qr-code"></use>
-                  </svg>
-                </span>
-              </button>
+              ${state.qrScanBtn(state)}
 
               <datalist id="contactAliases">
                 ${
@@ -169,7 +171,27 @@ export let sendOrRequestRig = (function (globals) {
               </datalist>
             </div>
 
-            ${inputAmount.renderAsHTML()}
+            <div class="field">
+              <label for="amount">
+                Amount
+              </label>
+              <div class="row">
+                <label for="amount">
+                  <svg width="32" height="33" viewBox="0 0 32 33">
+                    <use xlink:href="#icon-dash-mark"></use>
+                  </svg>
+                </label>
+                <input
+                  id="amount"
+                  name="amount"
+                  placeholder="0.123456789"
+                  spellcheck="false"
+                  autocomplete="off"
+                  pattern="${AMOUNT_REGEX.source}"
+                  title="Enter a valid number for the amount you wish to ${state.action}."
+                />
+              </div>
+            </div>
 
             <div class="error"></div>
           </article>
@@ -202,6 +224,9 @@ export let sendOrRequestRig = (function (globals) {
             let label = event.target?.previousElementSibling?.textContent?.trim()
             if (label) {
               event.target.setCustomValidity(`Invalid ${label}`)
+            }
+            if (event.target.name === 'amount') {
+              event.target.setCustomValidity(`Invalid Amount. Value must be a number.`)
             }
           } else {
             event.target.setCustomValidity('')
@@ -439,7 +464,7 @@ export let sendOrRequestRig = (function (globals) {
             let showConfirm = await appDialogs.sendConfirm.showModal()
           }
 
-          if (fde.intent === 'request') {
+          if (fde.intent === 'receive') {
             if (!inWallet && !state.wallet?.xpub) {
               return;
             }
@@ -538,16 +563,16 @@ export let sendOrRequestRig = (function (globals) {
 
           // return;
 
-          // sendOrRequest.close(fde.intent)
+          // sendOrReceive.close(fde.intent)
         },
       },
     }
   )
 
   // @ts-ignore
-  globals.sendOrRequest = sendOrRequest;
+  globals.sendOrReceive = sendOrReceive;
 
-  return sendOrRequest
+  return sendOrReceive
 })
 
-export default sendOrRequestRig
+export default sendOrReceiveRig

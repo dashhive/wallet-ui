@@ -3,7 +3,7 @@ import { lit as html } from '../helpers/lit.js'
 const initialState = {
   rendered: null,
   content: state => html`
-    <form name="send_or_request" class="inline row">
+    <form name="send_or_receive" class="inline row">
       <button
         class="rounded outline"
         type="submit"
@@ -22,7 +22,7 @@ const initialState = {
         class="rounded outline"
         type="submit"
         name="intent"
-        value="request"
+        value="receive"
         title="Receive"
       >
         <svg width="24" height="24" viewBox="0 0 24 24">

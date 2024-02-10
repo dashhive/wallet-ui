@@ -57,7 +57,7 @@ import confirmActionRig from './rigs/confirm-action.js'
 import confirmDeleteRig from './rigs/confirm-delete.js'
 import editProfileRig from './rigs/edit-profile.js'
 import scanContactRig from './rigs/scan.js'
-import sendOrRequestRig from './rigs/send-or-request.js'
+import sendOrReceiveRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
@@ -124,7 +124,7 @@ let appDialogs = envoy(
     editContact: {},
     editProfile: {},
     scanContact: {},
-    sendOrRequest: {},
+    sendOrReceive: {},
     sendConfirm: {},
     requestQr: {},
   },
@@ -459,7 +459,7 @@ async function main() {
     setupDialog, mainApp,
   })
 
-  appDialogs.sendOrRequest = sendOrRequestRig({
+  appDialogs.sendOrReceive = sendOrReceiveRig({
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
@@ -492,15 +492,15 @@ async function main() {
 
     let fde = formDataEntries(event)
 
-    if (formName === 'send_or_request') {
+    if (formName === 'send_or_receive') {
       event.preventDefault()
       event.stopPropagation()
       let name = 'Send Funds'
-      if (fde.intent === 'request') {
+      if (fde.intent === 'receive') {
         name = 'Receive Funds'
       }
 
-      appDialogs.sendOrRequest.render({
+      appDialogs.sendOrReceive.render({
         action: fde.intent,
         wallet,
         account: appState.account,
@@ -509,7 +509,7 @@ async function main() {
         contacts: appState.contacts,
         to: null,
       })
-      appDialogs.sendOrRequest.showModal()
+      appDialogs.sendOrReceive.showModal()
         // .catch(console.error)
     }
   })
@@ -967,8 +967,8 @@ async function main() {
         )
 
         if (appDialogs.requestQr.element.open) {
-          if (appDialogs.sendOrRequest.element.open) {
-            appDialogs.sendOrRequest.close()
+          if (appDialogs.sendOrReceive.element.open) {
+            appDialogs.sendOrReceive.close()
           }
           appDialogs.requestQr.close()
         }

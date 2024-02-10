@@ -123,6 +123,10 @@ export const TIMEAGO_LOCALE_EN = {
 export const PHRASE_REGEX = new RegExp(
   /^([a-zA-Z]+\s){11,}([a-zA-Z]+)$/
 )
+export const AMOUNT_REGEX = new RegExp(
+  // /^[0-9]{1,5}?$/
+  /^[0-9]+(\.[0-9]{1,9})?%?$/
+)
 export const ALIAS_REGEX = new RegExp(
   /^[a-zA-Z0-9]{1,}([a-zA-Z0-9_.\-]+[a-zA-Z0-9])?$/
 )
