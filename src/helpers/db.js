@@ -153,13 +153,16 @@ export function saveJsonToFile(filename, dataObjToWrite) {
   link.href = window.URL.createObjectURL(blob);
   link.dataset.downloadurl = ["text/json", link.download, link.href].join(":");
 
-  const evt = new MouseEvent("click", {
-      view: window,
-      bubbles: true,
-      cancelable: true,
-  });
+  document.body.appendChild(link);
 
-  link.dispatchEvent(evt);
+  // const evt = new MouseEvent("click", {
+  //     view: window,
+  //     bubbles: true,
+  //     cancelable: true,
+  // });
+
+  // link.dispatchEvent(evt);
+  link.click();
   link.remove()
 }
 
