@@ -8,14 +8,14 @@ import {
   roundUsing,
 } from '../helpers/utils.js'
 
-export let requestQrRig = (function (globals) {
+export let requestQrRig = (async function (globals) {
   'use strict';
 
   let {
     mainApp, setupDialog,
   } = globals;
 
-  let requestQr = setupDialog(
+  let requestQr = await setupDialog(
     mainApp,
     {
       name: 'Share to receive funds',

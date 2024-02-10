@@ -8,7 +8,7 @@ import {
   PHRASE_REGEX,
 } from '../helpers/constants.js'
 
-export let phraseImportRig = (function (globals) {
+export let phraseImportRig = (async function (globals) {
   'use strict';
 
   let {
@@ -38,7 +38,7 @@ export let phraseImportRig = (function (globals) {
     }
   }
 
-  let phraseImport = setupDialog(
+  let phraseImport = await setupDialog(
     mainApp,
     {
       name: 'Existing Wallet',
@@ -175,90 +175,129 @@ export let phraseImportRig = (function (globals) {
       `,
       fields: html``,
       events: {
+        handleClose: (
+          state,
+          resolve = res=>{},
+          reject = res=>{},
+        ) => async event => {
+          event.preventDefault()
+          state.removeAllListeners()
+
+          if (state.elements.dialog.returnValue !== 'cancel') {
+            resolve(state.elements.dialog.returnValue)
+          } else {
+            state.keystoreFile = ''
+            state.keystoreData = null
+            state.render(state)
+            resolve('cancel')
+          }
+          console.log(
+            'DIALOG handleClose',
+            state.modal.rendered[state.slugs.dialog],
+          )
+
+          setTimeout(t => {
+            state.modal.rendered[state.slugs.dialog] = null
+            event?.target?.remove()
+            console.log(
+              'DIALOG handleClose setTimeout',
+              state.delay,
+              // modal.rendered[state.slugs.dialog],
+              state.modal.rendered,
+            )
+          }, state.delay)
+        },
         handleDragOver: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          // console.log(
-          //   'PHRASE IMPORT DRAG OVER',
-          //   // state,
-          //   event.target,
-          //   // event?.dataTransfer?.items,
-          //   // event.target.files,
-          // )
 
           if (
             event.target.classList.contains('updrop')
           ) {
+            console.log(
+              'PHRASE IMPORT DRAG OVER',
+              // state,
+              event.target,
+              // event?.dataTransfer?.items,
+              // event.target.files,
+            )
+
             event.target.classList.add('drag-over')
           }
         },
         handleDragLeave: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          // console.log(
-          //   'PHRASE IMPORT DRAG LEAVE',
-          //   // state,
-          //   event.target,
-          //   // event?.dataTransfer?.items,
-          //   // event.target.files,
-          // )
 
           if (
             event.target.classList.contains('updrop')
           ) {
+            console.log(
+              'PHRASE IMPORT DRAG LEAVE',
+              // state,
+              event.target,
+              // event?.dataTransfer?.items,
+              // event.target.files,
+            )
+
             event.target.classList.remove('drag-over')
           }
         },
         handleDragEnd: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          // console.log(
-          //   'PHRASE IMPORT DRAG END',
-          //   // state,
-          //   event.target,
-          //   // event?.dataTransfer?.items,
-          //   // event.target.files,
-          // )
 
           if (
             event.target.classList.contains('updrop')
           ) {
+            console.log(
+              'PHRASE IMPORT DRAG END',
+              // state,
+              event.target,
+              // event?.dataTransfer?.items,
+              // event.target.files,
+            )
+
             event.target.classList.add('dropped')
           }
         },
         handleDrop: state => async event => {
           event.preventDefault()
           event.stopPropagation()
-          // console.log(
-          //   'PHRASE IMPORT DROP',
-          //   state, event.target,
-          //   event?.dataTransfer?.items,
-          //   event.target.files
-          // )
 
+          if (
+            event.target.classList.contains('updrop')
+          ) {
+            console.log(
+              'PHRASE IMPORT DROP',
+              state, event.target,
+              event?.dataTransfer?.items,
+              event.target.files
+            )
 
-          if (event.dataTransfer.items) {
-            [...event.dataTransfer.items].forEach((item, i) => {
-              if (item.kind === "file") {
-                const file = item.getAsFile();
-                // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
+            if (event.dataTransfer.items) {
+              [...event.dataTransfer.items].forEach((item, i) => {
+                if (item.kind === "file") {
+                  const file = item.getAsFile();
+                  // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
+                  readFile(
+                    file,
+                    processFile(state, event),
+                  )
+                  state.keystoreFile = file.name
+                  state.render(state)
+                }
+              });
+            } else {
+              [...event.dataTransfer.files].forEach((file, i) => {
                 readFile(
                   file,
                   processFile(state, event),
                 )
                 state.keystoreFile = file.name
                 state.render(state)
-              }
-            });
-          } else {
-            [...event.dataTransfer.files].forEach((file, i) => {
-              readFile(
-                file,
-                processFile(state, event),
-              )
-              state.keystoreFile = file.name
-              state.render(state)
-            });
+              });
+            }
           }
         },
         handleChange: state => async event => {
@@ -281,7 +320,7 @@ export let phraseImportRig = (function (globals) {
           let fde = formDataEntries(event)
 
           if (state.walletImportData) {
-            appDialogs.walletDecrypt.render({
+            await appDialogs.walletDecrypt.render({
               walletImportData: state.walletImportData
             })
             await appDialogs.walletDecrypt.showModal()
@@ -312,7 +351,7 @@ export let phraseImportRig = (function (globals) {
           localStorage.selectedAlias = appState.selectedAlias
 
           if (state.keystoreData) {
-            appDialogs.walletDecrypt.render({
+            await appDialogs.walletDecrypt.render({
               keystore: state.keystoreData
             })
             await appDialogs.walletDecrypt.showModal()
@@ -344,7 +383,7 @@ export let phraseImportRig = (function (globals) {
 
           phraseImport.close()
 
-          appDialogs.walletEncrypt.render(
+          await appDialogs.walletEncrypt.render(
             {
               wallet,
             },

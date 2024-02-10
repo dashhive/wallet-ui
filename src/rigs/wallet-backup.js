@@ -3,7 +3,7 @@ import {
   formDataEntries,
 } from '../helpers/utils.js'
 
-export let walletBackupRig = (function (globals) {
+export let walletBackupRig = (async function (globals) {
   'use strict';
 
   let {
@@ -12,7 +12,7 @@ export let walletBackupRig = (function (globals) {
     saveJsonToFile, exportWalletData, localForageBaseCfg,
   } = globals;
 
-  let walletBackup = setupDialog(
+  let walletBackup = await setupDialog(
     mainApp,
     {
       name: 'Backup Wallet',
@@ -120,7 +120,7 @@ export let walletBackupRig = (function (globals) {
           }
 
           if (fde.intent === 'display_seed_phrase' && ks) {
-            appDialogs.walletDecrypt.render({
+            await appDialogs.walletDecrypt.render({
               name: `Decrypt Seed Phrase`,
               submitTxt: `Show Decrypted Seed Phrase`,
               keystore: ks,
@@ -129,7 +129,7 @@ export let walletBackupRig = (function (globals) {
             let decryptRes = await appDialogs.walletDecrypt.showModal()
 
             if (decryptRes !== 'cancel') {
-              appDialogs.phraseBackup.render(
+              await appDialogs.phraseBackup.render(
                 {
                   wallet: state.wallet,
                   runEncryption: false,

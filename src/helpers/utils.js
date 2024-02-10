@@ -831,7 +831,29 @@ export function getBackgroundColor(stringInput) {
   return `hsl(${stringUniqueHash % 360}, 100%, 67%)`;
 }
 
-export function getAvatar(c) {
+export async function getAvatarUrl(
+  email,
+  size = 48,
+  rating = 'pg',
+  srv = 'gravatar',
+) {
+  let emailSHA = await sha256(email || '')
+
+  if (srv === 'gravatar') {
+    return `https://gravatar.com/avatar/${
+      emailSHA
+    }?s=${size}&r=${rating}&d=retro`
+  }
+  if (srv === 'libravatar') {
+    return `https://seccdn.libravatar.org/avatar/${
+      emailSHA
+    }?s=${size}&r=${rating}&d=retro`
+  }
+
+  return ''
+}
+
+export async function getAvatar(c) {
   let initials = c?.info?.name?.
     split(' ').map(n => n[0]).slice(0,3).join('') || ''
 
@@ -848,11 +870,11 @@ export function getAvatar(c) {
   }
 
   // Gravatar
-  // if (c?.info?.email) {
-  //   avStr += `color:transparent;background-image:url(https://gravatar.com/avatar/${
-  //     await sha256(c.info.email)
-  //   }?s=48&r=pg&d=retro);`
-  // }
+  if (c?.info?.email) {
+    avStr += `color:transparent;background-image:url(${
+      await getAvatarUrl(c.info.email)
+    });`
+  }
 
   return `${avStr}">${initials}</div>`
 }

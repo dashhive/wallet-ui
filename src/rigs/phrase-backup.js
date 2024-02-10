@@ -5,14 +5,14 @@ import {
   setClipboard,
 } from '../helpers/utils.js'
 
-export let phraseBackupRig = (function (globals) {
+export let phraseBackupRig = (async function (globals) {
   'use strict';
 
   let {
     mainApp, setupDialog, appDialogs,
   } = globals;
 
-  let phraseBackup = setupDialog(
+  let phraseBackup = await setupDialog(
     mainApp,
     {
       name: 'New Wallet',
@@ -83,7 +83,7 @@ export let phraseBackupRig = (function (globals) {
           phraseBackup.close()
 
           if (runEncryption) {
-            appDialogs.walletEncrypt.render(
+            await appDialogs.walletEncrypt.render(
               {
                 wallet,
               },

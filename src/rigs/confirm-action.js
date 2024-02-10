@@ -3,7 +3,7 @@ import {
   formDataEntries,
 } from '../helpers/utils.js'
 
-export let confirmActionRig = (function (globals) {
+export let confirmActionRig = (async function (globals) {
   'use strict';
 
   let {
@@ -11,7 +11,7 @@ export let confirmActionRig = (function (globals) {
     store, userInfo, contactsList,
   } = globals
 
-  let confirmAction = setupDialog(
+  let confirmAction = await setupDialog(
     mainApp,
     {
       name: 'Confirm',

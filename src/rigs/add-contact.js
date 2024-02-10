@@ -22,7 +22,7 @@ import {
   ALIAS_REGEX,
 } from '../helpers/constants.js'
 
-export let addContactRig = (function (globals) {
+export let addContactRig = (async function (globals) {
   'use strict';
 
   let {
@@ -227,7 +227,7 @@ export let addContactRig = (function (globals) {
     return
   }
 
-  let addContact = setupDialog(
+  let addContact = await setupDialog(
     mainApp,
     {
       name: 'Add a New Contact',
@@ -494,7 +494,7 @@ export let addContactRig = (function (globals) {
           console.log('scanContact', appDialogs.scanContact)
 
           if (fde?.intent === 'scan_new_contact') {
-            appDialogs.scanContact.render(
+            await appDialogs.scanContact.render(
               {
                 wallet,
               },

@@ -3,14 +3,14 @@ import { lit as html } from '../helpers/lit.js'
 //   formDataEntries,
 // } from '../helpers/utils.js'
 
-export let scanContactRig = (function (globals) {
+export let scanContactRig = (async function (globals) {
   'use strict';
 
   let {
     setupDialog, mainApp,
   } = globals;
 
-  let scanContact = setupDialog(
+  let scanContact = await setupDialog(
     mainApp,
     {
       name: 'Scan a Contact',
@@ -100,7 +100,7 @@ export let scanContactRig = (function (globals) {
           }
 
           setTimeout(t => {
-            state.rendered = null
+            state.modal.rendered[state.slugs.dialog] = null
             event?.target?.remove()
           }, state.delay)
         },

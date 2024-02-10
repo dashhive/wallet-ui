@@ -7,7 +7,7 @@ import {
   roundUsing,
 } from '../helpers/utils.js'
 
-export let sendOrReceiveRig = (function (globals) {
+export let sendOrReceiveRig = (async function (globals) {
   'use strict';
 
   let {
@@ -16,7 +16,7 @@ export let sendOrReceiveRig = (function (globals) {
     wallet, wallets, accounts, walletFunds,
   } = globals
 
-  let sendOrReceive = setupDialog(
+  let sendOrReceive = await setupDialog(
     mainApp,
     {
       name: 'Send or Receive',
@@ -297,7 +297,7 @@ export let sendOrReceiveRig = (function (globals) {
           // )
 
           if (fde?.intent === 'scan_qr_code') {
-            appDialogs.scanContact.render(
+            await appDialogs.scanContact.render(
               {
                 wallet: state.wallet,
               },
@@ -402,7 +402,7 @@ export let sendOrReceiveRig = (function (globals) {
                 walletFunds.balance - Number(fde.amount)
               )))
 
-              appDialogs.requestQr.render(
+              await appDialogs.requestQr.render(
                 {
                   name: 'Insufficient wallet funds',
                   wallet: receiveWallet,
@@ -449,7 +449,7 @@ export let sendOrReceiveRig = (function (globals) {
               )
             }
 
-            appDialogs.sendConfirm.render(
+            await appDialogs.sendConfirm.render(
               {
                 wallet: state.wallet,
                 // wallet: sendWallet,
@@ -543,7 +543,7 @@ export let sendOrReceiveRig = (function (globals) {
                 }
               )
 
-              appDialogs.requestQr.render(
+              await appDialogs.requestQr.render(
                 {
                   name: 'Share to receive funds',
                   footer: state => html`<footer class="center">

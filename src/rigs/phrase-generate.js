@@ -6,7 +6,7 @@ import {
   ALIAS_REGEX,
 } from '../helpers/constants.js'
 
-export let phraseGenerateRig = (function (globals) {
+export let phraseGenerateRig = (async function (globals) {
   'use strict';
 
   let {
@@ -15,7 +15,7 @@ export let phraseGenerateRig = (function (globals) {
     deriveWalletData, generateWalletData,
   } = globals;
 
-  let phraseGenerate = setupDialog(
+  let phraseGenerate = await setupDialog(
     mainApp,
     {
       name: 'New Wallet',
@@ -113,7 +113,7 @@ export let phraseGenerateRig = (function (globals) {
 
           // console.log('GENERATE wallet!', wallet)
 
-          appDialogs.phraseBackup.render(
+          await appDialogs.phraseBackup.render(
             {
               wallet,
             },

@@ -6,7 +6,7 @@ import {
   initWallet,
 } from '../helpers/wallet.js'
 
-export let walletDecryptRig = (function (globals) {
+export let walletDecryptRig = (async function (globals) {
   'use strict';
 
   let {
@@ -15,7 +15,7 @@ export let walletDecryptRig = (function (globals) {
     store, deriveWalletData, importFromJson,
   } = globals;
 
-  let walletDecrypt = setupDialog(
+  let walletDecrypt = await setupDialog(
     mainApp,
     {
       name: 'Decrypt Wallet',
@@ -103,32 +103,6 @@ export let walletDecryptRig = (function (globals) {
       `,
       fields: html``,
       events: {
-        handleClose: (
-          state,
-          resolve = res=>{},
-          reject = res=>{},
-        ) => async event => {
-          event.preventDefault()
-          state.removeAllListeners()
-
-          // console.log(
-          //   'handle dialog close',
-          //   event,
-          //   event.target === state.elements.dialog,
-          //   state.elements.dialog.returnValue
-          // )
-
-          if (state.elements.dialog.returnValue !== 'cancel') {
-            resolve(state.elements.dialog.returnValue)
-          } else {
-            resolve('cancel')
-          }
-
-          setTimeout(t => {
-            state.rendered = null
-            event?.target?.remove()
-          }, state.delay)
-        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()

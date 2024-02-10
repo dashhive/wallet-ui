@@ -38,13 +38,13 @@ const initialState = {
       </button>
     </header>
   `,
-  content: state => html`
+  content: async state => html`
     ${state.header(state)}
 
     <div>
       ${
         state.contacts.length > 0
-          ? state.contacts.map(c => state.item(c)).join('')
+          ? (await Promise.all(state.contacts.map(async c => await state.item(c)))).join('')
           : ''
       }
       ${
@@ -55,7 +55,7 @@ const initialState = {
 
     ${state.footer(state)}
   `,
-  item: c => {
+  item: async c => {
     // console.warn('contact list item', c)
     if ('string' === typeof c) {
       return html`
@@ -109,7 +109,7 @@ const initialState = {
 
     return html`
       <a ${itemSub}>
-        ${getAvatar(c)}
+        ${await getAvatar(c)}
         <address>
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
@@ -181,7 +181,7 @@ export async function setupContactsList(
 
   section.id = state.slugs.section
   section.classList.add(state.placement || '')
-  section.innerHTML = state.content(state)
+  section.innerHTML = await state.content(state)
 
   function addListener(
     node,
@@ -228,7 +228,7 @@ export async function setupContactsList(
     await restate(state, renderState)
 
     section.id = state.slugs.section
-    section.innerHTML = state.content(state)
+    section.innerHTML = await state.content(state)
 
     removeAllListeners()
     addListeners()

@@ -5,7 +5,7 @@ import {
   sortContactsByAlias,
 } from '../helpers/utils.js'
 
-export let sendConfirmRig = (function (globals) {
+export let sendConfirmRig = (async function (globals) {
   'use strict';
 
   let {
@@ -13,7 +13,7 @@ export let sendConfirmRig = (function (globals) {
     sendTx, store, userInfo, contactsList,
   } = globals
 
-  let sendConfirm = setupDialog(
+  let sendConfirm = await setupDialog(
     mainApp,
     {
       name: 'Confirm Send',
@@ -194,7 +194,7 @@ export let sendConfirmRig = (function (globals) {
           }
 
           sendConfirm.close(fde.intent)
-          appDialogs.sendOrRequest.close(fde.intent)
+          appDialogs.sendOrReceive.close(fde.intent)
         },
       },
     }

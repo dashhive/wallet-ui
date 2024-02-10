@@ -13,7 +13,7 @@ import {
   ALIAS_REGEX,
 } from '../helpers/constants.js'
 
-export let editProfileRig = (function (globals) {
+export let editProfileRig = (async function (globals) {
   'use strict';
 
   let {
@@ -21,7 +21,7 @@ export let editProfileRig = (function (globals) {
     appState, appTools, bodyNav,
   } = globals;
 
-  let editProfile = setupDialog(
+  let editProfile = await setupDialog(
     mainApp,
     {
       name: 'Edit Profile',

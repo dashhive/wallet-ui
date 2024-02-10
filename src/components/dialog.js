@@ -1,5 +1,14 @@
 import { lit as html } from '../helpers/lit.js'
-import { formDataEntries } from '../helpers/utils.js'
+import {
+  formDataEntries,
+  envoy,
+} from '../helpers/utils.js'
+
+let modal = envoy(
+  {
+    rendered: {},
+  },
+)
 
 let _handlers = []
 
@@ -13,6 +22,7 @@ const initialState = {
   closeTxt: 'X',
   closeAlt: `Close`,
   placement: 'center',
+  modal,
   rendered: null,
   responsive: true,
   delay: 500,
@@ -28,7 +38,7 @@ const initialState = {
       }
     </header>
   `,
-  content: state => html`
+  content: async state => html`
     ${state.header(state)}
 
     <fieldset>
@@ -172,10 +182,20 @@ const initialState = {
       } else {
         resolve('cancel')
       }
+      // console.log(
+      //   'DIALOG handleClose',
+      //   modal.rendered[state.slugs.dialog],
+      // )
 
       setTimeout(t => {
-        state.rendered = null
+        modal.rendered[state.slugs.dialog] = null
         event?.target?.remove()
+        // console.log(
+        //   'DIALOG handleClose setTimeout',
+        //   state.delay,
+        //   // modal.rendered[state.slugs.dialog],
+        //   modal.rendered,
+        // )
       }, state.delay)
     },
     handleSubmit: state => event => {
@@ -214,7 +234,7 @@ const initialState = {
   },
 }
 
-export function setupDialog(
+export async function setupDialog(
   el, setupState = {}
 ) {
   let state = {
@@ -260,7 +280,7 @@ export function setupDialog(
 
   form.name = `${state.slugs.form}`
   form.method = 'dialog'
-  form.innerHTML = state.content(state)
+  form.innerHTML = await state.content(state)
 
   dialog.insertAdjacentElement(
     'afterbegin',
@@ -281,16 +301,19 @@ export function setupDialog(
     resolve,
     reject,
   ) {
-    addListener(
-      dialog,
-      'close',
-      state.events.handleClose(state, resolve, reject),
-    )
-    addListener(
-      dialog,
-      'click',
-      state.events.handleClick(state),
-    )
+    if (resolve && reject) {
+      addListener(
+        dialog,
+        'close',
+        state.events.handleClose(state, resolve, reject),
+      )
+
+      addListener(
+        dialog,
+        'click',
+        state.events.handleClick(state),
+      )
+    }
 
     addListener(
       form,
@@ -302,29 +325,30 @@ export function setupDialog(
       'change',
       state.events.handleChange(state),
     )
-    let updrop = form.querySelector('.updrop')
-    if (updrop) {
+    // let updrop = form.querySelector('.updrop')
+    // state.elements.updrop = updrop
+    // if (updrop) {
       addListener(
-        updrop,
+        form,
         'drop',
         state.events.handleDrop(state),
       )
       addListener(
-        updrop,
+        form,
         'dragover',
         state.events.handleDragOver(state),
       )
       addListener(
-        updrop,
+        form,
         'dragend',
         state.events.handleDragEnd(state),
       )
       addListener(
-        updrop,
+        form,
         'dragleave',
         state.events.handleDragLeave(state),
       )
-    }
+    // }
     addListener(
       form,
       'input',
@@ -342,9 +366,14 @@ export function setupDialog(
     )
   }
 
+  state.addListeners = addListeners
+
   function removeAllListeners(
     targets = [dialog,form],
   ) {
+    if (state.elements.updrop) {
+      targets.push(state.elements.updrop)
+    }
     _handlers = _handlers
       .filter(({ node, event, handler, capture }) => {
         if (targets.includes(node)) {
@@ -382,13 +411,13 @@ export function setupDialog(
 
     dialog.id = state.slugs.dialog
     form.name = `${state.slugs.form}`
-    form.innerHTML = state.content(state)
+    form.innerHTML = await state.content(state)
 
-    // console.log('DIALOG RENDER', state, position, state.slugs.dialog)
+    // console.log('DIALOG RENDER', state, position, state.slugs.dialog, modal.rendered)
 
-    if (!state.rendered) {
+    if (!modal.rendered[state.slugs.dialog]) {
       el.insertAdjacentElement(position, dialog)
-      state.rendered = dialog
+      modal.rendered[state.slugs.dialog] = dialog
     }
 
     state.events.handleRender(state)
@@ -401,6 +430,7 @@ export function setupDialog(
     show: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
+      // console.log('dialog show', dialog)
       dialog.show()
       state.events.handleShow?.(state)
       callback?.()
@@ -408,6 +438,7 @@ export function setupDialog(
     showModal: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
+      // console.log('dialog showModal', dialog)
       dialog.showModal()
       state.events.handleShow?.(state)
       callback?.()

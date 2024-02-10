@@ -7,14 +7,14 @@ import {
   generateContactPairingURI,
 } from '../helpers/utils.js'
 
-export let pairQrRig = (function (globals) {
+export let pairQrRig = (async function (globals) {
   'use strict';
 
   let {
     mainApp, setupDialog,
   } = globals;
 
-  let pairQr = setupDialog(
+  let pairQr = await setupDialog(
     mainApp,
     {
       name: 'Pairing info',

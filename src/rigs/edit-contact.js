@@ -22,7 +22,7 @@ import {
   ALIAS_REGEX,
 } from '../helpers/constants.js'
 
-export let editContactRig = (function (globals) {
+export let editContactRig = (async function (globals) {
   'use strict';
 
   let {
@@ -89,7 +89,7 @@ export let editContactRig = (function (globals) {
     )
   }, 1000)
 
-  let editContact = setupDialog(
+  let editContact = await setupDialog(
     mainApp,
     {
       name: 'Edit Contact',
@@ -155,12 +155,12 @@ export let editContactRig = (function (globals) {
           </button>
         </footer>
       `,
-      content: state => html`
+      content: async state => html`
         <fieldset class="contact">
           <section>
             ${state.header(state)}
             <article>
-              ${getAvatar(state.contact)}
+              ${await getAvatar(state.contact)}
               <h3>@${state.contact?.alias || state.contact?.info?.preferred_username}</h3>
             </article>
             <article>
@@ -377,7 +377,7 @@ export let editContactRig = (function (globals) {
             event.target !== contactCard &&
             contactCard?.contains(event.target)
           ) {
-            appDialogs.pairQr.render(
+            await appDialogs.pairQr.render(
               {
                 name: `Pairing info for @${storedContact.alias}`,
                 wallet: state.shareAccount,
@@ -426,7 +426,7 @@ export let editContactRig = (function (globals) {
           if (['send','request'].includes(String(fde?.intent))) {
             editContact.close()
 
-            appDialogs.sendOrRequest.render({
+            await appDialogs.sendOrReceive.render({
               action: fde.intent,
               wallet: state.wallet,
               account: appState.account,
@@ -434,13 +434,13 @@ export let editContactRig = (function (globals) {
               contacts: appState.contacts,
               to: `@${storedContact.alias}`,
             })
-            appDialogs.sendOrRequest.showModal()
+            appDialogs.sendOrReceive.showModal()
 
             return;
           }
 
           if (fde?.intent === 'delete_contact') {
-            appDialogs.confirmDelete.render({
+            await appDialogs.confirmDelete.render({
               shareAccount: state.shareAccount,
               userInfo,
               contacts: appState.contacts,

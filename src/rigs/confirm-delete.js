@@ -5,7 +5,7 @@ import {
   sortContactsByAlias,
 } from '../helpers/utils.js'
 
-export let confirmDeleteRig = (function (globals) {
+export let confirmDeleteRig = (async function (globals) {
   'use strict';
 
   let {
@@ -13,7 +13,7 @@ export let confirmDeleteRig = (function (globals) {
     store, userInfo, contactsList,
   } = globals
 
-  let confirmDelete = setupDialog(
+  let confirmDelete = await setupDialog(
     mainApp,
     {
       name: 'Confirm Remove',

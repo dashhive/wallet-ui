@@ -3,14 +3,14 @@ import {
   formDataEntries,
 } from '../helpers/utils.js'
 
-export let onboardRig = (function (globals) {
+export let onboardRig = (async function (globals) {
   'use strict';
 
   let {
     mainApp, setupDialog, appDialogs,
   } = globals;
 
-  let onboard = setupDialog(
+  let onboard = await setupDialog(
     mainApp,
     {
       name: 'Onboarding Flow',
@@ -24,10 +24,10 @@ export let onboardRig = (function (globals) {
           let fde = formDataEntries(event)
 
           if (fde?.intent === 'generate') {
-            appDialogs.phraseGenerate.render()
+            await appDialogs.phraseGenerate.render()
             appDialogs.phraseGenerate.showModal()
           } else if (fde?.intent === 'import') {
-            appDialogs.phraseImport.render()
+            await appDialogs.phraseImport.render()
             appDialogs.phraseImport.showModal()
           }
         },

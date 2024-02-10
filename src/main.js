@@ -185,7 +185,7 @@ let contactsList = await setupContactsList(
           if (!contactData.outgoing) {
             // Finish Pairing
             let contactName = contactData?.info?.name || 'Contact'
-            appDialogs.addContact.render(
+            await appDialogs.addContact.render(
               {
                 name: `Finish Pairing with ${contactName}`,
                 wallet: shareAccount,
@@ -197,7 +197,7 @@ let contactsList = await setupContactsList(
             appDialogs.addContact.showModal()
           } else {
             // Edit Contact
-            appDialogs.editContact.render(
+            await appDialogs.editContact.render(
               {
                 wallet,
                 account: appState.account,
@@ -301,7 +301,7 @@ let contactsList = await setupContactsList(
 
             appState.contacts.push(newContact)
 
-            contactsList.render(
+            await contactsList.render(
               appState.contacts.sort(sortContactsByAlias)
             )
 
@@ -311,7 +311,7 @@ let contactsList = await setupContactsList(
             )
           }
 
-          appDialogs.addContact.render(
+          await appDialogs.addContact.render(
             {
               name: 'Add a New Contact',
               wallet: shareAccount,
@@ -394,90 +394,90 @@ async function main() {
     }
   )
 
-  appDialogs.walletEncrypt = walletEncryptRig({
+  appDialogs.walletEncrypt = await walletEncryptRig({
     setupDialog, appDialogs, appState, mainApp,
     wallet, wallets, bodyNav, dashBalance,
   })
 
-  appDialogs.walletDecrypt = walletDecryptRig({
+  appDialogs.walletDecrypt = await walletDecryptRig({
     setupDialog, appDialogs, appState, mainApp, importFromJson,
     wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
   })
 
-  appDialogs.walletBackup = walletBackupRig({
+  appDialogs.walletBackup = await walletBackupRig({
     mainApp, wallet, wallets, setupDialog, appDialogs, appState, store,
     exportWalletData, saveJsonToFile, localForageBaseCfg,
   })
 
-  appDialogs.phraseBackup = phraseBackupRig({
+  appDialogs.phraseBackup = await phraseBackupRig({
     mainApp, wallets, setupDialog, appDialogs,
   })
 
-  appDialogs.phraseGenerate = phraseGenerateRig({
+  appDialogs.phraseGenerate = await phraseGenerateRig({
     setupDialog, appDialogs, appState,
     mainApp, wallet, wallets, store,
     deriveWalletData, generateWalletData,
   })
 
-  appDialogs.phraseImport = phraseImportRig({
+  appDialogs.phraseImport = await phraseImportRig({
     setupDialog, appDialogs, appState, store,
     mainApp, wallet, wallets, deriveWalletData,
   })
 
-  appDialogs.onboard = onboardRig({
+  appDialogs.onboard = await onboardRig({
     mainApp, setupDialog, appDialogs,
   })
 
-  appDialogs.addContact = addContactRig({
+  appDialogs.addContact = await addContactRig({
     setupDialog, updateAllFunds,
     appDialogs, appState, appTools, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
   })
 
-  appDialogs.confirmAction = confirmActionRig({
+  appDialogs.confirmAction = await confirmActionRig({
     mainApp, setupDialog,
     appDialogs, appState, appTools,
   })
 
-  appDialogs.confirmDelete = confirmDeleteRig({
+  appDialogs.confirmDelete = await confirmDeleteRig({
     mainApp, setupDialog, appDialogs, appState, appTools,
     store, userInfo, contactsList,
   })
 
-  appDialogs.editContact = editContactRig({
+  appDialogs.editContact = await editContactRig({
     setupDialog, updateAllFunds,
     appDialogs, appState, appTools, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
   })
 
-  appDialogs.editProfile = editProfileRig({
+  appDialogs.editProfile = await editProfileRig({
     mainApp, setupDialog, store,
     appState, appTools, bodyNav,
   })
 
-  appDialogs.scanContact = scanContactRig({
+  appDialogs.scanContact = await scanContactRig({
     setupDialog, mainApp,
   })
 
-  appDialogs.sendOrReceive = sendOrReceiveRig({
+  appDialogs.sendOrReceive = await sendOrReceiveRig({
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
     getAddrsWithFunds, batchGenAcctAddrs,
   })
 
-  appDialogs.sendConfirm = sendConfirmRig({
+  appDialogs.sendConfirm = await sendConfirmRig({
     mainApp, appDialogs, appState, appTools,
     store, userInfo, contactsList, walletFunds,
     setupDialog, deriveWalletData, getAddrsWithFunds,
     createTx, sendTx,
   })
 
-  appDialogs.requestQr = requestQrRig({
+  appDialogs.requestQr = await requestQrRig({
     mainApp, setupDialog,
   })
 
-  appDialogs.pairQr = pairQrRig({
+  appDialogs.pairQr = await pairQrRig({
     setupDialog,
     mainApp, wallet, userInfo,
   })
@@ -500,7 +500,7 @@ async function main() {
         name = 'Receive Funds'
       }
 
-      appDialogs.sendOrReceive.render({
+      await appDialogs.sendOrReceive.render({
         action: fde.intent,
         wallet,
         account: appState.account,
@@ -593,7 +593,7 @@ async function main() {
   ) {
     sessionStorage.removeItem('encryptionPassword')
 
-    appDialogs.walletDecrypt.render({ wallet })
+    await appDialogs.walletDecrypt.render({ wallet })
     await appDialogs.walletDecrypt.showModal()
   }
 
@@ -612,7 +612,7 @@ async function main() {
   ]
 
   if (!appState.phrase) {
-    appDialogs.onboard.render()
+    await appDialogs.onboard.render()
     await appDialogs.onboard.show()
   } else {
     wallet = await deriveWalletData(appState.phrase)
@@ -718,14 +718,13 @@ async function main() {
 
       await getUserInfo()
 
-      appDialogs.editProfile.render(
+      await appDialogs.editProfile.render(
         {
           wallet,
           userInfo,
         },
         'afterend',
       )
-
       appDialogs.editProfile.showModal()
     }
     if (id === 'nav-backup') {
@@ -735,7 +734,7 @@ async function main() {
       // @ts-ignore
       event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
-      appDialogs.walletBackup.render(
+      await appDialogs.walletBackup.render(
         {
           wallet,
           wallets,
@@ -751,7 +750,7 @@ async function main() {
       // @ts-ignore
       event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
-      appDialogs.confirmAction.render({
+      await appDialogs.confirmAction.render({
         name: 'Confirm Wallet Lock',
         actionTxt: 'Lock it!',
         actionAlt: 'Lock the wallet',
@@ -774,7 +773,7 @@ async function main() {
       // @ts-ignore
       event.target?.closest?.('menu.user')?.classList?.toggle('hidden')
 
-      appDialogs.confirmAction.render({
+      await appDialogs.confirmAction.render({
         name: 'Confirm Wallet Disconnect',
         actionTxt: 'Disconnect',
         actionAlt: 'Clear all wallet data stored in browser',
