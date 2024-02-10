@@ -145,7 +145,7 @@ export let editContactRig = (async function (globals) {
             class="rounded"
             type="submit"
             name="intent"
-            value="request"
+            value="receive"
             title="${state.requestAlt}"
           >
             <svg width="24" height="24" viewBox="0 0 24 24">
@@ -423,7 +423,7 @@ export let editContactRig = (async function (globals) {
             storedContact,
           )
 
-          if (['send','request'].includes(String(fde?.intent))) {
+          if (['send','receive'].includes(String(fde?.intent))) {
             editContact.close()
 
             await appDialogs.sendOrReceive.render({
