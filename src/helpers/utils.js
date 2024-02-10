@@ -813,23 +813,45 @@ export function timeago(ms, locale = TIMEAGO_LOCALE_EN) {
   return locale.never;
 }
 
+export async function sha256(str) {
+  const buf = await crypto.subtle.digest(
+    "SHA-256", new TextEncoder().encode(str)
+  );
+  return Array.prototype.map.call(
+    new Uint8Array(buf),
+    x => (('00' + x.toString(16)).slice(-2))
+  ).join('');
+}
+
+// https://stackoverflow.com/a/66494926
+export function getBackgroundColor(stringInput) {
+  let stringUniqueHash = [...stringInput].reduce((acc, char) => {
+      return char.charCodeAt(0) + ((acc << 5) - acc);
+  }, 0);
+  return `hsl(${stringUniqueHash % 360}, 100%, 67%)`;
+}
+
 export function getAvatar(c) {
   let initials = c?.info?.name?.
-    split(' ').map(n => n[0]).join('') || ''
+    split(' ').map(n => n[0]).slice(0,3).join('') || ''
 
   if (!initials) {
     initials = (c?.alias || c?.info?.preferred_username)?.[0] || ''
   }
 
-  let avStr = `<div class="avatar" style="`
+  let avStr = `<div class="avatar" style="background-color:${
+    getBackgroundColor(c?.info?.name || c?.alias || c?.info?.preferred_username || '')
+  };color:#000;`
 
   if (c?.info?.picture) {
     avStr += `color:transparent;background-image:url(${c.info.picture});`
   }
 
   // Gravatar
-  // if (c.info.email) {
-  //   avStr += `color:transparent;background-image:url(${c.info.email});`
+  // if (c?.info?.email) {
+  //   avStr += `color:transparent;background-image:url(https://gravatar.com/avatar/${
+  //     await sha256(c.info.email)
+  //   }?s=48&r=pg&d=retro);`
   // }
 
   return `${avStr}">${initials}</div>`
