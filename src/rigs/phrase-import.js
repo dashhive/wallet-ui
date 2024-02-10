@@ -2,6 +2,7 @@ import { lit as html } from '../helpers/lit.js'
 import {
   formDataEntries,
   readFile,
+  verifyPhrase,
 } from '../helpers/utils.js'
 import {
   ALIAS_REGEX,
@@ -163,6 +164,7 @@ export let phraseImportRig = (async function (globals) {
                 required
                 spellcheck="false"
                 autocomplete="off"
+                title="Enter a string with one or more characters, that starts & ends with a letter or number and may contain underscores (_), periods (.) & hyphens (-) in between. (E.g. john.doe, jane_doe, 1.dash_fan)"
               />
             </div>
             <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>
@@ -191,20 +193,20 @@ export let phraseImportRig = (async function (globals) {
             state.render(state)
             resolve('cancel')
           }
-          console.log(
-            'DIALOG handleClose',
-            state.modal.rendered[state.slugs.dialog],
-          )
+          // console.log(
+          //   'DIALOG handleClose',
+          //   state.modal.rendered[state.slugs.dialog],
+          // )
 
           setTimeout(t => {
             state.modal.rendered[state.slugs.dialog] = null
             event?.target?.remove()
-            console.log(
-              'DIALOG handleClose setTimeout',
-              state.delay,
-              // modal.rendered[state.slugs.dialog],
-              state.modal.rendered,
-            )
+            // console.log(
+            //   'DIALOG handleClose setTimeout',
+            //   state.delay,
+            //   // modal.rendered[state.slugs.dialog],
+            //   state.modal.rendered,
+            // )
           }, state.delay)
         },
         handleDragOver: state => async event => {
@@ -212,7 +214,8 @@ export let phraseImportRig = (async function (globals) {
           event.stopPropagation()
 
           if (
-            event.target.classList.contains('updrop')
+            event.target.classList.contains('updrop') &&
+            !event.target.classList.contains('disabled')
           ) {
             console.log(
               'PHRASE IMPORT DRAG OVER',
@@ -230,7 +233,8 @@ export let phraseImportRig = (async function (globals) {
           event.stopPropagation()
 
           if (
-            event.target.classList.contains('updrop')
+            event.target.classList.contains('updrop') &&
+            !event.target.classList.contains('disabled')
           ) {
             console.log(
               'PHRASE IMPORT DRAG LEAVE',
@@ -248,7 +252,8 @@ export let phraseImportRig = (async function (globals) {
           event.stopPropagation()
 
           if (
-            event.target.classList.contains('updrop')
+            event.target.classList.contains('updrop') &&
+            !event.target.classList.contains('disabled')
           ) {
             console.log(
               'PHRASE IMPORT DRAG END',
@@ -266,7 +271,8 @@ export let phraseImportRig = (async function (globals) {
           event.stopPropagation()
 
           if (
-            event.target.classList.contains('updrop')
+            event.target.classList.contains('updrop') &&
+            !event.target.classList.contains('disabled')
           ) {
             console.log(
               'PHRASE IMPORT DROP',
@@ -313,6 +319,42 @@ export let phraseImportRig = (async function (globals) {
             state.render(state)
           }
         },
+        handleInput: state => async event => {
+          if (
+            event.target.name === 'pass'
+          ) {
+            event.preventDefault()
+            event.stopPropagation()
+
+            let testPhrase = PHRASE_REGEX.test(event.target.value)
+            let updr = state.elements.form.querySelector('.updrop')
+            let updrField = updr?.querySelector('input[type="file"]')
+
+            // console.log('phrase import handleInput', testPhrase)
+
+            if (testPhrase) {
+              let tmpWallet = await verifyPhrase(event.target.value)
+
+              state.validPhrase = testPhrase && tmpWallet
+
+              // console.log('phrase import handleInput wallet', tmpWallet)
+
+              if (tmpWallet) {
+                updr?.classList.add('disabled')
+                updrField.disabled = true
+              } else {
+                updr?.classList.remove('disabled')
+                updrField.disabled = false
+              }
+            }
+            if (state.validPhrase && !testPhrase) {
+              updr?.classList.remove('disabled')
+              updrField.disabled = false
+              state.validPhrase = testPhrase
+            }
+          }
+        },
+        // PHRASE_REGEX
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()

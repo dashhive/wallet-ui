@@ -582,8 +582,8 @@ label[for],
 label:has(> input) {
   cursor: pointer;
 }
-fieldset:not(:disabled) label[for],
-fieldset:not(:disabled) label:has(> input) {
+fieldset:not(:disabled) label[for]:not(.disabled),
+fieldset:not(:disabled) label:has(> input:not(:disabled)) {
   cursor: pointer;
 }
 form[name="network"] {
@@ -683,8 +683,10 @@ form[name="network"] {
   line-height: 2;
 }
 
-.dropped ~ article {
+.dropped ~ article,
+.updrop.disabled {
   opacity: .35;
+  cursor: default;
 }
 
 

@@ -61,8 +61,10 @@ export let phraseGenerateRig = (async function (globals) {
                 required
                 spellcheck="false"
                 autocomplete="off"
+                title="Enter a string with one or more characters, that starts & ends with a letter or number and may contain underscores (_), periods (.) & hyphens (-) in between. (E.g. john.doe, jane_doe, 1.dash_fan)"
               />
             </div>
+            <p>Name the wallet (similar to a username), shared when connecting with a contact.</p>
 
             <div class="error"></div>
           </article>

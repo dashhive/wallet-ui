@@ -904,6 +904,10 @@ export async function getRandomWords(len = 32) {
   return await DashPhrase.generate(len)
 }
 
+export async function verifyPhrase(phrase) {
+  return await DashPhrase.verify(phrase).catch(_ => false)
+}
+
 export function isUniqueAlias(aliases, preferredAlias) {
   return !aliases[preferredAlias]
 }
