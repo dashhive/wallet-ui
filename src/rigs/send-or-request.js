@@ -233,6 +233,13 @@ export let sendOrReceiveRig = (async function (globals) {
           }
           event.target.reportValidity()
 
+          if (
+            event.target?.name === 'amount' &&
+            event.target.value.startsWith('.')
+          ) {
+            event.target.value = `0${event.target.value}`
+          }
+
           if (event.target?.name === 'to') {
             if (
               event.target.value &&

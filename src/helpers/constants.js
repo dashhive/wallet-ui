@@ -125,7 +125,7 @@ export const PHRASE_REGEX = new RegExp(
 )
 export const AMOUNT_REGEX = new RegExp(
   // /^[0-9]{1,5}?$/
-  /^[0-9]+(\.[0-9]{1,9})?%?$/
+  /^[0-9]+(\.[0-9]{1,8})?%?$/
 )
 export const ALIAS_REGEX = new RegExp(
   /^[a-zA-Z0-9]{1,}([a-zA-Z0-9_.\-]+[a-zA-Z0-9])?$/
