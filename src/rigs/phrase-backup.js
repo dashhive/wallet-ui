@@ -15,7 +15,7 @@ export let phraseBackupRig = (async function (globals) {
   let phraseBackup = await setupDialog(
     mainApp,
     {
-      name: 'New Wallet',
+      name: 'Your New Seed Phrase',
       submitTxt: 'I backed up this Seed Phrase',
       submitAlt: 'Confirm Seed Phrase backup',
       cancelTxt: 'Cancel',
@@ -40,7 +40,7 @@ export let phraseBackupRig = (async function (globals) {
           </button>
         </footer>
       `,
-      content: state => html`
+      content: async state => html`
         ${state.header(state)}
 
         <fieldset>

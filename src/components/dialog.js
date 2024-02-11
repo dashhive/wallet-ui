@@ -26,7 +26,7 @@ const initialState = {
   rendered: null,
   responsive: true,
   delay: 500,
-  render () {},
+  async render () {},
   addListener () {},
   addListeners () {},
   removeAllListeners (targets) {},
