@@ -641,6 +641,9 @@ form[name="network"] {
 .updrop.drag-over {
   border-style: solid;
 }
+.updrop.focus{
+  border-style: dotted;
+}
 .dropped .updrop,
 .updrop.dropped {
   background-color: var(--dark-900);

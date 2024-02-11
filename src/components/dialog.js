@@ -107,10 +107,24 @@ const initialState = {
       }
       event.target.reportValidity()
     },
-    handleFocus: state => event => {
+    handleBlur: state => event => {
       // event.preventDefault()
       // console.log(
-      //   'handle input focus',
+      //   'handle input blur',
+      //   event,
+      // )
+    },
+    handleFocusOut: state => event => {
+      // event.preventDefault()
+      // console.log(
+      //   'handle input focus out',
+      //   event,
+      // )
+    },
+    handleFocusIn: state => event => {
+      // event.preventDefault()
+      // console.log(
+      //   'handle input focus in',
       //   event,
       // )
     },
@@ -317,8 +331,18 @@ export async function setupDialog(
 
     addListener(
       form,
+      'blur',
+      state.events.handleBlur(state),
+    )
+    addListener(
+      form,
       'focusout',
-      state.events.handleFocus(state),
+      state.events.handleFocusOut(state),
+    )
+    addListener(
+      form,
+      'focusin',
+      state.events.handleFocusIn(state),
     )
     addListener(
       form,

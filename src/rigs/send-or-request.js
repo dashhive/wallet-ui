@@ -279,7 +279,7 @@ export let sendOrReceiveRig = (async function (globals) {
             }
           }
         },
-        handleFocus: state => event => {
+        handleFocusOut: state => event => {
           // event.preventDefault()
           // console.log(
           //   'handle input focus',

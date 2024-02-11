@@ -177,6 +177,16 @@ export let phraseImportRig = (async function (globals) {
       `,
       fields: html``,
       events: {
+        handleFocusOut: state => event => {
+          if (event.target.id === 'keystore') {
+            event.target.parentElement.classList.remove('focus')
+          }
+        },
+        handleFocusIn: state => event => {
+          if (event.target.id === 'keystore') {
+            event.target.parentElement.classList.add('focus')
+          }
+        },
         handleClose: (
           state,
           resolve = res=>{},
