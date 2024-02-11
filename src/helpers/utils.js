@@ -856,14 +856,19 @@ export async function getAvatarUrl(
 export async function getAvatar(c) {
   let initials = c?.info?.name?.
     split(' ').map(n => n[0]).slice(0,3).join('') || ''
+  let nameOrAlias = c?.info?.name || c?.alias || c?.info?.preferred_username
 
   if (!initials) {
     initials = (c?.alias || c?.info?.preferred_username)?.[0] || ''
   }
 
-  let avStr = `<div class="avatar" style="background-color:${
-    getBackgroundColor(c?.info?.name || c?.alias || c?.info?.preferred_username || '')
-  };color:#000;`
+  let avStr = `<div class="avatar" style="`
+
+  if (nameOrAlias) {
+    avStr += `background-color:${
+      getBackgroundColor(nameOrAlias)
+    };color:#000;`
+  }
 
   if (c?.info?.picture) {
     avStr += `color:transparent;background-image:url(${c.info.picture});`
