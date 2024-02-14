@@ -977,7 +977,7 @@ export async function createTx(
 
   // console.log('createTx fundAddrs', [...fundAddrs])
 
-  if (Array.isArray(fundAddrs)) {
+  if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
     fundAddrs.sort(sortAddrs)
     changeAddr = changeAddr || fundAddrs[0].address
     // console.log('createTx fundAddrs sorted', fundAddrs)
