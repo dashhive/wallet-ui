@@ -30,7 +30,7 @@
   - should be fixed by <https://github.com/dashhive/wallet-ui/commit/b511813db1f432cb80db8a3ffc5d4fc06a897aee>
 - [x] Pairing via QR Code looks like it works, yet clicking save ends with an unpaired contact
 - [ ] Unique Alias Collision with only the one contact you're trying to pair with
-- [ ] Encrypted Full Backup & Backup Keystore fail to open "Save file dialog" in brave on android
+- [x] Encrypted Full Backup & Backup Keystore fail to open "Save file dialog" in brave on android
 - [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
 
 #### General
@@ -39,7 +39,7 @@
   - should be fixed by <https://github.com/dashhive/wallet-ui/commit/b511813db1f432cb80db8a3ffc5d4fc06a897aee>
 
 ### Enhancements
-- [ ] Dialog: Sent Funds Confirmation
+- [x] Dialog: Sent Funds Confirmation
   - currently send closes, and you see your balance change
   - we should show a "Funds Sent" type dialog with a link to the Transaction ID
 - [ ] Batch Generate tweaks
