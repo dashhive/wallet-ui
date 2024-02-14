@@ -39,6 +39,21 @@ export let phraseImportRig = (async function (globals) {
     }
   }
 
+  function clearFile(state) {
+    let updrField = state.elements.form?.querySelector(
+      '.updrop input[type="file"]'
+    )
+    updrField.value = null
+    state.keystoreData = null
+    state.walletImportData = null
+    state.keystoreFile = ''
+    state.render(state)
+  }
+
+  function updropContainer(state) {
+    return state.keystoreFile ? `div` : `label`
+  }
+
   let phraseImport = await setupDialog(
     mainApp,
     {
@@ -47,6 +62,7 @@ export let phraseImportRig = (async function (globals) {
       submitAlt: 'Import Existing Wallet',
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel Wallet Import`,
+      clearAlt: `Clear selected file`,
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
       <use xlink:href="#icon-x"></use>
     </svg>`,
@@ -68,7 +84,7 @@ export let phraseImportRig = (async function (globals) {
         if (state.keystoreFile) {
           return ''
         }
-        // <span>Drag and drop a Keystore file <br/> or Incubator Wallet backup file <br/> or click to <strong><u>upload</u></strong></span>
+
         return html`
           <svg class="upload" width="40" height="40" viewBox="0 0 40 40">
             <use xlink:href="#icon-upload"></use>
@@ -86,25 +102,43 @@ export let phraseImportRig = (async function (globals) {
         if (!state.keystoreFile) {
           return ''
         }
+
         return html`
-          ${state.keystoreFile}
+          <button
+            class="link clear"
+            type="submit"
+            name="intent"
+            value="clear"
+            title="${state.clearAlt}"
+          >
+            <svg class="x" width="40" height="40" viewBox="0 0 26 26">
+              <use xlink:href="#icon-x"></use>
+            </svg>
+          </button>
+          <label for="keystore">
+            ${state.keystoreFile}
+          </label>
         `
       },
-      updrop: state => html`
-        <label for="keystore">
-          Keystore or Backup
-        </label>
-        <label for="keystore" class="updrop">
-          <input
-            type="file"
-            id="keystore"
-            name="ksfile"
-            enctype="multipart/form-data"
-          />
-          ${state.showFileName(state)}
-          ${state.upload(state)}
-        </label>
-      `,
+      updrop: state => {
+        let el = updropContainer(state)
+
+        return html`
+          <label for="keystore">
+            Keystore or Backup
+          </label>
+          <${el} for="keystore" class="updrop">
+            ${state.upload(state)}
+            ${state.showFileName(state)}
+            <input
+              type="file"
+              id="keystore"
+              name="ksfile"
+              enctype="multipart/form-data"
+            />
+          </${el}>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
@@ -198,9 +232,7 @@ export let phraseImportRig = (async function (globals) {
           if (state.elements.dialog.returnValue !== 'cancel') {
             resolve(state.elements.dialog.returnValue)
           } else {
-            state.keystoreFile = ''
-            state.keystoreData = null
-            state.render(state)
+            clearFile(state)
             resolve('cancel')
           }
           // console.log(
@@ -211,12 +243,6 @@ export let phraseImportRig = (async function (globals) {
           setTimeout(t => {
             state.modal.rendered[state.slugs.dialog] = null
             event?.target?.remove()
-            // console.log(
-            //   'DIALOG handleClose setTimeout',
-            //   state.delay,
-            //   // modal.rendered[state.slugs.dialog],
-            //   state.modal.rendered,
-            // )
           }, state.delay)
         },
         handleDragOver: state => async event => {
@@ -227,14 +253,6 @@ export let phraseImportRig = (async function (globals) {
             event.target.classList.contains('updrop') &&
             !event.target.classList.contains('disabled')
           ) {
-            console.log(
-              'PHRASE IMPORT DRAG OVER',
-              // state,
-              event.target,
-              // event?.dataTransfer?.items,
-              // event.target.files,
-            )
-
             event.target.classList.add('drag-over')
           }
         },
@@ -246,14 +264,6 @@ export let phraseImportRig = (async function (globals) {
             event.target.classList.contains('updrop') &&
             !event.target.classList.contains('disabled')
           ) {
-            console.log(
-              'PHRASE IMPORT DRAG LEAVE',
-              // state,
-              event.target,
-              // event?.dataTransfer?.items,
-              // event.target.files,
-            )
-
             event.target.classList.remove('drag-over')
           }
         },
@@ -265,14 +275,6 @@ export let phraseImportRig = (async function (globals) {
             event.target.classList.contains('updrop') &&
             !event.target.classList.contains('disabled')
           ) {
-            console.log(
-              'PHRASE IMPORT DRAG END',
-              // state,
-              event.target,
-              // event?.dataTransfer?.items,
-              // event.target.files,
-            )
-
             event.target.classList.add('dropped')
           }
         },
@@ -284,18 +286,10 @@ export let phraseImportRig = (async function (globals) {
             event.target.classList.contains('updrop') &&
             !event.target.classList.contains('disabled')
           ) {
-            console.log(
-              'PHRASE IMPORT DROP',
-              state, event.target,
-              event?.dataTransfer?.items,
-              event.target.files
-            )
-
             if (event.dataTransfer.items) {
               [...event.dataTransfer.items].forEach((item, i) => {
                 if (item.kind === "file") {
                   const file = item.getAsFile();
-                  // console.log(`ITEMS file[${i}].name = ${file.name}`, file);
                   readFile(
                     file,
                     processFile(state, event),
@@ -343,13 +337,13 @@ export let phraseImportRig = (async function (globals) {
             // console.log('phrase import handleInput', testPhrase)
 
             if (testPhrase) {
-              let tmpWallet = await verifyPhrase(event.target.value)
+              let tmpPhrase = await verifyPhrase(
+                event.target.value
+              )
 
-              state.validPhrase = testPhrase && tmpWallet
+              state.validPhrase = testPhrase && tmpPhrase
 
-              // console.log('phrase import handleInput wallet', tmpWallet)
-
-              if (tmpWallet) {
+              if (tmpPhrase) {
                 updr?.classList.add('disabled')
                 updrField.disabled = true
               } else {
@@ -370,6 +364,11 @@ export let phraseImportRig = (async function (globals) {
           event.stopPropagation()
 
           let fde = formDataEntries(event)
+
+          if (fde.intent === 'clear') {
+            clearFile(state)
+            return;
+          }
 
           if (state.walletImportData) {
             await appDialogs.walletDecrypt.render({

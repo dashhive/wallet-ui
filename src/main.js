@@ -618,13 +618,13 @@ async function main() {
     wallet = await deriveWalletData(appState.phrase)
   }
 
-  batchGenAcctsAddrs(wallet)
-    // .then(data => console.warn('batchGenAcctsAddrs', { data }))
-
   // temp fix, should be handled already
   if (appState.phrase && !wallet) {
     wallet = await deriveWalletData(appState.phrase)
   }
+
+  batchGenAcctsAddrs(wallet)
+    // .then(data => console.warn('batchGenAcctsAddrs', { data }))
 
   bodyNav.render({
     data: {

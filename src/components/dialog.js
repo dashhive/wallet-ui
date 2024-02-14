@@ -228,7 +228,10 @@ const initialState = {
     },
     handleReset: state => event => {
       event.preventDefault()
-      state.elements.form?.removeEventListener('close', state.events.handleReset)
+      state.elements.form?.removeEventListener(
+        'close',
+        state.events.handleReset
+      )
       // console.log(
       //   'handleReset',
       //   [event.target],

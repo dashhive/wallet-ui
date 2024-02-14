@@ -408,9 +408,12 @@ button:not(:disabled):focus-visible {
   /* outline: 4px auto -webkit-focus-ring-color; */
   /* outline: 0 auto -webkit-focus-ring-color; */
 }
+button.clear:not(:disabled):focus,
+button.clear:not(:disabled):hover,
 button[type=reset]:not(:disabled):focus,
 button[type=reset]:not(:disabled):hover {
   /* background-color: var(--c); */
+  background-color: transparent;
   color: var(--dang);
   border-color: var(--dang);
 }
@@ -637,6 +640,10 @@ form[name="network"] {
   margin-bottom: 2.5rem;
   cursor: pointer;
   text-transform: none;
+
+  margin-bottom: 0;
+  min-height: 60px;
+  height: 6rem;
 }
 .updrop.drag-over {
   border-style: solid;
@@ -660,8 +667,15 @@ form[name="network"] {
 .updrop * {
   pointer-events: none;
 }
-.updrop svg {
+.updrop svg.upload {
   color: var(--dark-500);
+}
+.updrop button.link {
+  flex: initial !important;
+  align-self: stretch;
+}
+.updrop svg.x {
+  pointer-events: auto;
 }
 .updrop span {
   max-width: 12rem;
@@ -670,10 +684,12 @@ form[name="network"] {
 .updrop span button {
   padding: 0;
 }
-.updrop[for="keystore"] {
-  margin-bottom: 0;
+.updrop label[for="keystore"] {
+  /* margin-bottom: 0;
   min-height: 60px;
-  height: 6rem;
+  height: 6rem; */
+  align-self: stretch;
+  text-transform: none;
 }
 .updrop[for="keystore"] span {
   max-width: inherit;
