@@ -191,6 +191,17 @@ export let sendConfirmRig = (async function (globals) {
               state.contact,
               txRes,
             )
+
+            await appDialogs.txInfo.render(
+              {
+                contact: state.contact,
+                txRes,
+                amount: state.amount,
+              },
+              'afterend',
+            )
+
+            let showTxInfo = appDialogs.txInfo.showModal()
           }
 
           sendConfirm.close(fde.intent)

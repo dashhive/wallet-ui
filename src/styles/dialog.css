@@ -452,6 +452,13 @@ dialog.responsive fieldset.contact section article {
   align-items: stretch;
 }
 
+dialog .txid {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
+}
+
 @media (min-width: 650px) {
   dialog.responsive {
     width: fit-content;

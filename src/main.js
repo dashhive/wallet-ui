@@ -61,6 +61,7 @@ import sendOrReceiveRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
+import txInfoRig from './rigs/tx-info.js'
 
 // app/data state
 let accounts
@@ -464,6 +465,11 @@ async function main() {
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
     getAddrsWithFunds, batchGenAcctAddrs,
+  })
+
+  appDialogs.txInfo = await txInfoRig({
+    setupDialog,
+    mainApp, wallet, userInfo,
   })
 
   appDialogs.sendConfirm = await sendConfirmRig({
