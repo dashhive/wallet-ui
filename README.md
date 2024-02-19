@@ -112,4 +112,7 @@ A Graphical User Interface (GUI) for
   - [ ] We need to support importing raw xpubs if we don’t already.
 - [ ] style: Top button is “adjective noun”, bottom two buttons are “verb noun”. Maybe make it consistent.
 - [ ] feat: Every time I click Request the wallet generates a new address. This might be unsettling for users. Need to rethink this functionality. Side note/question: Is this cycling through the 0 index on the HD path when no contact is selected? Either way, we may want to put our own username in the alias input box by default, which would be the default funding mechanism.
+- [ ] Contact Data List Selector in the Send Dialog on mobile does not show contact alias hints
+  - Appears to be an issue specific to Firefox on Android, both normal version (in normal & private view) & Firefox Focus
+- [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
 - [ ]
