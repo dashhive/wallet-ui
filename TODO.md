@@ -13,9 +13,12 @@
 
 ### Bugs
 #### Mobile Specific
-- [ ] Copy Buttons don't seem to work reliably
-- [ ] Unique Alias Collision with only the one contact you're trying to pair with
 - [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
+- [ ] Contact Data List Selector in the Send Dialog on mobile does not show contact alias hints
+  - Appears to be an issue specific to Firefox on Android, both normal version (in normal & private view) & Firefox Focus
+- [x] Copy Buttons don't seem to work reliably
+- [x] Unique Alias Collision with only the one contact you're trying to pair with
+  - Unable to verify and reproduce issue
 - [x] After initial pairing between mobile & desktop wallets, we funded the wallet from an external source, no page refresh but websocket updated balance, attempting to send to mobile contact from desktop failed
   - Should be fixed by https://github.com/dashhive/wallet-ui/pull/31/commits/6c96982925544aeafac470d46722a2f5bdb050d0
   - tried to POST to https://insight.dash.org/insight-api/addrs/utxo with an empty `addrs` array/string
@@ -30,8 +33,6 @@
     at Layer.handle [as handle_request] (/insight/node_modules/express/lib/router/layer.js:95:5)
     at /insight/node_modules/express/lib/router/index.js:284:15
     at Function.process_params (/insight/node_modules/express/lib/router/index.js:346:12)
-- [ ] Contact Data List Selector in the Send Dialog on mobile does not show contact alias hints
-  - Appears to be an issue specific to Firefox on Android, both normal version (in normal & private view) & Firefox Focus
 - [ ]
 
 ### Enhancements

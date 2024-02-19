@@ -43,6 +43,8 @@ A Graphical User Interface (GUI) for
   - [ ] Fix any bugs that arise
 
 ### Stage 2
+- [ ] Add "Max" option to send dialog #41
+- [ ] What about putting data into a normal web link (https://wallet.dashincubator.dev with parameters in the query string) that people can just click and accept your friend request)?
 - [ ] PWA Improvements & Fixes
   - [ ] Fix White Screen of Death
 - [ ] Mobile Improvements
@@ -63,6 +65,9 @@ A Graphical User Interface (GUI) for
 - [ ] System Wrappers
   - [ ] Desktop / Tauri Wrapper
   - [ ] Mobile / Capacitor App
+
+- [ ] feat: I kind of want some hover options right on each contact in the list. This would bring some life and color to the otherwise sparse list.
+  - [ ] trash icon - quickly get rid of contacts that I know I didn’t share
 
 ### Stage 2 - QA
 - [ ]
@@ -93,4 +98,18 @@ A Graphical User Interface (GUI) for
 - [ ] Add side-by-side view for contacts to display the XPubs that represent both you & the contact in the connection
 
 ### Stage 4 - QA
+- [ ]
+
+
+### Backlog
+- [ ] style(julius): Is there some reason it is necessary to use the terms “disconnect” and “add wallet” as opposed to just “log in” and “log out”?
+- [ ] Tutorializing for the user
+  - [ ] doc(julius): Minor aspects of user understanding: how does the wallet actually work? What information is your browser storing when you create a wallet? Is it downloading a temporary self custodial wallet into the browser session? How does that work, where is it saved to? How does locking work?
+- [ ] doc(julius): User experience: should you be able to create a new alias every time you log back in?
+- [ ] style(julius): Minor visual design notes: the landing page feels slightly “empty”. Awkward side columns.
+- [ ] feat: Maybe we should use the big empty space in the contacts list to recommend pairing with other prominent wallets (mobile wallet, Desktop wallet, etc).
+  - [ ] DCG’s mobile wallet definitely needs to display a QR for its xpub address.
+  - [ ] We need to support importing raw xpubs if we don’t already.
+- [ ] style: Top button is “adjective noun”, bottom two buttons are “verb noun”. Maybe make it consistent.
+- [ ] feat: Every time I click Request the wallet generates a new address. This might be unsettling for users. Need to rethink this functionality. Side note/question: Is this cycling through the 0 index on the HD path when no contact is selected? Either way, we may want to put our own username in the alias input box by default, which would be the default funding mechanism.
 - [ ]
