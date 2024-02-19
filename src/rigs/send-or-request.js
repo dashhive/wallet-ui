@@ -124,6 +124,58 @@ export let sendOrReceiveRig = (async function (globals) {
           </button>
         `
       },
+      fundAmountBtns: state => {
+        if (state.action !== 'send') {
+          return ''
+        }
+
+        return html`
+          <button
+            class="rounded outline"
+            type="submit"
+            name="intent"
+            value="amount_25"
+            title="${state.scanAlt}"
+          >
+            <span>
+              25%
+            </span>
+          </button>
+          <button
+            class="rounded outline"
+            type="submit"
+            name="intent"
+            value="amount_50"
+            title="${state.scanAlt}"
+          >
+            <span>
+              50%
+            </span>
+          </button>
+          <button
+            class="rounded outline"
+            type="submit"
+            name="intent"
+            value="amount_75"
+            title="${state.scanAlt}"
+          >
+            <span>
+              75%
+            </span>
+          </button>
+          <!-- <button
+            class="rounded outline"
+            type="submit"
+            name="intent"
+            value="amount_100"
+            title="${state.scanAlt}"
+          >
+            <span>
+              100%
+            </span>
+          </button> -->
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
@@ -171,7 +223,7 @@ export let sendOrReceiveRig = (async function (globals) {
               </datalist>
             </div>
 
-            <div class="field">
+            <div class="field amount">
               <label for="amount">
                 Amount
               </label>
@@ -192,6 +244,11 @@ export let sendOrReceiveRig = (async function (globals) {
                 />
               </div>
             </div>
+            <div class="field mt-0">
+              <div class="row">
+                ${state.fundAmountBtns(state)}
+              </div>
+            </div>
 
             <div class="error"></div>
           </article>
@@ -208,6 +265,7 @@ export let sendOrReceiveRig = (async function (globals) {
           event.preventDefault()
           // event.stopPropagation()
           state.removeAllListeners()
+          state.sendFull = false
 
           if (state.elements.dialog.returnValue !== 'cancel') {
             resolve(state.elements.dialog.returnValue)
@@ -302,6 +360,28 @@ export let sendOrReceiveRig = (async function (globals) {
           //   fde.intent,
           //   [event.target],
           // )
+          if (String(fde?.intent).includes('amount')) {
+            let [_t, percent] = String(fde.intent).split('_')
+            let amountPercent = ((Number(percent) / 100) * walletFunds.balance)
+            let prettyAmountPercent = fixedDash(roundUsing(Math.ceil, Math.abs(
+              amountPercent
+            )))
+            event.target.amount.value = prettyAmountPercent
+
+            if (percent === '100') {
+              state.sendFull = true
+            } else {
+              state.sendFull = false
+            }
+
+            console.log(`Send ${percent}% of ${walletFunds.balance}`, [
+              amountPercent,
+              prettyAmountPercent,
+              state.sendFull,
+            ])
+
+            return;
+          }
 
           if (fde?.intent === 'scan_qr_code') {
             await appDialogs.scanContact.render(
@@ -373,6 +453,7 @@ export let sendOrReceiveRig = (async function (globals) {
               `CONFIRM ${fde.intent} TO`,
               contact,
               `Ð ${amount || 0}`,
+              {sendFull: state.sendFull},
             )
 
             if (outWallet?.addressIndex !== undefined) {

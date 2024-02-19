@@ -1024,9 +1024,11 @@ export async function createTx(
   //   optimalUtxos
   // );
 
+  let recipientAddr = recipient?.address || recipient
+
   let payments = [
     {
-      address: recipient?.address || recipient,
+      address: recipientAddr,
       satoshis: AMOUNT_SATS,
     },
   ];

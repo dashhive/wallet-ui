@@ -171,12 +171,14 @@ form .field {
   border: 1px solid transparent;
   border-radius: 1.5rem;
   padding: 1rem 1.5rem;
-  margin-top: 3rem;
   flex: 0;
   max-width: 30rem;
   min-width: initial;
   align-self: center;
   align-items: flex-start;
+}
+form .field.amount {
+  margin-top: 3rem;
 }
 form .field > div {
   display: flex;
