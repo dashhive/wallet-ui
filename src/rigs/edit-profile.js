@@ -34,9 +34,9 @@ export let editProfileRig = (async function (globals) {
       cancelTxt: 'Cancel',
       cancelAlt: `Cancel`,
       placement: 'wide',
-      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26">
-      <use xlink:href="#icon-x"></use>
-    </svg>`,
+      uriLabelPrefix: 'Dash Incubator Wallet Funding:',
+      uriLabel: state => encodeURI(`${state.uriLabelPrefix} ${appState.selectedAlias}`),
+      closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       closeAlt: `Close`,
       footer: state => html`
         <footer class="inline col">
@@ -51,7 +51,7 @@ export let editProfileRig = (async function (globals) {
           </button>
         </footer>
       `,
-      getLink: state => `dash:${state.wallet?.address || ''}?label=funding`,
+      getLink: state => `dash:${state.wallet?.address || ''}?label=${state.uriLabel(state)}`,
       content: state => html`
         ${state.header(state)}
 
