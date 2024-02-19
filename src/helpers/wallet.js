@@ -46,7 +46,7 @@ export async function initDashSocket(
   let dashsocket = DashSocket.create({
     dashsocketBaseUrl: 'https://insight.dash.org/socket.io',
     cookieStore: null,
-    debug: true,
+    debug: false,
     ...defaultSocketEvents,
     ...events,
   })
