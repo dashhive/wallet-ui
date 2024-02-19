@@ -228,7 +228,7 @@ form > article > figure figcaption + div {
 }
 form aside > article > figure figcaption + div.big,
 form > article > figure figcaption + div.big {
-  font-size: 3.75rem;
+  font-size: 3rem;
   font-weight: 800;
 }
 form aside > article > figure figcaption + div svg,
@@ -255,6 +255,7 @@ form fieldset.share {
   flex-direction: row;
   align-items: center;
   flex: none;
+  margin: 0;
 }
 form fieldset.share aside {
   display: flex;
@@ -264,8 +265,6 @@ form fieldset.share aside {
   align-self: stretch;
   align-items: center;
   text-align: center;
-  padding-left: 2rem;
-  padding-right: 1rem;
   gap: 1rem;
 }
 form fieldset.share aside input:read-only {
@@ -283,7 +282,7 @@ form fieldset.share aside label {
   color: inherit;
   /* margin-bottom: 2rem; */
 }
-form fieldset.share aside svg {
+form fieldset.share aside span svg {
   height: 100%;
   width: 100%;
 }
@@ -724,5 +723,13 @@ form[name="network"] {
     background-color: var(--co);
     padding: 1rem;
     position: relative;
+  }
+  form fieldset.share aside {
+    padding-left: 2rem;
+    padding-right: 1rem;
+  }
+  form aside > article > figure figcaption + div.big,
+  form > article > figure figcaption + div.big {
+    font-size: 3.75rem;
   }
 }

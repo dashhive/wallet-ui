@@ -114,7 +114,7 @@ dialog form {
   justify-self: center;
   flex-direction: column;
   justify-content: space-between;
-  gap: 2rem;
+  gap: 1rem;
 }
 
 dialog > form > header,
@@ -141,7 +141,6 @@ dialog > form sup {
 dialog > form > footer sup,
 dialog > form > footer sub {
   font-size: .875rem;
-  margin-bottom: 1.25rem;
 }
 dialog > form > footer button {
   padding: .75rem 1rem;
@@ -267,6 +266,7 @@ dialog.responsive footer button[type="reset"],
 dialog.responsive footer button[type="submit"] {
   flex: 1 1 50%;
   border: 1px solid transparent;
+  height: 100%;
   line-height: 1;
 }
 dialog.responsive footer button[type="reset"] {
@@ -464,6 +464,13 @@ dialog .txid {
 }
 
 @media (min-width: 650px) {
+  dialog form {
+    gap: 2rem;
+  }
+  dialog > form > footer sup,
+  dialog > form > footer sub {
+    margin-bottom: 1.25rem;
+  }
   dialog.responsive {
     width: fit-content;
     height: fit-content;
