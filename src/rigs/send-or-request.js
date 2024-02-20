@@ -194,33 +194,6 @@ export let sendOrReceiveRig = (async function (globals) {
               />
 
               ${state.qrScanBtn(state)}
-
-              <datalist id="contactAliases">
-                ${
-                  (state.contacts || [])
-                    .filter(
-                      c => c.alias &&
-                      Object.keys(c.outgoing || {}).length > 0
-                    ).map(contact => {
-                      return html`<option value="@${
-                        contact.alias
-                      }">${
-                        contact.info?.name || contact.alias
-                      }</option>`
-                    })
-                    // Adds multiple entries for
-                    // outgoing wallets per contact
-                    //
-                    // ).map(contact =>
-                    //   Object.values(contact.outgoing).map(co => {
-                    //     return html`<option value="@${
-                    //       contact.alias
-                    //     }#${co?.xkeyId}">${
-                    //       contact.info?.name || contact.alias
-                    //     }</option>`
-                    // }))
-                }
-              </datalist>
             </div>
 
             <div class="field amount">
@@ -272,6 +245,11 @@ export let sendOrReceiveRig = (async function (globals) {
           } else {
             resolve('cancel')
           }
+
+          setTimeout(t => {
+            state.modal.rendered[state.slugs.dialog] = null
+            event?.target?.remove()
+          }, state.delay)
         },
         handleInput: state => async event => {
           event.preventDefault()
@@ -631,12 +609,29 @@ export let sendOrReceiveRig = (async function (globals) {
                 }
               )
 
+              sendOrReceive.close(fde.intent)
+
               await appDialogs.requestQr.render(
                 {
                   name: 'Share to receive funds',
-                  footer: state => html`<footer class="center">
-                    <sub>Share this QR code to receive funds</sub>
-                  </footer>`,
+                  submitTxt: `Select a Contact`,
+                  submitAlt: `Change the currently selected contact`,
+                  // footer: state => html`<footer class="center">
+                  //   <sub>Share this QR code to receive funds</sub>
+                  // </footer>`,
+                  footer: state => html`
+                    <footer class="inline col">
+                      <button
+                        class="rounded"
+                        type="submit"
+                        name="intent"
+                        value="select_address"
+                        title="${state.submitAlt}"
+                      >
+                        <span>${state.submitTxt}</span>
+                      </button>
+                    </footer>
+                  `,
                   wallet: receiveWallet,
                   contact,
                   to,
@@ -648,10 +643,6 @@ export let sendOrReceiveRig = (async function (globals) {
               let showRequestQR = await appDialogs.requestQr.showModal()
             }
           }
-
-          // return;
-
-          // sendOrReceive.close(fde.intent)
         },
       },
     }

@@ -1,6 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
 import { qrSvg } from '../helpers/qr.js'
 import {
+  formDataEntries,
   setClipboard,
   openBlobSVG,
   generatePaymentRequestURI,
@@ -12,7 +13,7 @@ export let requestQrRig = (async function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog,
+    mainApp, setupDialog, appDialogs, appState, userInfo,
   } = globals;
 
   let requestQr = await setupDialog(
@@ -28,16 +29,6 @@ export let requestQrRig = (async function (globals) {
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       closeAlt: `Close`,
       amount: 0,
-      getContact: state => {
-        let to = state.contact?.info?.name
-        if (!to && state.contact?.alias) {
-          to = `@${state.contact?.alias}`
-        }
-        if (!to) {
-          to = state.to
-        }
-        return to
-      },
       footer: state => html`<footer class="center">
         <sub>Share this QR code to receive funds</sub>
       </footer>`,
@@ -60,19 +51,27 @@ export let requestQrRig = (async function (globals) {
           </article>
         `
       },
+      aliasSelector: state => {
+        return html`
+          <input
+            type="text"
+            id="${state.slugs.form}_to"
+            name="to"
+            placeholder="enter @alias or dash address"
+            spellcheck="false"
+            autocomplete="off"
+            list="contactAliases"
+            value="${state.to || ''}"
+          />
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
         <fieldset class="share solo">
           <aside>
-            <!-- <article>
-              <figure>
-                <figcaption>To</figcaption>
-                <div>${state.getContact(state)}</div>
-              </figure>
-            </article> -->
             ${state.showAmount(state)}
-            <span title="Open QR Code in new Window">${qrSvg(
+            <span class="qr" title="Open QR Code in new Window">${qrSvg(
               generatePaymentRequestURI(state),
               {
                 indent: 0,
@@ -102,6 +101,9 @@ export let requestQrRig = (async function (globals) {
           let shareAside = state.elements?.dialog?.querySelector(
             'fieldset.share > aside'
           )
+          let qrWrapper = state.elements?.dialog?.querySelector(
+            'fieldset.share > aside .qr'
+          )
           if (
             shareAside?.contains(event.target)
           ) {
@@ -124,7 +126,8 @@ export let requestQrRig = (async function (globals) {
               setClipboard(event)
             }
             if (
-              event.target?.nodeName.toLowerCase() === 'svg'
+              event.target?.nodeName.toLowerCase() === 'svg' &&
+              qrWrapper?.contains(event.target)
             ) {
               event.preventDefault()
               event.stopPropagation()
@@ -132,7 +135,8 @@ export let requestQrRig = (async function (globals) {
               openBlobSVG(event.target)
             }
             if (
-              event.target?.parentElement?.nodeName.toLowerCase() === 'svg'
+              event.target?.parentElement?.nodeName.toLowerCase() === 'svg' &&
+              qrWrapper?.contains(event.target)
             ) {
               event.preventDefault()
               event.stopPropagation()
@@ -146,7 +150,27 @@ export let requestQrRig = (async function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          console.log('Receive Payment', state, event)
+          let fde = formDataEntries(event)
+
+          if (fde?.intent === 'select_address') {
+            // console.log('SELECT AN ADDRESS', {state, event, fde})
+
+            await appDialogs.sendOrReceive.render({
+              action: 'receive',
+              wallet: state.wallet,
+              account: appState.account,
+              contacts: appState.contacts,
+              userInfo,
+              to: null,
+            })
+            appDialogs.sendOrReceive.showModal()
+
+            return;
+          }
+          // else {
+          //   console.log('Receive Payment', {state, event})
+          // }
+
 
           requestQr.close()
         },

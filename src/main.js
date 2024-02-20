@@ -480,7 +480,7 @@ async function main() {
   })
 
   appDialogs.requestQr = await requestQrRig({
-    mainApp, setupDialog,
+    mainApp, setupDialog, appDialogs, appState, userInfo,
   })
 
   appDialogs.pairQr = await pairQrRig({
@@ -501,22 +501,85 @@ async function main() {
     if (formName === 'send_or_receive') {
       event.preventDefault()
       event.stopPropagation()
-      let name = 'Send Funds'
-      if (fde.intent === 'receive') {
-        name = 'Receive Funds'
-      }
 
-      await appDialogs.sendOrReceive.render({
-        action: fde.intent,
-        wallet,
-        account: appState.account,
-        // accounts,
-        userInfo,
-        contacts: appState.contacts,
-        to: null,
-      })
-      appDialogs.sendOrReceive.showModal()
-        // .catch(console.error)
+      if (fde.intent === 'receive') {
+        let receiveWallet
+
+        if (wallet?.xpub) {
+          wallet.addressIndex = (
+            wallet?.addressIndex || 0
+          ) + 1
+          receiveWallet = await deriveWalletData(
+            appState.phrase,
+            wallet.accountIndex,
+            wallet.addressIndex,
+          )
+        }
+
+        if (receiveWallet?.xkeyId) {
+          let tmpWallet = await store.accounts.getItem(
+            receiveWallet.xkeyId,
+          )
+
+          // state.wallet =
+          let tmpAcct = await store.accounts.setItem(
+            receiveWallet.xkeyId,
+            {
+              ...tmpWallet,
+              updatedAt: (new Date()).toISOString(),
+              address: receiveWallet.address,
+              addressIndex: receiveWallet.addressIndex,
+            }
+          )
+
+          batchGenAcctAddrs(receiveWallet, tmpAcct)
+
+          console.log(
+            `${fde.intent} FROM CONTACT`,
+            {
+              stateWallet: wallet,
+              receiveWallet,
+              tmpAcct,
+            }
+          )
+
+          await appDialogs.requestQr.render(
+            {
+              name: 'Share to receive funds',
+              submitTxt: `Select a Contact`,
+              submitAlt: `Change the currently selected contact`,
+              footer: state => html`
+                <footer class="inline col">
+                  <button
+                    class="rounded"
+                    type="submit"
+                    name="intent"
+                    value="select_address"
+                    title="${state.submitAlt}"
+                  >
+                    <span>${state.submitTxt}</span>
+                  </button>
+                </footer>
+              `,
+              wallet: receiveWallet,
+              contacts: appState.contacts,
+            },
+            'afterend',
+          )
+
+          let showRequestQR = await appDialogs.requestQr.showModal()
+        }
+      } else {
+        await appDialogs.sendOrReceive.render({
+          action: fde.intent,
+          wallet,
+          account: appState.account,
+          userInfo,
+          contacts: appState.contacts,
+          to: null,
+        })
+        appDialogs.sendOrReceive.showModal()
+      }
     }
   })
   document.addEventListener('input', async event => {

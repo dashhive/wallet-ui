@@ -53,7 +53,7 @@ const initialState = {
       }
     </div>
 
-    ${state.footer(state)}
+    ${await state.footer(state)}
   `,
   item: async c => {
     // console.warn('contact list item', c)
@@ -117,7 +117,32 @@ const initialState = {
       </a>
     `
   },
-  footer: state => html``,
+  footer: async state => html`
+    <datalist id="contactAliases">
+      ${
+        state.contacts.length > 0
+          ? (
+              await Promise.all(
+                state.contacts
+                  .filter(
+                    c => c.alias &&
+                    Object.keys(c.outgoing || {}).length > 0
+                  ).map(contact => {
+                    return html`<option value="@${
+                      contact.alias
+                    }">${
+                      contact.info?.name || contact.alias
+                    }</option>`
+                  })
+                // .map(
+                //   async c => await state.item(c)
+                // )
+              )
+            ).join('')
+          : ''
+      }
+    </datalist>
+  `,
   slugs: {
   },
   elements: {
