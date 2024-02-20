@@ -44,7 +44,7 @@ A Graphical User Interface (GUI) for
 
 ### Stage 2
 - [ ] Add "Max" option to send dialog #41
-- [ ] What about putting data into a normal web link (https://wallet.dashincubator.dev with parameters in the query string) that people can just click and accept your friend request)?
+- [ ] What about putting data into a normal web link (https://wallet.dashincubator.dev with parameters in the query string) that people can just click and accept your friend request?
 - [ ] PWA Improvements & Fixes
   - [ ] Fix White Screen of Death
 - [ ] Mobile Improvements
