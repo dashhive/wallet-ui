@@ -93,6 +93,7 @@ export let editProfileRig = (async function (globals) {
                   required
                   spellcheck="false"
                   autocomplete="off"
+                  autocapitalize="off"
                 />
               </div>
               <p>Alias others can call you (similar to a @username)</p>

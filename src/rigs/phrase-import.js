@@ -198,6 +198,7 @@ export let phraseImportRig = (async function (globals) {
                 required
                 spellcheck="false"
                 autocomplete="off"
+                autocapitalize="off"
                 title="Enter a string with one or more characters, that starts & ends with a letter or number and may contain underscores (_), periods (.) & hyphens (-) in between. (E.g. john.doe, jane_doe, 1.dash_fan)"
               />
             </div>

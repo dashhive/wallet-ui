@@ -60,6 +60,7 @@ export let requestQrRig = (async function (globals) {
             placeholder="enter @alias or dash address"
             spellcheck="false"
             autocomplete="off"
+            autocapitalize="off"
             list="contactAliases"
             value="${state.to || ''}"
           />
