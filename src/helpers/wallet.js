@@ -1,4 +1,5 @@
 import {
+  DashWallet,
   DashTx,
   DashHd,
   DashSight,
@@ -23,6 +24,15 @@ import { keccak_256 } from '@noble/hashes/sha3'
 let dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
+});
+
+// @ts-ignore
+let dashwallet = await DashWallet.create({
+  safe: {},
+  store: {
+    save: (a, b, c) => console.log('wallet tried to save stuff', {a, b, c})
+  },
+  dashsight,
 });
 
 let defaultSocketEvents = {
@@ -955,6 +965,7 @@ export async function createTx(
   fundAddrs,
   recipient,
   amount,
+  fullTransfer = false,
 ) {
   const MIN_FEE = 191;
   const DUST = 2000;
@@ -974,6 +985,8 @@ export async function createTx(
     0,
   ))?.address
   let tmpWallet
+
+  let recipientAddr = recipient?.address || recipient
 
   // console.log('createTx fundAddrs', [...fundAddrs])
 
@@ -1007,78 +1020,80 @@ export async function createTx(
     changeAddr = changeAddr || tmpWallet.address
   }
 
-  let optimalUtxos = selectOptimalUtxos(
-    coreUtxos,
+  console.log('output', {
+    amount,
     AMOUNT_SATS,
-  )
+  });
 
-  console.log('coreUtxos', coreUtxos);
-  // console.log(
-  //   'coreUtxos amounts',
-  //   coreUtxos.map(({ address, satoshis }) => ({ address, satoshis }))
-  // );
-  // console.log(
-  //   'optimalUtxos',
-  //   amount,
-  //   AMOUNT_SATS,
-  //   optimalUtxos
-  // );
-
-  let recipientAddr = recipient?.address || recipient
-
-  let payments = [
-    {
-      address: recipientAddr,
-      satoshis: AMOUNT_SATS,
-    },
-  ];
-
-  let spendableDuffs = optimalUtxos.reduce(function (total, utxo) {
-    return total + utxo.satoshis;
-  }, 0);
-  let spentDuffs = payments.reduce(function (total, output) {
-    return total + output.satoshis;
-  }, 0);
-  let unspentDuffs = spendableDuffs - spentDuffs;
-
-  let txInfo = {
-    inputs: optimalUtxos,
-    outputs: payments,
-  };
-
-  let sizes = DashTx.appraise(txInfo);
-  let midFee = sizes.mid;
-
-  if (unspentDuffs < MIN_FEE) {
-    throw new Error(
-      `overspend: inputs total '${spendableDuffs}', but outputs total '${spentDuffs}', which leaves no way to pay the fee of '${sizes.mid}'`,
-    );
-  }
-
-  txInfo.inputs.sort(DashTx.sortInputs)
-
-  let outputs = txInfo.outputs.slice(0);
-  let change;
-
-  change = unspentDuffs - (midFee + DashTx.OUTPUT_SIZE);
-  if (change < DUST) {
-    change = 0;
-  }
-  if (change) {
-    txInfo.outputs = outputs.slice(0);
-    txInfo.outputs.push({
-      address: changeAddr,
-      satoshis: change,
+  let selection
+  let receiverOutput
+  if (fullTransfer) {
+    selection = dashwallet.useAllCoins({
+      utxos: coreUtxos,
+      breakChange: false,
+    })
+    receiverOutput = selection.output
+  } else {
+    receiverOutput = DashWallet._parseSendInfo(dashwallet, AMOUNT_SATS);
+    console.log('_parseSendInfo receiverOutput', {
+      receiverOutput,
+    });
+    selection = dashwallet.useMatchingCoins({
+      output: receiverOutput,
+      utxos: coreUtxos,
+      breakChange: false,
+    })
+    console.log('sendMatchingUtxos', {
+      selection,
     });
   }
 
-  txInfo.outputs.sort(DashTx.sortOutputs)
+  console.log('coreUtxos', {
+    coreUtxos,
+    selection,
+    amount,
+    AMOUNT_SATS,
+    fullTransfer,
+  });
 
-  let keys = optimalUtxos.map(
-    utxo => privateKeys[utxo.address]
-  );
+  let outputs = [];
+  let stampVal = dashwallet.__STAMP__ * selection.output.stampsPerCoin;
+  let receiverDenoms = receiverOutput?.denoms.slice(0);
+
+  for (let denom of selection.output.denoms) {
+    let address = '';
+    let matchingDenomIndex = receiverDenoms.indexOf(denom);
+    if (matchingDenomIndex >= 0) {
+      void receiverDenoms.splice(matchingDenomIndex, 1);
+      address = recipientAddr;
+    } else {
+      address = changeAddr;
+    }
+
+    let coreOutput = {
+      address,
+      // address: addrsInfo.addresses.pop(),
+      satoshis: denom + stampVal,
+      faceValue: denom,
+      stamps: selection.output.stampsPerCoin,
+    };
+
+    outputs.push(coreOutput);
+  }
+
+  let txInfo = {
+    inputs: selection.inputs,
+    outputs: outputs,
+  };
+
+  txInfo.outputs.sort(DashTx.sortOutputs)
+  txInfo.inputs.sort(DashTx.sortInputs)
 
   console.log('txInfo', txInfo);
+
+  let keys = txInfo.inputs.map(
+    utxo => privateKeys[utxo.address]
+  );
 
   let tx = await dashTx.hashAndSignAll(txInfo, keys);
 

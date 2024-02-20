@@ -130,7 +130,7 @@ export let sendOrReceiveRig = (async function (globals) {
         }
 
         return html`
-          <button
+          <!-- <button
             class="rounded outline"
             type="submit"
             name="intent"
@@ -140,7 +140,7 @@ export let sendOrReceiveRig = (async function (globals) {
             <span>
               25%
             </span>
-          </button>
+          </button> -->
           <button
             class="rounded outline"
             type="submit"
@@ -149,10 +149,10 @@ export let sendOrReceiveRig = (async function (globals) {
             title="${state.scanAlt}"
           >
             <span>
-              50%
+              HALF
             </span>
           </button>
-          <button
+          <!-- <button
             class="rounded outline"
             type="submit"
             name="intent"
@@ -162,8 +162,8 @@ export let sendOrReceiveRig = (async function (globals) {
             <span>
               75%
             </span>
-          </button>
-          <!-- <button
+          </button> -->
+          <button
             class="rounded outline"
             type="submit"
             name="intent"
@@ -171,9 +171,9 @@ export let sendOrReceiveRig = (async function (globals) {
             title="${state.scanAlt}"
           >
             <span>
-              100%
+              FULL
             </span>
-          </button> -->
+          </button>
         `
       },
       content: state => html`
@@ -189,6 +189,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 placeholder="enter @alias or dash address"
                 spellcheck="false"
                 autocomplete="off"
+                autocapitalize="off"
                 list="contactAliases"
                 value="${state.to || ''}"
               />
@@ -341,7 +342,7 @@ export let sendOrReceiveRig = (async function (globals) {
           if (String(fde?.intent).includes('amount')) {
             let [_t, percent] = String(fde.intent).split('_')
             let amountPercent = ((Number(percent) / 100) * walletFunds.balance)
-            let prettyAmountPercent = fixedDash(roundUsing(Math.ceil, Math.abs(
+            let prettyAmountPercent = fixedDash(roundUsing(Math.floor, Math.abs(
               amountPercent
             )))
             event.target.amount.value = prettyAmountPercent
@@ -464,7 +465,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 state.wallet.accountIndex,
                 state.wallet.addressIndex,
               )
-              let amountNeeded = fixedDash(roundUsing(Math.ceil, Math.abs(
+              let amountNeeded = fixedDash(roundUsing(Math.floor, Math.abs(
                 walletFunds.balance - Number(fde.amount)
               )))
 
@@ -496,11 +497,15 @@ export let sendOrReceiveRig = (async function (globals) {
               fundingAddrs = Object.values(
                 fundingAddrs || {}
               )
+              let leftoverBalance = walletFunds.balance - amount
+              let fullTransfer = leftoverBalance <= 0.0010_0200
+
               tx = await createTx(
                 state.wallet,
                 fundingAddrs,
                 address,
                 amount,
+                fullTransfer,
               )
 
               console.log(

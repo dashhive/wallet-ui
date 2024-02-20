@@ -490,6 +490,68 @@ async function main() {
 
   svgSprite.render()
 
+  let ks = wallets?.[appState.selectedWallet]
+    ?.keystore
+  let ks_phrase = ks?.crypto?.ciphertext || ''
+  let ks_iv = ks?.crypto?.cipherparams?.iv || ''
+  let ks_salt = ks?.crypto?.kdfparams?.salt || ''
+
+  if (appState.encryptionPassword && ks) {
+    try {
+      appState.phrase = await decryptKeystore(
+        appState.encryptionPassword,
+        ks,
+      )
+
+      appTools.storedData = storedData(
+        appState.encryptionPassword,
+        ks,
+      )
+    } catch(err) {
+      console.error(
+        '[fail] unable to decrypt seed phrase',
+        err
+      )
+      sessionStorage.removeItem('encryptionPassword')
+    }
+  }
+
+  if (
+    !appState.phrase &&
+    ks_phrase && ks_iv && ks_salt
+  ) {
+    sessionStorage.removeItem('encryptionPassword')
+
+    await appDialogs.walletDecrypt.render({ wallet })
+    await appDialogs.walletDecrypt.showModal()
+  }
+
+  walletFunds._listeners = [
+    ...walletFunds._listeners,
+    (state, oldState) => {
+      if (state.balance !== oldState.balance) {
+        dashBalance?.restate({
+          wallet,
+          walletFunds: {
+            balance: state.balance
+          }
+        })
+      }
+    }
+  ]
+
+  if (!appState.phrase) {
+    await appDialogs.onboard.render()
+    await appDialogs.onboard.show()
+  } else {
+    wallet = await deriveWalletData(appState.phrase)
+  }
+
+  // temp fix, should be handled already
+  if (appState.phrase && !wallet) {
+    wallet = await deriveWalletData(appState.phrase)
+  }
+
   document.addEventListener('submit', async event => {
     let {
       // @ts-ignore
@@ -507,7 +569,7 @@ async function main() {
 
         if (wallet?.xpub) {
           wallet.addressIndex = (
-            wallet?.addressIndex || 0
+            appState.selectedWallet?.addressIndex || 0
           ) + 1
           receiveWallet = await deriveWalletData(
             appState.phrase,
@@ -629,68 +691,6 @@ async function main() {
       }
     }
   })
-
-  let ks = wallets?.[appState.selectedWallet]
-    ?.keystore
-  let ks_phrase = ks?.crypto?.ciphertext || ''
-  let ks_iv = ks?.crypto?.cipherparams?.iv || ''
-  let ks_salt = ks?.crypto?.kdfparams?.salt || ''
-
-  if (appState.encryptionPassword && ks) {
-    try {
-      appState.phrase = await decryptKeystore(
-        appState.encryptionPassword,
-        ks,
-      )
-
-      appTools.storedData = storedData(
-        appState.encryptionPassword,
-        ks,
-      )
-    } catch(err) {
-      console.error(
-        '[fail] unable to decrypt seed phrase',
-        err
-      )
-      sessionStorage.removeItem('encryptionPassword')
-    }
-  }
-
-  if (
-    !appState.phrase &&
-    ks_phrase && ks_iv && ks_salt
-  ) {
-    sessionStorage.removeItem('encryptionPassword')
-
-    await appDialogs.walletDecrypt.render({ wallet })
-    await appDialogs.walletDecrypt.showModal()
-  }
-
-  walletFunds._listeners = [
-    ...walletFunds._listeners,
-    (state, oldState) => {
-      if (state.balance !== oldState.balance) {
-        dashBalance?.restate({
-          wallet,
-          walletFunds: {
-            balance: state.balance
-          }
-        })
-      }
-    }
-  ]
-
-  if (!appState.phrase) {
-    await appDialogs.onboard.render()
-    await appDialogs.onboard.show()
-  } else {
-    wallet = await deriveWalletData(appState.phrase)
-  }
-
-  // temp fix, should be handled already
-  if (appState.phrase && !wallet) {
-    wallet = await deriveWalletData(appState.phrase)
-  }
 
   batchGenAcctsAddrs(wallet)
     // .then(data => console.warn('batchGenAcctsAddrs', { data }))

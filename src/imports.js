@@ -12,7 +12,6 @@
  * See https://github.com/jojobyte/browser-import-rabbit-hole
  */
 
-// import '../node_modules/dashwallet/dashwallet.js';
 import '../node_modules/dashtx/dashtx.js';
 import '../node_modules/dashkeys/dashkeys.js';
 import '../node_modules/dashhd/dashhd.js';
@@ -23,9 +22,9 @@ import '../node_modules/@dashincubator/base58check/base58check.js';
 import '../node_modules/@dashincubator/ripemd160/ripemd160.js';
 import '../node_modules/@dashincubator/secp256k1/secp256k1.js';
 import '../node_modules/crypticstorage/cryptic.js';
+import '../node_modules/dashwallet/dashwallet.js';
 import '../node_modules/localforage/dist/localforage.js';
 
-// import * as DashWalletTypes from '../node_modules/dashwallet/dashwallet.js';
 import * as DashTxTypes from '../node_modules/dashtx/dashtx.js';
 import * as DashKeysTypes from '../node_modules/dashkeys/dashkeys.js';
 import * as DashHDTypes from '../node_modules/dashhd/dashhd.js';
@@ -37,10 +36,9 @@ import * as RIPEMD160Types from '../node_modules/@dashincubator/ripemd160/ripemd
 import * as Secp256k1Types from '../node_modules/@dashincubator/secp256k1/secp256k1.js';
 import * as CrypticTypes from '../node_modules/crypticstorage/cryptic.js';
 import * as CrypticStorageTypes from '../node_modules/crypticstorage/storage.js';
+import * as DashWalletTypes from '../node_modules/dashwallet/dashwallet.js';
 // import * as LocalForageTypes from '../node_modules/localforage/dist/localforage.js';
 
-// /** @type {DashWalletTypes} */
-// export let DashWallet = window?.Wallet || globalThis?.Wallet;
 /** @type {DashTxTypes} */
 export let DashTx = window?.DashTx || globalThis?.DashTx;
 /** @type {DashKeysTypes} */
@@ -65,12 +63,14 @@ export let Cryptic =
 /** @type {CrypticStorageTypes} */
 export let CrypticStorage =
   window?.CrypticStorage || globalThis?.CrypticStorage;
+/** @type {DashWalletTypes} */
+export let DashWallet = window?.Wallet || globalThis?.Wallet;
 
 export let localforage =
   window?.localforage || globalThis?.localforage;
 
 export default {
-  // DashWallet,
+  DashWallet,
   DashTx,
   DashKeys,
   DashHd,
