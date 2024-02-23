@@ -360,6 +360,54 @@ async function getUserInfo() {
   }
 }
 
+async function handlePasswordToggle(event) {
+  let {
+    // @ts-ignore
+    name: fieldName, form,
+  } = event?.target
+
+  // console.log('handlePasswordToggle', {
+  //   fieldName,
+  //   form,
+  // })
+
+  if (
+    fieldName === 'show_pass'
+  ) {
+    event.stopPropagation()
+    event.preventDefault()
+
+    let { pass, show_pass, } = form
+
+    if (show_pass?.checked) {
+      pass.type = 'text'
+    } else {
+      pass.type = 'password'
+    }
+  }
+}
+
+function getTarget(event, selector) {
+  let {
+    // @ts-ignore
+    id,
+    // @ts-ignore
+    parentElement,
+  } = event?.target
+
+  let target
+
+  if (id === selector) {
+    target = event?.target
+  }
+
+  if (parentElement.id === selector) {
+    target = parentElement
+  }
+
+  return target
+}
+
 async function main() {
   appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
@@ -540,14 +588,14 @@ async function main() {
     }
   ]
 
+  document.addEventListener('input', handlePasswordToggle)
+  document.addEventListener('change', handlePasswordToggle)
+
   if (!appState.phrase) {
     await appDialogs.onboard.render()
     await appDialogs.onboard.show()
-  } else {
-    wallet = await deriveWalletData(appState.phrase)
   }
 
-  // temp fix, should be handled already
   if (appState.phrase && !wallet) {
     wallet = await deriveWalletData(appState.phrase)
   }
@@ -555,7 +603,7 @@ async function main() {
   document.addEventListener('submit', async event => {
     let {
       // @ts-ignore
-      name: formName, parentElement, form,
+      name: formName,
     } = event?.target
 
     let fde = formDataEntries(event)
@@ -644,53 +692,6 @@ async function main() {
       }
     }
   })
-  document.addEventListener('input', async event => {
-    let {
-      // @ts-ignore
-      name: fieldName, form,
-    } = event?.target
-
-    if (
-      fieldName === 'show_pass'
-    ) {
-      event.stopPropagation()
-      event.preventDefault()
-
-      let { pass, show_pass, } = form
-
-      if (show_pass?.checked) {
-        pass.type = 'text'
-      } else {
-        pass.type = 'password'
-      }
-    }
-  })
-  document.addEventListener('change', async event => {
-    let {
-      // @ts-ignore
-      name: fieldName, parentElement, form,
-    } = event?.target
-
-    // console.log('form change', {
-    //   fieldName,
-    //   form,
-    // })
-
-    if (
-      fieldName === 'show_pass'
-    ) {
-      event.stopPropagation()
-      event.preventDefault()
-
-      let { pass, show_pass, } = form
-
-      if (show_pass?.checked) {
-        pass.type = 'text'
-      } else {
-        pass.type = 'password'
-      }
-    }
-  })
 
   batchGenAcctsAddrs(wallet)
     // .then(data => console.warn('batchGenAcctsAddrs', { data }))
@@ -732,27 +733,6 @@ async function main() {
     contacts: appState.contacts
   })
   sendRequestBtn.render()
-
-  function getTarget(event, selector) {
-    let {
-      // @ts-ignore
-      id,
-      // @ts-ignore
-      parentElement,
-    } = event?.target
-
-    let target
-
-    if (id === selector) {
-      target = event?.target
-    }
-
-    if (parentElement.id === selector) {
-      target = parentElement
-    }
-
-    return target
-  }
 
   document.addEventListener('click', async event => {
     let {

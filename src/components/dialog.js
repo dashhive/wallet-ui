@@ -93,11 +93,46 @@ const initialState = {
   },
   events: {
     handleInput: state => event => {
-      event.preventDefault()
+      // let {
+      //   // @ts-ignore
+      //   name: fieldName, form,
+      // } = event?.target
+
+      // console.log('handle input', {
+      //   fieldName,
+      //   form,
+      // })
+
       if (
         event?.target?.validity?.patternMismatch &&
         event?.target?.type !== 'checkbox'
       ) {
+        event.preventDefault()
+        let label = event.target?.previousElementSibling?.textContent?.trim()
+        if (label) {
+          event.target.setCustomValidity(`Invalid ${label}`)
+        }
+      } else {
+        event.target.setCustomValidity('')
+      }
+      event.target.reportValidity()
+    },
+    handleChange: state => event => {
+      // let {
+      //   // @ts-ignore
+      //   name: fieldName, form,
+      // } = event?.target
+
+      // console.log('handle change', {
+      //   fieldName,
+      //   form,
+      // })
+
+      if (
+        event?.target?.validity?.patternMismatch &&
+        event?.target?.type !== 'checkbox'
+      ) {
+        event.preventDefault()
         let label = event.target?.previousElementSibling?.textContent?.trim()
         if (label) {
           event.target.setCustomValidity(`Invalid ${label}`)
@@ -110,21 +145,21 @@ const initialState = {
     handleBlur: state => event => {
       // event.preventDefault()
       // console.log(
-      //   'handle input blur',
+      //   'handle blur',
       //   event,
       // )
     },
     handleFocusOut: state => event => {
       // event.preventDefault()
       // console.log(
-      //   'handle input focus out',
+      //   'handle focus out',
       //   event,
       // )
     },
     handleFocusIn: state => event => {
       // event.preventDefault()
       // console.log(
-      //   'handle input focus in',
+      //   'handle focus in',
       //   event,
       // )
     },
@@ -139,21 +174,6 @@ const initialState = {
     },
     handleDragLeave: state => event => {
       event.preventDefault()
-    },
-    handleChange: state => event => {
-      event.preventDefault()
-      if (
-        event?.target?.validity?.patternMismatch &&
-        event?.target?.type !== 'checkbox'
-      ) {
-        let label = event.target?.previousElementSibling?.textContent?.trim()
-        if (label) {
-          event.target.setCustomValidity(`Invalid ${label}`)
-        }
-      } else {
-        event.target.setCustomValidity('')
-      }
-      event.target.reportValidity()
     },
     handleRender: (
       state,
