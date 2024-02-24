@@ -453,7 +453,7 @@ export function DashURLSearchParams(params) {
     })
   }
 
-  if(params instanceof Array && params.length > 0) {
+  if(Array.isArray(params) && params.length > 0) {
     params.forEach(q => {
       let [prop,val] = q
       qry[prop] = val
