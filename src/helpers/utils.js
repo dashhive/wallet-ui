@@ -423,12 +423,56 @@ export function sortContactsByName(a, b) {
   return 0;
 }
 
+export function DashURLSearchParams(params) {
+  let searchParams
+  let qry = {}
+
+  Object.defineProperty(this, "entries", {
+    enumerable: false,
+    configurable: false,
+    writable: false,
+    value: () => Object.entries(qry),
+  });
+  Object.defineProperty(this, "toString", {
+    enumerable: false,
+    configurable: false,
+    writable: false,
+    value: () => this.entries().map(p => p.join('=')).join('&'),
+  });
+  Object.defineProperty(this, "size", {
+    get() { return this.entries().length },
+    enumerable: false,
+    configurable: false,
+  });
+
+  if (typeof params === 'string' && params !== '') {
+    searchParams = params.split('&')
+    searchParams.forEach(q => {
+      let [prop,val] = q.split('=')
+      qry[prop] = val
+    })
+  }
+
+  if(params instanceof Array && params.length > 0) {
+    params.forEach(q => {
+      let [prop,val] = q
+      qry[prop] = val
+    })
+  }
+
+  // console.log('DashURLSearchParams', {
+  //   params, searchParams, qry,
+  //   qryStr: this.toString(),
+  // })
+}
+
 export function parseDashURI(uri) {
   let result = {}
   let parsedUri = [
     ...uri.matchAll(DASH_URI_REGEX)
   ]?.[0]?.groups || {}
-  let searchParams = new URLSearchParams(parsedUri?.params || '')
+  // let searchParams = new URLSearchParams(parsedUri?.params || '')
+  let searchParams = new DashURLSearchParams(parsedUri?.params || '')
 
   console.log(
     'parseDashURI',
@@ -534,7 +578,11 @@ export function generateContactPairingURI(
   }
 
   let scope = claims.map(p => p[0]).join(',')
-  let searchParams = new URLSearchParams([
+  // let searchParams = new URLSearchParams([
+  //   ...claims,
+  //   ['scope', scope]
+  // ])
+  let searchParams = new DashURLSearchParams([
     ...claims,
     ['scope', scope]
   ])
@@ -542,6 +590,8 @@ export function generateContactPairingURI(
   console.log(
     'Generate Dash URI claims',
     claims, scope, searchParams,
+    searchParams.size,
+    searchParams.entries(),
   )
 
   let res = `${protocol}${joiner}${addr}`
@@ -601,7 +651,10 @@ export function generatePaymentRequestURI(
     )
   }
 
-  let searchParams = new URLSearchParams([
+  // let searchParams = new URLSearchParams([
+  //   ...claims,
+  // ])
+  let searchParams = new DashURLSearchParams([
     ...claims,
   ])
 
