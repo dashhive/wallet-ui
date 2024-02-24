@@ -171,7 +171,7 @@ export let sendConfirmRig = (async function (globals) {
             )
 
             console.log(
-              `${fde.intent} TO ${address}`,
+              `${fde.intent} TO ${state.to}`,
               `Ð ${state.amount || 0}`,
               state.contact,
               txRes,
@@ -180,8 +180,8 @@ export let sendConfirmRig = (async function (globals) {
             await appDialogs.txInfo.render(
               {
                 contact: state.contact,
-                txRes,
                 amount: state.amount,
+                txRes,
               },
               'afterend',
             )

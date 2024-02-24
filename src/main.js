@@ -524,7 +524,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools,
     store, userInfo, contactsList, walletFunds,
     setupDialog, deriveWalletData, getAddrsWithFunds,
-    createTx, sendTx,
+    createTx, sendTx, updateAllFunds,
   })
 
   appDialogs.requestQr = await requestQrRig({
@@ -909,6 +909,15 @@ async function main() {
           '===sentTransactions TXID===',
           appState?.sentTransactions?.[data.txid]
         )
+
+        setTimeout(() =>
+          updateAllFunds(wallet, walletFunds)
+            .then(funds => {
+              console.log('updateAllFunds then funds', funds)
+            })
+            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+          1000
+        )
       }
 
       let now = Date.now();
@@ -948,10 +957,10 @@ async function main() {
           txUpdates[data.txid] = true
           store.addresses.getItem(addr)
             .then(async storedAddr => {
-              if (storedAddr?.insight?.updated_at) {
+              if (storedAddr?.insight?.updatedAt) {
                 storedAddr.insight.balance = (duffs / DUFFS)
                 storedAddr.insight.balanceSat = duffs
-                storedAddr.insight.updated_at = 0
+                storedAddr.insight.updatedAt = 0
                 store.addresses.setItem(addr, storedAddr)
               }
             })
@@ -996,10 +1005,10 @@ async function main() {
         updates[addr] = newTx
         store.addresses.getItem(addr)
           .then(async storedAddr => {
-            if (storedAddr.insight?.updated_at) {
+            if (storedAddr.insight?.updatedAt) {
               storedAddr.insight.balance += (duffs / DUFFS)
               storedAddr.insight.balanceSat += duffs
-              storedAddr.insight.updated_at = 0
+              storedAddr.insight.updatedAt = 0
               store.addresses.setItem(addr, storedAddr)
             }
           })
@@ -1020,6 +1029,15 @@ async function main() {
           }
           appDialogs.requestQr.close()
         }
+
+        setTimeout(() =>
+          updateAllFunds(wallet, walletFunds)
+            .then(funds => {
+              console.log('updateAllFunds then funds', funds)
+            })
+            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+          1000
+        )
       }
       let txs = appState?.sentTransactions
 

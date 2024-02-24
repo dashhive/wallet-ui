@@ -4,6 +4,8 @@ import {
   formDataEntries,
   parseAddressField,
   fixedDash,
+  toDASH,
+  toDash,
   roundUsing,
 } from '../helpers/utils.js'
 
@@ -500,17 +502,27 @@ export let sendOrReceiveRig = (async function (globals) {
               let leftoverBalance = walletFunds.balance - amount
               let fullTransfer = leftoverBalance <= 0.0010_0200
 
-              tx = await createTx(
+              let { tx: createdTx, changeAddr } = await createTx(
                 state.wallet,
                 fundingAddrs,
                 address,
                 amount,
                 fullTransfer,
               )
+              tx = createdTx
+
+              let amountToSend = 0
+              tx.outputs
+                .filter(o => o.address !== changeAddr)
+                .forEach(o => {
+                  amountToSend += o.satoshis
+                  console.log('tx output loop', o, amountToSend)
+                })
 
               console.log(
                 `TX TO ${address}`,
                 `Ð ${amount || 0}`,
+                `Ð ${toDash(amountToSend)}`,
                 contact,
                 tx,
               )
