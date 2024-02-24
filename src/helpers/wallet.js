@@ -903,7 +903,7 @@ export function sortAddrs(a, b) {
   // Ascending Vout (Numerical)
   let indexDiff = a.addressIndex - b.addressIndex;
   return indexDiff;
-};
+}
 
 export function getBalance(utxos) {
   return utxos.reduce(function (total, utxo) {
@@ -988,7 +988,7 @@ export async function createTx(
 
   let cachedAddrs = {}
 
-  console.log(DashTx, fromWallet)
+  // console.log(DashTx, fromWallet)
 
   let dashTx = DashTx.create({
     // @ts-ignore
@@ -1054,23 +1054,13 @@ export async function createTx(
     }
   }
 
-  console.log('fundAddrs', {fundAddrs, cachedAddrs})
+  // console.log('fundAddrs', {fundAddrs, cachedAddrs})
 
   // @ts-ignore
   let dashwallet = await DashWallet.create({
     safe: {
       cache: {
         addresses: cachedAddrs
-        // {
-        //   'Xaddr': {
-        //     checked_at: 0,
-        //     hdpath: `m/44'/${COIN_TYPE}'/${account}'/${usage}`,
-        //     index: index,
-        //     txs: [],
-        //     utxos: [],
-        //     wallet: wallet,
-        //   },
-        // },
       }
     },
     store: {
