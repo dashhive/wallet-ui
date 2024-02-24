@@ -921,7 +921,7 @@ async function main() {
 
       // console.log('init dash socket vout', data.vout)
 
-      let result = data.vout.some(function (vout) {
+      let result = data.vout.filter(function (vout) {
         let v = Object.keys(vout)
         let addr = v[0]
         let duffs = vout[addr];
@@ -1007,7 +1007,7 @@ async function main() {
         return newTx;
       });
 
-      if (result) {
+      if (result.length > 0) {
         console.log(
           'socket found address in store',
           updates,
