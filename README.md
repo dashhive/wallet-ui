@@ -43,18 +43,7 @@ A Graphical User Interface (GUI) for
   - Fix any bugs that arise
 
 ### Stage 2
-- [ ] #41
-- [ ] #43
-- [ ] #44
-- [ ] #45
-- [ ] #46
-- [ ] #47
-- [ ] #48
-- [ ] #49
-- [ ] #39
-- [ ] #50
-- [ ] #51
-- [ ] #52
+See the [Stage 2](/../../milestone/2) milestone
 
 ### Stage 2 - QA
 - [ ] ...
