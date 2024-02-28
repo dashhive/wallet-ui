@@ -40,37 +40,24 @@ A Graphical User Interface (GUI) for
 
 ### Stage 1 - QA
 - [ ] User testing of wallet and all processes
-  - [ ] Fix any bugs that arise
+  - Fix any bugs that arise
 
 ### Stage 2
-- [ ] Add "Max" option to send dialog #41
-- [ ] What about putting data into a normal web link (https://wallet.dashincubator.dev with parameters in the query string) that people can just click and accept your friend request?
-- [ ] PWA Improvements & Fixes
-  - [ ] Fix White Screen of Death
-- [ ] Mobile Improvements
-- [ ] Display Wallet balance in desired fiat currency
-- [ ] Settings
-  - [ ] Preferred fiat Currency (USD, GBP, EUR, etc)
-- [ ] Add Memo to Send Dialog
-- [ ] Integrations
-  - [ ] Save
-    - [ ] CrowdNode
-    - [ ] Maya
-  - [ ] Spend - Gift Cards
-    - [ ] DashSpend (CTX)
-    - [ ] BitRefill
-  - [ ] Earn
-- [ ] Contact/Payment Share Features
-  - [ ] QR Image / Button Fixes
-- [ ] System Wrappers
-  - [ ] Desktop / Tauri Wrapper
-  - [ ] Mobile / Capacitor App
-
-- [ ] feat: I kind of want some hover options right on each contact in the list. This would bring some life and color to the otherwise sparse list.
-  - [ ] trash icon - quickly get rid of contacts that I know I didn’t share
+- [ ] #41
+- [ ] #43
+- [ ] #44
+- [ ] #45
+- [ ] #46
+- [ ] #47
+- [ ] #48
+- [ ] #49
+- [ ] #39
+- [ ] #50
+- [ ] #51
+- [ ] #52
 
 ### Stage 2 - QA
-- [ ]
+- [ ] ...
 
 ### Stage 3
 - [ ] Contact/Payment Share Features
@@ -86,7 +73,7 @@ A Graphical User Interface (GUI) for
 - [ ] Theme: Light version
 
 ### Stage 3 - QA
-- [ ]
+- [ ] ...
 
 ### Stage 4
 - [ ] Localization for multiple languages
@@ -98,7 +85,7 @@ A Graphical User Interface (GUI) for
 - [ ] Add side-by-side view for contacts to display the XPubs that represent both you & the contact in the connection
 
 ### Stage 4 - QA
-- [ ]
+- [ ] ...
 
 
 ### Backlog
@@ -115,4 +102,4 @@ A Graphical User Interface (GUI) for
 - [ ] Contact Data List Selector in the Send Dialog on mobile does not show contact alias hints
   - Appears to be an issue specific to Firefox on Android, both normal version (in normal & private view) & Firefox Focus
 - [ ] Edit Profile, Add Contact & Insufficient Wallet Funds Dialogs have layout issues on mobile
-- [ ]
+- [ ] ...
