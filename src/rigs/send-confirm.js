@@ -78,6 +78,28 @@ export let sendConfirmRig = (async function (globals) {
               </div>
             </figure>
           </article>
+          <article>
+            <figure>
+              <figcaption>Full Amount</figcaption>
+              <div class="big">
+                <svg width="32" height="33" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${state.fullAmount}
+              </div>
+            </figure>
+          </article>
+          <article>
+            <figure>
+              <figcaption>Estimated Fee</figcaption>
+              <div>
+                <svg width="32" height="33" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${state.fee?.dash}
+              </div>
+            </figure>
+          </article>
         `
       },
       content: state => html`
@@ -180,7 +202,8 @@ export let sendConfirmRig = (async function (globals) {
             await appDialogs.txInfo.render(
               {
                 contact: state.contact,
-                amount: state.amount,
+                amount: state.fullAmount,
+                fee: state.fee?.dash,
                 txRes,
               },
               'afterend',

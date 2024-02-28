@@ -66,6 +66,17 @@ export let txInfoRig = (async function (globals) {
               </div>
             </figure>
           </article>
+          <article>
+            <figure>
+              <figcaption>Estimated Fee</figcaption>
+              <div>
+                <svg width="32" height="33" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${state.fee}
+              </div>
+            </figure>
+          </article>
         `
       },
       showTransaction: state => {

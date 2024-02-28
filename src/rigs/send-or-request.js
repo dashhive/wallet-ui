@@ -405,7 +405,7 @@ export let sendOrReceiveRig = (async function (globals) {
             return;
           }
 
-          let inWallet, outWallet, address, tx, contact
+          let inWallet, outWallet, address, contact
           let to = String(fde.to), amount = Number(fde.amount)
           let receiveWallet = {}, sendWallet = {}
 
@@ -502,49 +502,62 @@ export let sendOrReceiveRig = (async function (globals) {
               let leftoverBalance = walletFunds.balance - amount
               let fullTransfer = leftoverBalance <= 0.0010_0200
 
-              let { tx: createdTx, changeAddr } = await createTx(
+              let { tx, changeAddr, fee } = await createTx(
                 state.wallet,
                 fundingAddrs,
                 address,
                 amount,
                 fullTransfer,
               )
-              tx = createdTx
 
-              let amountToSend = 0
+              let fullAmount = 0
+
               tx.outputs
-                .filter(o => o.address !== changeAddr)
+                .filter(o => ![changeAddr].includes(o.address))
                 .forEach(o => {
-                  amountToSend += o.satoshis
-                  console.log('tx output loop', o, amountToSend)
+                  fullAmount += o.satoshis
+                  console.log('tx output loop', o, fullAmount)
                 })
 
+              let estimatedSatFee = fee * tx.outputs.length
+              let estimatedDashFee = toDash(fee)
+
               console.log(
-                `TX TO ${address}`,
-                `Ð ${amount || 0}`,
-                `Ð ${toDash(amountToSend)}`,
+                `TX TO ${address} for Ð ${amount || 0}`,
+              )
+              console.log([
+                `Actual Amount: Ð ${toDash(fullAmount)}`,
+                `SATS Fee: ${fee}`,
+                `Fee: ${estimatedDashFee}`,
+              ])
+              console.log({
                 contact,
                 tx,
-              )
+              })
               console.log(
                 `TX HEX`,
                 tx.transaction,
               )
+
+              await appDialogs.sendConfirm.render(
+                {
+                  wallet: state.wallet,
+                  // wallet: sendWallet,
+                  contact,
+                  to,
+                  amount,
+                  fullAmount: toDash(fullAmount),
+                  tx,
+                  fee: {
+                    sat: fee,
+                    dash: estimatedDashFee
+                  }
+                },
+                'afterend',
+              )
+
+              let showConfirm = await appDialogs.sendConfirm.showModal()
             }
-
-            await appDialogs.sendConfirm.render(
-              {
-                wallet: state.wallet,
-                // wallet: sendWallet,
-                contact,
-                to,
-                amount,
-                tx,
-              },
-              'afterend',
-            )
-
-            let showConfirm = await appDialogs.sendConfirm.showModal()
           }
 
           if (fde.intent === 'receive') {
