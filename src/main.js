@@ -889,7 +889,7 @@ async function main() {
     })
     .catch(err => console.error('catch updateAllFunds', err, wallet))
 
-  let addrs = (await store.addresses.keys()) || []
+  let storedAddrs = (await store.addresses.keys()) || []
 
   initDashSocket({
     onMessage: async function (evname, data) {
@@ -928,15 +928,16 @@ async function main() {
       //   }
       // }
 
-      // console.log('init dash socket vout', data.vout)
+      // console.log('dash socket vout', data)
 
       let result = data.vout.filter(function (vout) {
         let v = Object.keys(vout)
         let addr = v[0]
-        let duffs = vout[addr];
-        let checkAddr = addrs.includes(addr)
+        let duffs = vout[addr]
+        let checkAddr = storedAddrs.includes(addr)
 
         if (!checkAddr) {
+
           if (
             appState?.sentTransactions?.[data.txid]
           ) {
@@ -954,14 +955,21 @@ async function main() {
           checkAddr &&
           appState?.sentTransactions?.[data.txid]
         ) {
+          // console.log('data.vout.filter', vout, data)
+
           txUpdates[data.txid] = true
           store.addresses.getItem(addr)
             .then(async storedAddr => {
               if (storedAddr?.insight?.updatedAt) {
+                // let tmpBalance = storedAddr.insight.balance
                 storedAddr.insight.balance = (duffs / DUFFS)
                 storedAddr.insight.balanceSat = duffs
                 storedAddr.insight.updatedAt = 0
                 store.addresses.setItem(addr, storedAddr)
+
+                // walletFunds.balance = (
+                //   walletFunds.balance - (tmpBalance - storedAddr.insight.balance)
+                // )
               }
             })
           return false
