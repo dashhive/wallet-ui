@@ -50,30 +50,48 @@ export let txInfoRig = (async function (globals) {
         </footer>
       `,
       showAmount: state => {
-        if (!state.amount) {
+        let output = html``
+        if (state.amount) {
+          output = html`
+            ${output}
+            <article>
+              <figure>
+                <figcaption class="txt-small">To <span>${state.getContact(state)}</span></figcaption>
+                <div class="big">
+                  <svg width="26" height="27" viewBox="0 0 32 33">
+                    <use xlink:href="#icon-dash-mark"></use>
+                  </svg>
+                  ${state.amount}
+                </div>
+              </figure>
+            </article>
+          `
+        }
+        return output
+      },
+      showFeeAndTotal: state => {
+        if (!state.fee || !state.amount) {
           return ''
         }
 
         return html`
-          <article>
+          <article class="col rg-3">
             <figure>
-              <figcaption>Amount</figcaption>
+              <figcaption>Dash Network Fee</figcaption>
+              <div class="small">
+                <svg width="22" height="23" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${state.fee}
+              </div>
+            </figure>
+            <figure>
+              <figcaption>Total</figcaption>
               <div class="big">
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${state.amount}
-              </div>
-            </figure>
-          </article>
-          <article>
-            <figure>
-              <figcaption>Estimated Fee</figcaption>
-              <div>
-                <svg width="32" height="33" viewBox="0 0 32 33">
-                  <use xlink:href="#icon-dash-mark"></use>
-                </svg>
-                ${state.fee}
+                ${(Number(state.amount) + Number(state.fee)).toFixed(8)}
               </div>
             </figure>
           </article>
@@ -98,13 +116,8 @@ export let txInfoRig = (async function (globals) {
       content: state => html`
         ${state.header(state)}
 
-        <article>
-          <figure>
-            <figcaption>To</figcaption>
-            <div>${state.getContact(state)}</div>
-          </figure>
-        </article>
         ${state.showAmount(state)}
+        ${state.showFeeAndTotal(state)}
         ${state.showTransaction(state)}
 
         ${state.footer(state)}

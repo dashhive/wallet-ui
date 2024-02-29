@@ -63,27 +63,11 @@ export let sendConfirmRig = (async function (globals) {
       },
       showAmount: state => {
         let output = html``
-        // if (state.amount) {
-        //   output = html`
-        //     <article>
-        //       <figure>
-        //         <figcaption>Input Amount</figcaption>
-        //         <div class="big">
-        //           <svg width="32" height="33" viewBox="0 0 32 33">
-        //             <use xlink:href="#icon-dash-mark"></use>
-        //           </svg>
-        //           ${state.amount}
-        //         </div>
-        //       </figure>
-        //     </article>
-        //   `
-        // }
         if (state.fullAmount) {
           output = html`
             ${output}
             <article>
               <figure>
-                <!-- <figcaption>Standard Amount</figcaption> -->
                 <figcaption class="txt-small">To <span>${state.getContact(state)}</span></figcaption>
                 <div class="big">
                   <svg width="26" height="27" viewBox="0 0 32 33">
@@ -103,7 +87,7 @@ export let sendConfirmRig = (async function (globals) {
         }
 
         return html`
-          <article>
+          <article class="col rg-3">
             <figure>
               <figcaption>Dash Network Fee</figcaption>
               <div class="small">
@@ -113,15 +97,13 @@ export let sendConfirmRig = (async function (globals) {
                 ${state.fee?.dash}
               </div>
             </figure>
-          </article>
-          <article>
             <figure>
               <figcaption>Total</figcaption>
               <div class="big">
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${Number(state.fullAmount) + Number(state.fee?.dash)}
+                ${(Number(state.fullAmount) + Number(state.fee?.dash)).toFixed(8)}
               </div>
             </figure>
           </article>
@@ -131,13 +113,6 @@ export let sendConfirmRig = (async function (globals) {
         ${state.header(state)}
 
         ${state.showAmount(state)}
-
-        <!-- <article>
-          <figure>
-            <figcaption>To</figcaption>
-            <div class="mid">${state.getContact(state)}</div>
-          </figure>
-        </article> -->
 
         ${state.showFeeAndTotal(state)}
 
