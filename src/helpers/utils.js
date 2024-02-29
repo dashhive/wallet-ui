@@ -175,34 +175,34 @@ export async function deriveAddressData(
   return address
 }
 
-export async function batchAddressGenerate(
-  wallet,
-  accountIndex = 0,
-  addressIndex = 0,
-  use = DashHd.RECEIVE,
-  batchSize = 20
-) {
-  let batchLimit = addressIndex + batchSize
-  let addresses = []
+// export async function batchAddressGenerate(
+//   wallet,
+//   accountIndex = 0,
+//   addressIndex = 0,
+//   use = DashHd.RECEIVE,
+//   batchSize = 20
+// ) {
+//   let batchLimit = addressIndex + batchSize
+//   let addresses = []
 
-  let account = await wallet.deriveAccount(accountIndex);
-  let xkey = await account.deriveXKey(use);
+//   let account = await wallet.deriveAccount(accountIndex);
+//   let xkey = await account.deriveXKey(use);
 
-  for (;addressIndex < batchLimit; addressIndex++) {
-    let key = await xkey.deriveAddress(addressIndex);
-    let address = await DashHd.toAddr(key.publicKey);
-    addresses.push({
-      address,
-      addressIndex,
-      accountIndex,
-    })
-  }
+//   for (;addressIndex < batchLimit; addressIndex++) {
+//     let key = await xkey.deriveAddress(addressIndex);
+//     let address = await DashHd.toAddr(key.publicKey);
+//     addresses.push({
+//       address,
+//       addressIndex,
+//       accountIndex,
+//     })
+//   }
 
-  return {
-    addresses,
-    finalAddressIndex: addressIndex,
-  }
-}
+//   return {
+//     addresses,
+//     finalAddressIndex: addressIndex,
+//   }
+// }
 
 export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   let words = phrase?.split(' ')
