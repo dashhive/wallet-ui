@@ -228,6 +228,17 @@ form > article > figure figcaption + div {
   text-align: left;
   color: inherit;
 }
+form aside > article > figure figcaption + div.small,
+form > article > figure figcaption + div.small {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+form aside > article > figure figcaption + div.mid,
+form > article > figure figcaption + div.mid {
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.1;
+}
 form aside > article > figure figcaption + div.big,
 form > article > figure figcaption + div.big {
   font-size: 3rem;
@@ -533,11 +544,11 @@ label:has(+ input[type=checkbox]) {
   flex: 1 1 auto;
   font-weight: 400;
   font-size: 1.3rem;
-  justify-content: space-between;
+  /* justify-content: space-between; */
 }
-fieldset label:has(+ input[type=checkbox]) {
+/* fieldset label:has(+ input[type=checkbox]) {
   justify-content: center;
-}
+} */
 fieldset .switch label:first-of-type {
   flex: 1 1 auto;
   font-weight: 400;
@@ -730,8 +741,12 @@ form[name="network"] {
     padding-left: 2rem;
     padding-right: 1rem;
   }
+  /* form aside > article > figure figcaption + div.mid,
+  form > article > figure figcaption + div.mid {
+    font-size: 1.5rem;
+  }
   form aside > article > figure figcaption + div.big,
   form > article > figure figcaption + div.big {
     font-size: 3.75rem;
-  }
+  } */
 }

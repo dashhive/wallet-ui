@@ -158,6 +158,7 @@ export let requestQrRig = (async function (globals) {
 
             await appDialogs.sendOrReceive.render({
               action: 'receive',
+              amount: state.amount || 0,
               wallet: state.wallet,
               account: appState.account,
               contacts: appState.contacts,

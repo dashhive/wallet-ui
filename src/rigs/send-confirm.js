@@ -62,41 +62,66 @@ export let sendConfirmRig = (async function (globals) {
         return to
       },
       showAmount: state => {
-        if (!state.amount) {
+        let output = html``
+        // if (state.amount) {
+        //   output = html`
+        //     <article>
+        //       <figure>
+        //         <figcaption>Input Amount</figcaption>
+        //         <div class="big">
+        //           <svg width="32" height="33" viewBox="0 0 32 33">
+        //             <use xlink:href="#icon-dash-mark"></use>
+        //           </svg>
+        //           ${state.amount}
+        //         </div>
+        //       </figure>
+        //     </article>
+        //   `
+        // }
+        if (state.fullAmount) {
+          output = html`
+            ${output}
+            <article>
+              <figure>
+                <!-- <figcaption>Standard Amount</figcaption> -->
+                <figcaption class="txt-small">To <span>${state.getContact(state)}</span></figcaption>
+                <div class="big">
+                  <svg width="26" height="27" viewBox="0 0 32 33">
+                    <use xlink:href="#icon-dash-mark"></use>
+                  </svg>
+                  ${state.fullAmount}
+                </div>
+              </figure>
+            </article>
+          `
+        }
+        return output
+      },
+      showFeeAndTotal: state => {
+        if (!state.fee?.dash || !state.fullAmount) {
           return ''
         }
 
         return html`
           <article>
             <figure>
-              <figcaption>Amount</figcaption>
-              <div class="big">
-                <svg width="32" height="33" viewBox="0 0 32 33">
-                  <use xlink:href="#icon-dash-mark"></use>
-                </svg>
-                ${state.amount}
-              </div>
-            </figure>
-          </article>
-          <article>
-            <figure>
-              <figcaption>Full Amount</figcaption>
-              <div class="big">
-                <svg width="32" height="33" viewBox="0 0 32 33">
-                  <use xlink:href="#icon-dash-mark"></use>
-                </svg>
-                ${state.fullAmount}
-              </div>
-            </figure>
-          </article>
-          <article>
-            <figure>
-              <figcaption>Estimated Fee</figcaption>
-              <div>
-                <svg width="32" height="33" viewBox="0 0 32 33">
+              <figcaption>Dash Network Fee</figcaption>
+              <div class="small">
+                <svg width="22" height="23" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
                 ${state.fee?.dash}
+              </div>
+            </figure>
+          </article>
+          <article>
+            <figure>
+              <figcaption>Total</figcaption>
+              <div class="big">
+                <svg width="32" height="33" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${Number(state.fullAmount) + Number(state.fee?.dash)}
               </div>
             </figure>
           </article>
@@ -105,14 +130,16 @@ export let sendConfirmRig = (async function (globals) {
       content: state => html`
         ${state.header(state)}
 
-        <article>
+        ${state.showAmount(state)}
+
+        <!-- <article>
           <figure>
             <figcaption>To</figcaption>
-            <div>${state.getContact(state)}</div>
+            <div class="mid">${state.getContact(state)}</div>
           </figure>
-        </article>
+        </article> -->
 
-        ${state.showAmount(state)}
+        ${state.showFeeAndTotal(state)}
 
         ${state.footer(state)}
       `,

@@ -671,6 +671,7 @@ async function main() {
                   </button>
                 </footer>
               `,
+              amount: 0,
               wallet: receiveWallet,
               contacts: appState.contacts,
             },

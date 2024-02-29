@@ -217,6 +217,7 @@ export let sendOrReceiveRig = (async function (globals) {
                   autocomplete="off"
                   pattern="${AMOUNT_REGEX.source}"
                   title="Enter a valid number for the amount you wish to ${state.action}."
+                  value="${state.amount || ''}"
                 />
               </div>
             </div>
@@ -225,6 +226,17 @@ export let sendOrReceiveRig = (async function (globals) {
                 ${state.fundAmountBtns(state)}
               </div>
             </div>
+            <!-- <div class="switch py-3 pr-3">
+              <label for="standardMode" class="jc-end">
+                Use Standard Send
+              </label>
+              <input
+                id="standardMode"
+                name="mode"
+                type="checkbox"
+              />
+              <label for="standardMode" class="switch" title="Standard Send"></label>
+            </div> -->
 
             <div class="error"></div>
           </article>

@@ -114,6 +114,12 @@ figure h4 {
 .jc-left {
   justify-content: left;
 }
+.jc-start {
+  justify-content: start;
+}
+.jc-end {
+  justify-content: end;
+}
 .ji-left {
   justify-items: left;
 }
@@ -135,6 +141,19 @@ figure h4 {
 .msg {
   display: flex;
   flex-direction: column;
+}
+
+.txt-small {
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+.txt-small span {
+  font-weight: 500;
+}
+.txt-mid {
+  font-size: 2rem;
+  font-weight: 500;
+  line-height: 1.1;
 }
 
 .ta-left {
