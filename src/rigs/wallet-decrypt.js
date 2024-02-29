@@ -168,13 +168,16 @@ export let walletDecryptRig = (async function (globals) {
 
               wallets = initialized.wallets
 
+              let usage = [0,0]
+              usage[wallet.usageIndex] = wallet.addressIndex
+
               let newAccount = await store.accounts.setItem(
                 wallet.xkeyId,
                 {
                   createdAt: (new Date()).toISOString(),
                   updatedAt: (new Date()).toISOString(),
                   accountIndex: wallet.accountIndex,
-                  addressIndex: wallet.addressIndex,
+                  usage,
                   walletId: wallet.id,
                   xkeyId: wallet.xkeyId,
                   addressKeyId: wallet.addressKeyId,

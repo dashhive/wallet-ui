@@ -98,13 +98,16 @@ export let phraseGenerateRig = (async function (globals) {
           localStorage.selectedWallet = appState.selectedWallet
           localStorage.selectedAlias = appState.selectedAlias
 
+          let usage = [0,0]
+          usage[wallet.usageIndex] = wallet.addressIndex
+
           let newAccount = await store.accounts.setItem(
             wallet.xkeyId,
             {
               createdAt: (new Date()).toISOString(),
               updatedAt: (new Date()).toISOString(),
               accountIndex: wallet.accountIndex,
-              addressIndex: wallet.addressIndex,
+              usage,
               walletId: wallet.id,
               xkeyId: wallet.xkeyId,
               addressKeyId: wallet.addressKeyId,

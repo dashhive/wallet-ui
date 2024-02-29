@@ -508,45 +508,115 @@ export async function encryptKeystore(
   return keystore
 }
 
+export async function generateAddressIterator(
+  xkey,
+  walletId,
+  accountIndex,
+  addressIndex,
+) {
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  console.log(
+    'generateAddressIterator',
+    {xkey, key, address, accountIndex, addressIndex},
+  )
+
+  store.addresses.getItem(address)
+    .then(a => {
+      let $addr = a || {}
+      console.log(
+        'generateAddressIterator store.addresses.getItem',
+        {address, $addr},
+      )
+
+      store.addresses.setItem(
+        address,
+        {
+          ...$addr,
+          updatedAt: Date.now(),
+          walletId,
+          accountIndex,
+          addressIndex,
+          usageIndex: xkey.index,
+        },
+      )
+    })
+
+  return {
+    address,
+    addressIndex,
+    accountIndex,
+    usageIndex: xkey.index,
+  }
+}
+
 export async function batchAddressGenerate(
   wallet,
   accountIndex = 0,
   addressIndex = 0,
-  use = DashHd.RECEIVE,
+  usageIndex = DashHd.RECEIVE,
   batchSize = 20,
 ) {
-  // let hdpath = `m/44'/5'/${accountIndex}'/${use}/${addressIndex}`,
+  // let hdpath = `m/44'/5'/${accountIndex}'/${usageIndex}/${addressIndex}`,
   let batchLimit = addressIndex + batchSize
   let addresses = []
 
   let account = await wallet.derivedWallet.deriveAccount(accountIndex);
-  let xkey = await account.deriveXKey(use);
+  let xkey = await account.deriveXKey(usageIndex);
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
-    let key = await xkey.deriveAddress(addrIdx);
-    let address = await DashHd.toAddr(key.publicKey);
+    addresses.push(
+      generateAddressIterator(
+        xkey,
+        wallet.id,
+        accountIndex,
+        addressIndex,
+      )
+    )
+  }
 
-    addresses.push({
-      address,
-      addressIndex: addrIdx,
-      accountIndex,
-    })
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+export async function batchAddressUsageGenerate(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  batchSize = 20,
+) {
+  // let hdpath = `m/44'/5'/${accountIndex}'/${usageIndex}/${addressIndex}`,
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
 
-    store.addresses.getItem(address)
-      .then(a => {
-        let $addr = a || {}
+  let account = await wallet.derivedWallet.deriveAccount(accountIndex);
+  let xkeyReceive = await account.deriveXKey(DashHd.RECEIVE);
+  let xkeyChange = await account.deriveXKey(DashHd.CHANGE);
 
-        store.addresses.setItem(
-          address,
-          {
-            ...$addr,
-            updatedAt: Date.now(),
-            walletId: wallet.id,
-            accountIndex,
-            addressIndex: addrIdx,
-          },
-        )
-      })
+  console.log(
+    'batchAddressUsageGenerate',
+    {batchLimit, account, xkeyReceive, xkeyChange},
+  )
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAddressIterator(
+        xkeyReceive,
+        wallet.id,
+        accountIndex,
+        addrIdx,
+      )
+    )
+    addresses.push(
+      await generateAddressIterator(
+        xkeyChange,
+        wallet.id,
+        accountIndex,
+        addrIdx,
+      )
+    )
   }
 
   return {
@@ -581,11 +651,13 @@ export async function initWallet(
     wallets.push(id)
   }
 
-  let addrs = await batchAddressGenerate(
+  let addrs = await batchAddressUsageGenerate(
     wallet,
     accountIndex,
     addressIndex,
   )
+
+  console.log('init wallet batchAddressUsageGenerate', addrs)
 
   for (let a of addrs.addresses) {
     store.addresses.setItem(
@@ -595,6 +667,7 @@ export async function initWallet(
         walletId: wallet.id,
         accountIndex: a.accountIndex,
         addressIndex: a.addressIndex,
+        usageIndex: a.usageIndex,
       }
     )
   }
@@ -646,6 +719,7 @@ export async function checkWalletFunds(addr, wallet = {}) {
     address,
     accountIndex,
     addressIndex,
+    usageIndex,
   } = addr
   let updatedAt = Date.now()
   let $addr = await store.addresses.getItem(address) || {}
@@ -654,6 +728,7 @@ export async function checkWalletFunds(addr, wallet = {}) {
     walletId: wallet.id,
     accountIndex,
     addressIndex,
+    usageIndex,
     ...$addr,
   }
   // console.log('checkWalletFunds $addr', $addr)
@@ -698,6 +773,7 @@ export async function updateAddrFunds(
     walletId,
     accountIndex,
     addressIndex,
+    usageIndex,
   } = $addr
   // console.log(
   //   'checkWalletFunds $addr',
@@ -712,6 +788,7 @@ export async function updateAddrFunds(
       walletId: wallet.id,
       accountIndex,
       addressIndex,
+      usageIndex,
       ...$addr,
     }
 
@@ -825,30 +902,42 @@ export async function getAddrsWithFunds(wallet) {
 export async function batchGenAcctAddrs(
   wallet,
   account,
-  batchSize = 20
+  usageIndex = -1,
+  batchSize = 20,
 ) {
+  console.log('batchGenAcctAddrs account', account, usageIndex)
   let acctAddrsLen = await getFilteredStoreLength(
     store.addresses,
     {
       accountIndex: account.accountIndex,
     }
   )
-  let addrIdx = account.addressIndex
+  let addrUsageIdx = account.usage?.[usageIndex] || 0
+  let addrIdx = addrUsageIdx
   let batSize = batchSize
 
   if (acctAddrsLen === 0) {
     addrIdx = 0
-    batSize = account.addressIndex + batchSize
+    batSize = addrUsageIdx + batchSize
   }
 
-  if (acctAddrsLen <= account.addressIndex + (batchSize / 2)) {
-    return await batchAddressGenerate(
-      wallet,
-      account.accountIndex,
-      addrIdx,
-      DashHd.RECEIVE,
-      batSize
-    )
+  if (acctAddrsLen <= addrUsageIdx + (batchSize / 2)) {
+    if (usageIndex >= 0) {
+      return await batchAddressGenerate(
+        wallet,
+        account.accountIndex,
+        account.usage[usageIndex],
+        usageIndex,
+        batSize,
+      )
+    } else {
+      return await batchAddressUsageGenerate(
+        wallet,
+        account.accountIndex,
+        addrIdx,
+        batSize,
+      )
+    }
   }
 
   return null
@@ -856,7 +945,8 @@ export async function batchGenAcctAddrs(
 
 export async function batchGenAcctsAddrs(
   wallet,
-  batchSize = 20
+  usageIndex = -1,
+  batchSize = 20,
 ) {
   let $accts = await getStoredItems(store.accounts)
   let $acctsArr = Object.values($accts)
@@ -867,6 +957,7 @@ export async function batchGenAcctsAddrs(
       accts[`bat__${$a.accountIndex}`] = await batchGenAcctAddrs(
         wallet,
         $a,
+        usageIndex,
         batchSize,
       )
     }

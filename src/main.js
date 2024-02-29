@@ -17,7 +17,7 @@ import {
 import {
   findInStore,
   initDashSocket,
-  batchAddressGenerate,
+  // batchAddressGenerate,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
   updateAllFunds,
@@ -253,7 +253,11 @@ let contactsList = await setupContactsList(
               accountIndex
             )
 
+            console.log('main.js contact account', shareAccount)
+
             let created = (new Date()).toISOString()
+            let usage = [0,0]
+            usage[shareAccount.usageIndex] = shareAccount.addressIndex
 
             newAccount = await store.accounts.setItem(
               shareAccount.xkeyId,
@@ -261,7 +265,10 @@ let contactsList = await setupContactsList(
                 createdAt: created,
                 updatedAt: (new Date()).toISOString(),
                 accountIndex,
-                addressIndex: shareAccount.addressIndex,
+                // addressIndex: shareAccount.addressIndex,
+                // changeIndex: shareAccount.addressIndex,
+                // usageIndex: shareAccount.usageIndex,
+                usage,
                 walletId: shareAccount.id,
                 xkeyId: shareAccount.xkeyId,
                 addressKeyId: shareAccount.addressKeyId,
@@ -629,7 +636,12 @@ async function main() {
         if (receiveWallet?.xkeyId) {
           let tmpWallet = await store.accounts.getItem(
             receiveWallet.xkeyId,
-          )
+          ) || {}
+
+          tmpWallet.usage = tmpWallet?.usage || [0,0]
+          tmpWallet.usage[
+            receiveWallet.usageIndex
+          ] = receiveWallet.addressIndex
 
           // state.wallet =
           let tmpAcct = await store.accounts.setItem(
@@ -638,7 +650,6 @@ async function main() {
               ...tmpWallet,
               updatedAt: (new Date()).toISOString(),
               address: receiveWallet.address,
-              addressIndex: receiveWallet.addressIndex,
             }
           )
 
@@ -694,8 +705,9 @@ async function main() {
     }
   })
 
+  console.warn('batchGenAcctsAddrs', { wallet })
   batchGenAcctsAddrs(wallet)
-    // .then(data => console.warn('batchGenAcctsAddrs', { data }))
+    .then(accts => console.warn('batchGenAcctsAddrs', { accts }))
 
   bodyNav.render({
     data: {
@@ -708,7 +720,7 @@ async function main() {
 
   await getUserInfo()
 
-  console.log('appTools.storedData', appTools.storedData)
+  // console.log('appTools.storedData', appTools.storedData)
 
   getStoreData(
     store.contacts,

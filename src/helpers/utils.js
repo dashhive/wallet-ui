@@ -18,7 +18,7 @@ import {
  * @param {String} [phraseOrXkey]
  * @param {Number} [accountIndex]
  * @param {Number} [addressIndex]
- * @param {Number} [use]
+ * @param {Number} [usageIndex]
  *
  * @returns {Promise<SeedWallet>}
  */
@@ -26,7 +26,7 @@ export async function deriveWalletData(
   phraseOrXkey,
   accountIndex = 0,
   addressIndex = 0,
-  use = DashHd.RECEIVE
+  usageIndex = DashHd.RECEIVE,
 ) {
   if (!phraseOrXkey) {
     throw new Error('Seed phrase or xkey value empty or invalid')
@@ -55,7 +55,7 @@ export async function deriveWalletData(
     wpub = await DashHd.toXPub(derivedWallet);
     id = await DashHd.toId(derivedWallet);
     account = await derivedWallet.deriveAccount(accountIndex);
-    xkey = await account.deriveXKey(use);
+    xkey = await account.deriveXKey(usageIndex);
     xprv = await DashHd.toXPrv(xkey);
   }
 
@@ -68,6 +68,7 @@ export async function deriveWalletData(
   return {
     id,
     accountIndex,
+    usageIndex,
     addressIndex,
     addressKeyId,
     addressKey,

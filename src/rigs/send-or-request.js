@@ -618,7 +618,12 @@ export let sendOrReceiveRig = (async function (globals) {
             if (receiveWallet?.xkeyId) {
               let tmpWallet = await store.accounts.getItem(
                 receiveWallet.xkeyId,
-              )
+              ) || {}
+
+              tmpWallet.usage = tmpWallet?.usage || [0,0]
+              tmpWallet.usage[
+                receiveWallet.usageIndex
+              ] = receiveWallet.addressIndex
 
               // state.wallet =
               let tmpAcct = await store.accounts.setItem(
@@ -627,7 +632,6 @@ export let sendOrReceiveRig = (async function (globals) {
                   ...tmpWallet,
                   updatedAt: (new Date()).toISOString(),
                   address: receiveWallet.address,
-                  addressIndex: receiveWallet.addressIndex,
                 }
               )
 
