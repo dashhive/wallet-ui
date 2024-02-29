@@ -294,8 +294,8 @@ export async function setupDialog(
   state.slugs.dialog = `${state.name}_${state.id}`.toLowerCase()
     .replaceAll(/[^a-zA-Z _]/g, '')
     .replaceAll(' ', '_')
-  state.slugs.form = state.name?.toLowerCase()
-    .replaceAll(/[^a-zA-Z ]/g, '')
+  state.slugs.form = `${state.id}_${state.name}`.toLowerCase()
+    .replaceAll(/[^a-zA-Z _]/g, '')
     .replaceAll(' ', '_')
 
   const dialog = document.createElement('dialog')
