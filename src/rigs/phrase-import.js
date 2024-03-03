@@ -418,7 +418,7 @@ export let phraseImportRig = (async function (globals) {
           localStorage.selectedWallet = appState.selectedWallet
 
           let usage = [0,0]
-          usage[wallet.usageIndex] = wallet.addressIndex
+          // usage[wallet.usageIndex] = wallet.addressIndex
 
           let newAccount = await store.accounts.setItem(
             wallet.xkeyId,

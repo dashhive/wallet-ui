@@ -408,7 +408,7 @@ export let editContactRig = (async function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          console.log('EDIT CONTACT!', state, event)
+          // console.log('EDIT CONTACT!', state, event)
 
           let fde = formDataEntries(event)
 

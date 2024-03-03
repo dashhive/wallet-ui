@@ -486,12 +486,12 @@ export let addContactRig = (async function (globals) {
           // event.target.contactAlias.setCustomValidity('')
           // event.target.contactAlias.reportValidity()
 
-          console.log('ADD CONTACT!', state, event)
+          // console.log('ADD CONTACT!', state, event)
 
           let fde = formDataEntries(event)
           let parsedAddr
 
-          console.log('scanContact', appDialogs.scanContact)
+          // console.log('scanContact', appDialogs.scanContact)
 
           if (fde?.intent === 'scan_new_contact') {
             await appDialogs.scanContact.render(

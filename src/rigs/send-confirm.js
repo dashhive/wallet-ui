@@ -57,7 +57,7 @@ export let sendConfirmRig = (async function (globals) {
           to = `@${state.contact?.alias}`
         }
         if (!to) {
-          to = state.to
+          to = state.to || ''
         }
         return to
       },
