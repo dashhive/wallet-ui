@@ -79,6 +79,7 @@ form fieldset div.input {
   display: flex;
   flex-direction: row;
   align-items: center;
+  width: 100%;
 }
 form fieldset div:has(input),
 form fieldset div:has(input + button),

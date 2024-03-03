@@ -120,6 +120,12 @@ figure h4 {
 .jc-end {
   justify-content: end;
 }
+.as-start {
+  align-self: start;
+}
+.as-end {
+  align-self: end;
+}
 .ji-left {
   justify-items: left;
 }
