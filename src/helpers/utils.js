@@ -999,3 +999,19 @@ export async function getUniqueAlias(aliases, preferredAlias) {
 
   return uniqueAlias
 }
+
+export function getPartialHDPath(wallet) {
+  return [
+    wallet.accountIndex,
+    wallet.usageIndex,
+    wallet.addressIndex,
+  ].join('/')
+}
+
+export function getAddressIndexFromUsage(wallet, account) {
+  return {
+    ...account,
+    usageIndex: wallet.usageIndex,
+    addressIndex: account.usage[wallet.usageIndex],
+  }
+}
