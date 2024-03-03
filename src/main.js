@@ -175,7 +175,7 @@ let contactsList = await setupContactsList(
           if (!contactData.incoming) {
             return;
           }
-          let contactAccountID = Object.values(contactData?.incoming || {})?.[0]?.accountIndex
+          let contactAccountID = Object.values(contactData.incoming || {})?.[0]?.accountIndex
           console.log('contact click data', contactData)
 
           let shareAccount = await deriveWalletData(
@@ -257,7 +257,7 @@ let contactsList = await setupContactsList(
 
             let created = (new Date()).toISOString()
             let usage = [0,0]
-            usage[shareAccount.usageIndex] = shareAccount.addressIndex
+            // usage[shareAccount.usageIndex] = shareAccount.addressIndex
 
             newAccount = await store.accounts.setItem(
               shareAccount.xkeyId,
@@ -358,6 +358,14 @@ async function getUserInfo() {
         $alias
       )
       wallets = $wallets
+      console.log(
+        'getUserInfo $alias',
+        {
+          $alias,
+          $wallets,
+          $userInfo,
+        }
+      )
 
       Object.entries(($userInfo?.info || {}))
         .forEach(
@@ -531,11 +539,12 @@ async function main() {
     mainApp, appDialogs, appState, appTools,
     store, userInfo, contactsList, walletFunds,
     setupDialog, deriveWalletData, getAddrsWithFunds,
-    createTx, sendTx, updateAllFunds,
+    sendTx, updateAllFunds,
   })
 
   appDialogs.requestQr = await requestQrRig({
-    mainApp, setupDialog, appDialogs, appState, userInfo,
+    mainApp, setupDialog, appDialogs, appState, userInfo, store,
+    deriveWalletData, batchGenAcctAddrs,
   })
 
   appDialogs.pairQr = await pairQrRig({
@@ -621,45 +630,47 @@ async function main() {
 
       if (fde.intent === 'receive') {
         let receiveWallet
+        let selectedWallet = wallets?.[appState.selectedWallet]
 
-        if (wallet?.xpub) {
-          wallet.addressIndex = (
-            appState.selectedWallet?.addressIndex || 0
-          ) + 1
-          receiveWallet = await deriveWalletData(
-            appState.phrase,
-            wallet.accountIndex,
-            wallet.addressIndex,
-          )
-        }
+        console.log('selectedWallet', wallet, selectedWallet)
 
-        if (receiveWallet?.xkeyId) {
-          let tmpWallet = await store.accounts.getItem(
-            receiveWallet.xkeyId,
+        // if (wallet?.xpub) {
+        //   wallet.addressIndex = (
+        //     selectedWallet?.addressIndex ?? -1
+        //   ) + 1
+        //   receiveWallet = await deriveWalletData(
+        //     appState.phrase,
+        //     wallet.accountIndex,
+        //     wallet.addressIndex,
+        //   )
+        // }
+
+        if (wallet?.xkeyId) {
+          let tmpAcct = await store.accounts.getItem(
+            wallet.xkeyId,
           ) || {}
 
-          tmpWallet.usage = tmpWallet?.usage || [0,0]
-          tmpWallet.usage[
-            receiveWallet.usageIndex
-          ] = receiveWallet.addressIndex
+          // tmpAcct.usage = tmpAcct?.usage || [0,0]
+          // tmpAcct.usage[
+          //   wallet.usageIndex
+          // ] = wallet.addressIndex
 
           // state.wallet =
-          let tmpAcct = await store.accounts.setItem(
-            receiveWallet.xkeyId,
-            {
-              ...tmpWallet,
-              updatedAt: (new Date()).toISOString(),
-              address: receiveWallet.address,
-            }
-          )
+          // tmpAcct = await store.accounts.setItem(
+          //   wallet.xkeyId,
+          //   {
+          //     ...tmpAcct,
+          //     updatedAt: (new Date()).toISOString(),
+          //     address: wallet.address,
+          //   }
+          // )
 
           batchGenAcctAddrs(receiveWallet, tmpAcct)
 
           console.log(
-            `${fde.intent} FROM CONTACT`,
+            `${fde.intent} TO SELECTED WALLET`,
             {
-              stateWallet: wallet,
-              receiveWallet,
+              wallet,
               tmpAcct,
             }
           )
@@ -683,7 +694,7 @@ async function main() {
                 </footer>
               `,
               amount: 0,
-              wallet: receiveWallet,
+              wallet,
               contacts: appState.contacts,
             },
             'afterend',
@@ -705,9 +716,9 @@ async function main() {
     }
   })
 
-  console.warn('batchGenAcctsAddrs', { wallet })
+  // console.warn('batchGenAcctsAddrs', { wallet })
   batchGenAcctsAddrs(wallet)
-    .then(accts => console.warn('batchGenAcctsAddrs', { accts }))
+    // .then(accts => console.warn('batchGenAcctsAddrs', { accts }))
 
   bodyNav.render({
     data: {
@@ -964,8 +975,9 @@ async function main() {
           return false
         }
 
+        // Updates Insight info for Change Address
         if (
-          checkAddr &&
+          // checkAddr &&
           appState?.sentTransactions?.[data.txid]
         ) {
           // console.log('data.vout.filter', vout, data)
@@ -1032,6 +1044,37 @@ async function main() {
               storedAddr.insight.updatedAt = 0
               store.addresses.setItem(addr, storedAddr)
             }
+
+            // let selectedWallet = wallets?.[appState.selectedWallet]
+            // wallet.addressIndex = (
+            //   selectedWallet?.addressIndex || 0
+            // ) + 1
+            // let walletTemp = await deriveWalletData(
+            //   appState.phrase,
+            //   storedAddr.accountIndex,
+            //   storedAddr.addressIndex,
+            //   storedAddr.usageIndex,
+            // )
+
+            let tmpWalletAcct = await store.accounts.getItem(
+              storedAddr.xkeyId,
+            ) || {}
+
+            let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
+              wallet,
+              tmpWalletAcct,
+              tmpWalletAcct.usage[storedAddr.usageIndex],
+            )
+
+            console.log(
+              'socket batch generate addresses for wallet',
+              {
+                // walletTemp,
+                tmpWalletAcct,
+                finalAddressIndex,
+                addresses,
+              }
+            )
           })
 
         return newTx;

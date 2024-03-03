@@ -510,16 +510,18 @@ export async function encryptKeystore(
 
 export async function generateAddressIterator(
   xkey,
+  xkeyId,
   walletId,
   accountIndex,
   addressIndex,
 ) {
+  // let xkeyId = await DashHd.toId(xkey);
   let key = await xkey.deriveAddress(addressIndex);
   let address = await DashHd.toAddr(key.publicKey);
 
   console.log(
     'generateAddressIterator',
-    {xkey, key, address, accountIndex, addressIndex},
+    {xkey, xkeyId, key, address, accountIndex, addressIndex},
   )
 
   store.addresses.getItem(address)
@@ -536,6 +538,7 @@ export async function generateAddressIterator(
           ...$addr,
           updatedAt: Date.now(),
           walletId,
+          xkeyId,
           accountIndex,
           addressIndex,
           usageIndex: xkey.index,
@@ -548,6 +551,7 @@ export async function generateAddressIterator(
     addressIndex,
     accountIndex,
     usageIndex: xkey.index,
+    xkeyId,
   }
 }
 
@@ -564,14 +568,21 @@ export async function batchAddressGenerate(
 
   let account = await wallet.derivedWallet.deriveAccount(accountIndex);
   let xkey = await account.deriveXKey(usageIndex);
+  let xkeyId = await DashHd.toId(xkey);
+
+  if (usageIndex !== DashHd.RECEIVE) {
+    let xkeyReceive = await account.deriveXKey(DashHd.RECEIVE);
+    xkeyId = await DashHd.toId(xkeyReceive);
+  }
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
     addresses.push(
-      generateAddressIterator(
+      await generateAddressIterator(
         xkey,
+        xkeyId,
         wallet.id,
         accountIndex,
-        addressIndex,
+        addrIdx,
       )
     )
   }
@@ -581,6 +592,7 @@ export async function batchAddressGenerate(
     finalAddressIndex: batchLimit,
   }
 }
+
 export async function batchAddressUsageGenerate(
   wallet,
   accountIndex = 0,
@@ -594,6 +606,7 @@ export async function batchAddressUsageGenerate(
   let account = await wallet.derivedWallet.deriveAccount(accountIndex);
   let xkeyReceive = await account.deriveXKey(DashHd.RECEIVE);
   let xkeyChange = await account.deriveXKey(DashHd.CHANGE);
+  let xkeyId = await DashHd.toId(xkeyReceive);
 
   console.log(
     'batchAddressUsageGenerate',
@@ -604,6 +617,7 @@ export async function batchAddressUsageGenerate(
     addresses.push(
       await generateAddressIterator(
         xkeyReceive,
+        xkeyId,
         wallet.id,
         accountIndex,
         addrIdx,
@@ -612,6 +626,7 @@ export async function batchAddressUsageGenerate(
     addresses.push(
       await generateAddressIterator(
         xkeyChange,
+        xkeyId,
         wallet.id,
         accountIndex,
         addrIdx,
@@ -668,6 +683,7 @@ export async function initWallet(
         accountIndex: a.accountIndex,
         addressIndex: a.addressIndex,
         usageIndex: a.usageIndex,
+        xkeyId: a.xkeyId,
       }
     )
   }
@@ -712,56 +728,56 @@ export async function initWallet(
   }
 }
 
-export async function checkWalletFunds(addr, wallet = {}) {
-  const HOUR = 1000 * 60 * 60;
+// export async function checkWalletFunds(addr, wallet = {}) {
+//   const HOUR = 1000 * 60 * 60;
 
-  let {
-    address,
-    accountIndex,
-    addressIndex,
-    usageIndex,
-  } = addr
-  let updatedAt = Date.now()
-  let $addr = await store.addresses.getItem(address) || {}
+//   let {
+//     address,
+//     accountIndex,
+//     addressIndex,
+//     usageIndex,
+//   } = addr
+//   let updatedAt = Date.now()
+//   let $addr = await store.addresses.getItem(address) || {}
 
-  $addr = {
-    walletId: wallet.id,
-    accountIndex,
-    addressIndex,
-    usageIndex,
-    ...$addr,
-  }
-  // console.log('checkWalletFunds $addr', $addr)
-  let walletFunds = $addr?.insight
+//   $addr = {
+//     walletId: wallet.id,
+//     accountIndex,
+//     addressIndex,
+//     usageIndex,
+//     ...$addr,
+//   }
+//   // console.log('checkWalletFunds $addr', $addr)
+//   let walletFunds = $addr?.insight
 
-  if (
-    !walletFunds?.updatedAt ||
-    updatedAt - walletFunds?.updatedAt > HOUR
-  ) {
-    // console.info('check insight api for addr', addr)
+//   if (
+//     !walletFunds?.updatedAt ||
+//     updatedAt - walletFunds?.updatedAt > HOUR
+//   ) {
+//     // console.info('check insight api for addr', addr)
 
-    let insightRes = await dashsight.getInstantBalance(address)
+//     let insightRes = await dashsight.getInstantBalance(address)
 
-    if (insightRes) {
-      let { addrStr, ...res } = insightRes
-      walletFunds = res
+//     if (insightRes) {
+//       let { addrStr, ...res } = insightRes
+//       walletFunds = res
 
-      $addr.insight = {
-        ...walletFunds,
-        updatedAt,
-      }
+//       $addr.insight = {
+//         ...walletFunds,
+//         updatedAt,
+//       }
 
-      store.addresses.setItem(
-        address,
-        $addr,
-      )
-    }
-  }
+//       store.addresses.setItem(
+//         address,
+//         $addr,
+//       )
+//     }
+//   }
 
-  // console.info('check addr funds', addr, walletFunds)
+//   // console.info('check addr funds', addr, walletFunds)
 
-  return $addr
-}
+//   return $addr
+// }
 
 export async function updateAddrFunds(
   wallet, insightRes,
@@ -771,10 +787,8 @@ export async function updateAddrFunds(
   let $addr = await store.addresses.getItem(addrStr) || {}
   let {
     walletId,
-    accountIndex,
-    addressIndex,
-    usageIndex,
   } = $addr
+
   // console.log(
   //   'checkWalletFunds $addr',
   //   $addr,
@@ -783,15 +797,7 @@ export async function updateAddrFunds(
   //   walletId === wallet?.id
   // )
 
-  if (walletId === wallet?.id) {
-    $addr = {
-      walletId: wallet.id,
-      accountIndex,
-      addressIndex,
-      usageIndex,
-      ...$addr,
-    }
-
+  if (walletId && walletId === wallet?.id) {
     $addr.insight = {
       ...res,
       updatedAt,
@@ -802,10 +808,10 @@ export async function updateAddrFunds(
       $addr,
     )
 
-    // funds += res?.balance || 0
-    // walletFunds.balance = funds
     return res
   }
+
+  return { balance: 0 }
 }
 
 export async function updateAllFunds(wallet, walletFunds) {
@@ -842,9 +848,9 @@ export async function updateAllFunds(wallet, walletFunds) {
 
   // remove insight balances from address
   for (const addr of addrKeys) {
-    let { insight, ...$addr } = await store.addresses.getItem(addr) || {}
+    let { _insight, ...$addr } = await store.addresses.getItem(addr) || {}
 
-    // walletFunds.balance = funds - (insight?.balance || 0)
+    // walletFunds.balance = funds - (_insight?.balance || 0)
 
     store.addresses.setItem(
       addr,
@@ -906,12 +912,19 @@ export async function batchGenAcctAddrs(
   batchSize = 20,
 ) {
   console.log('batchGenAcctAddrs account', account, usageIndex)
+  let filterQuery = {
+    accountIndex: account.accountIndex,
+  }
+
+  if (usageIndex >= 0) {
+    filterQuery.usageIndex = usageIndex
+  }
+
   let acctAddrsLen = await getFilteredStoreLength(
     store.addresses,
-    {
-      accountIndex: account.accountIndex,
-    }
+    filterQuery,
   )
+  console.log('getFilteredStoreLength res', acctAddrsLen)
   let addrUsageIdx = account.usage?.[usageIndex] || 0
   let addrIdx = addrUsageIdx
   let batSize = batchSize
@@ -1076,12 +1089,10 @@ export async function deriveTxWallet(
   let cachedAddrs = {}
   let privateKeys = {}
   let coreUtxos
-  let changeAddr
   let tmpWallet
 
   if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
     fundAddrs.sort(sortAddrs)
-    changeAddr = fundAddrs[0].address
 
     for (let w of fundAddrs) {
       tmpWallet = await deriveWalletData(
@@ -1110,7 +1121,6 @@ export async function deriveTxWallet(
       fundAddrs.addressIndex,
     )
     privateKeys[tmpWallet.address] = tmpWallet.addressKey.privateKey
-    changeAddr = tmpWallet.address
     cachedAddrs[fundAddrs.address] = {
       checked_at: fundAddrs.updatedAt,
       hdpath: `m/44'/${DashWallet.COIN_TYPE}'/${fundAddrs.accountIndex}'/${DashHd.RECEIVE}`,
@@ -1126,7 +1136,6 @@ export async function deriveTxWallet(
 
   return {
     privateKeys,
-    changeAddr,
     cachedAddrs,
     coreUtxos,
   }
@@ -1135,6 +1144,7 @@ export async function deriveTxWallet(
 export async function createOptimalTx(
   fromWallet,
   fundAddrs,
+  changeAddrs,
   recipient,
   amount,
 ) {
@@ -1147,10 +1157,11 @@ export async function createOptimalTx(
     amountSats,
   })
 
+  let changeAddr = changeAddrs[0]
+
   let {
     privateKeys,
     coreUtxos,
-    changeAddr,
   } = await deriveTxWallet(fromWallet, fundAddrs)
 
   let optimalUtxos = selectOptimalUtxos(
@@ -1227,6 +1238,7 @@ export async function createOptimalTx(
 export async function createStandardTx(
   fromWallet,
   fundAddrs,
+  changeAddrs,
   recipient,
   amount,
   fullTransfer = false,
@@ -1244,9 +1256,9 @@ export async function createStandardTx(
   let {
     privateKeys,
     coreUtxos,
-    changeAddr,
     cachedAddrs,
   } = await deriveTxWallet(fromWallet, fundAddrs)
+  let changeAddr = changeAddrs[0]
 
   let recipientAddr = recipient?.address || recipient
 
@@ -1333,6 +1345,7 @@ export async function createStandardTx(
 export async function createTx(
   fromWallet,
   fundAddrs,
+  changeAddrs,
   recipient,
   amount,
   fullTransfer = false,
@@ -1344,9 +1357,22 @@ export async function createTx(
   });
 
   if (fullTransfer) {
-    tmpTx = await createStandardTx(fromWallet, fundAddrs, recipient, amount, fullTransfer)
+    tmpTx = await createStandardTx(
+      fromWallet,
+      fundAddrs,
+      changeAddrs,
+      recipient,
+      amount,
+      fullTransfer,
+    )
   } else {
-    tmpTx = await createOptimalTx(fromWallet, fundAddrs, recipient, amount)
+    tmpTx = await createOptimalTx(
+      fromWallet,
+      fundAddrs,
+      changeAddrs,
+      recipient,
+      amount,
+    )
   }
 
   let [txInfo, keys, changeAddr] = tmpTx
