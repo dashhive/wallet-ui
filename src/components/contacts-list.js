@@ -44,7 +44,11 @@ const initialState = {
     <div>
       ${
         state.contacts.length > 0
-          ? (await Promise.all(state.contacts.map(async c => await state.item(c)))).join('')
+          ? (
+            await Promise.all(
+              state.contacts.map(async c => await state.item(c))
+            )
+          ).join('')
           : ''
       }
       ${
