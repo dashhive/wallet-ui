@@ -196,6 +196,17 @@ export let requestQrRig = (async function (globals) {
             resolve('cancel')
           }
 
+          await requestQr.render(
+            {
+              wallet: state.wallet,
+              selectedWallet: state.wallet,
+              amount: state.amount,
+              contact: state.contact,
+              to: state.to,
+            },
+            'afterend',
+          )
+
           setTimeout(t => {
             state.modal.rendered[state.slugs.dialog] = null
             event?.target?.remove()
