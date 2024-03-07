@@ -320,7 +320,7 @@ export let requestQrRig = (async function (globals) {
 
             let contact, inWallet
 
-            if (state.to.startsWith('@')) {
+            if (state.to?.startsWith('@')) {
               contact = appState.contacts.find(
                 c => c.alias === state.to.substring(1)
               )
