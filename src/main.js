@@ -665,6 +665,15 @@ async function main() {
           let tmpAcct = await store.accounts.getItem(
             wallet.xkeyId,
           ) || {}
+          let tmpAcctWallet = getAddressIndexFromUsage(wallet, tmpAcct)
+
+          if (tmpAcctWallet?.addressIndex > 0) {
+            wallet = await deriveWalletData(
+              appState.phrase,
+              tmpAcctWallet?.accountIndex,
+              tmpAcctWallet?.addressIndex,
+            )
+          }
 
           // tmpAcct.usage = tmpAcct?.usage || [0,0]
           // tmpAcct.usage[
