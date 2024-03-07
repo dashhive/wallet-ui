@@ -17,7 +17,7 @@ export let sendOrReceiveRig = (async function (globals) {
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
-    wallet, wallets, accounts, walletFunds,
+    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress,
   } = globals
 
   let sendOrReceive = await setupDialog(
@@ -582,21 +582,14 @@ export let sendOrReceiveRig = (async function (globals) {
               let tmpAcct = await store.accounts.getItem(
                 state.wallet.xkeyId,
               ) || {}
-              let changeWallet = {
-                ...state.wallet,
-                usageIndex: USAGE.CHANGE,
-              }
               let tmpAcctWallet = getAddressIndexFromUsage(
-                changeWallet,
+                state.wallet,
                 tmpAcct,
+                USAGE.CHANGE,
               )
-              let derivedChangeWallet = await deriveWalletData(
-                appState.phrase,
-                tmpAcctWallet.accountIndex,
-                tmpAcctWallet.addressIndex,
-                tmpAcctWallet.usageIndex,
-              )
-              changeAddress = derivedChangeWallet.address
+
+              changeAddress = await getUnusedChangeAddress(tmpAcctWallet)
+
               console.log(
                 'derive change wallet',
                 {
@@ -605,8 +598,7 @@ export let sendOrReceiveRig = (async function (globals) {
                   tmpAcct,
                   tmpAcctWallet,
                   stateWallet: state.wallet,
-                  changeWallet,
-                  derivedChangeWallet,
+                  // derivedChangeWallet,
                 }
               )
 

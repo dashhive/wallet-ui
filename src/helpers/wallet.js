@@ -152,6 +152,49 @@ export async function findInStore(targStore, query = {}) {
   })
 }
 
+export async function findOneInStore(targStore, query = {}) {
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = value
+
+    qs.forEach(([k,v]) => {
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    if (res) {
+      return res
+    }
+
+    if (iterationNumber === storeLen) {
+      return undefined
+    }
+  })
+}
+
+export async function getUnusedChangeAddress(account) {
+  let filterQuery = {
+    xkeyId: account.xkeyId,
+    usageIndex: DashHd.CHANGE,
+  }
+
+  let foundAddrs = await findInStore(store.addresses, filterQuery)
+
+  for (let [fkey,fval] of Object.entries(foundAddrs)) {
+    if (!fval.insight?.balance) {
+      return fkey
+    }
+  }
+
+  // return foundAddr.address
+  return null
+}
+
 export async function loadWalletsForAlias($alias) {
   $alias.$wallets = {}
 
@@ -1103,11 +1146,12 @@ export async function deriveTxWallet(
         fromWallet.recoveryPhrase,
         w.accountIndex,
         w.addressIndex,
+        w.usageIndex,
       )
       privateKeys[tmpWallet.address] = tmpWallet.addressKey.privateKey
       cachedAddrs[w.address] = {
         checked_at: w.updatedAt,
-        hdpath: `m/44'/${DashWallet.COIN_TYPE}'/${w.accountIndex}'/${DashHd.RECEIVE}`,
+        hdpath: `m/44'/${DashWallet.COIN_TYPE}'/${w.accountIndex}'/${w.usageIndex}`,
         index: w.addressIndex,
         wallet: w.walletId, // maybe `selectedAlias`?
         txs: [],
@@ -1123,11 +1167,12 @@ export async function deriveTxWallet(
       fromWallet.recoveryPhrase,
       fundAddrs.accountIndex,
       fundAddrs.addressIndex,
+      fundAddrs.usageIndex,
     )
     privateKeys[tmpWallet.address] = tmpWallet.addressKey.privateKey
     cachedAddrs[fundAddrs.address] = {
       checked_at: fundAddrs.updatedAt,
-      hdpath: `m/44'/${DashWallet.COIN_TYPE}'/${fundAddrs.accountIndex}'/${DashHd.RECEIVE}`,
+      hdpath: `m/44'/${DashWallet.COIN_TYPE}'/${fundAddrs.accountIndex}'/${fundAddrs.usageIndex}`,
       index: fundAddrs.addressIndex,
       wallet: fundAddrs.walletId, // maybe `selectedAlias`?
       txs: [],
@@ -1159,6 +1204,7 @@ export async function createOptimalTx(
   console.log('amount to send', {
     amount,
     amountSats,
+    fundAddrs,
   })
 
   let changeAddr = changeAddrs[0]

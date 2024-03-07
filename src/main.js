@@ -31,6 +31,7 @@ import {
   sendTx,
   getAddrsWithFunds,
   storedData,
+  getUnusedChangeAddress,
 } from './helpers/wallet.js'
 import {
   localForageBaseCfg,
@@ -529,7 +530,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
-    getAddrsWithFunds, batchGenAcctAddrs,
+    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress,
   })
 
   appDialogs.txInfo = await txInfoRig({
@@ -1075,7 +1076,7 @@ async function main() {
               storedAddr.xkeyId,
             ) || {}
 
-            let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
+            let batchAddrs = await batchGenAcctAddrs(
               wallet,
               tmpWalletAcct,
               tmpWalletAcct.usage[storedAddr.usageIndex],
@@ -1086,8 +1087,7 @@ async function main() {
               {
                 // walletTemp,
                 tmpWalletAcct,
-                finalAddressIndex,
-                addresses,
+                batchAddrs,
               }
             )
           })
