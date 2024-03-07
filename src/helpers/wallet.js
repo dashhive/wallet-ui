@@ -514,6 +514,7 @@ export async function generateAddressIterator(
   walletId,
   accountIndex,
   addressIndex,
+  usageIndex = DashHd.RECEIVE,
 ) {
   // let xkeyId = await DashHd.toId(xkey);
   let key = await xkey.deriveAddress(addressIndex);
@@ -541,7 +542,7 @@ export async function generateAddressIterator(
           xkeyId,
           accountIndex,
           addressIndex,
-          usageIndex: xkey.index,
+          usageIndex,
         },
       )
     })
@@ -583,6 +584,7 @@ export async function batchAddressGenerate(
         wallet.id,
         accountIndex,
         addrIdx,
+        usageIndex,
       )
     )
   }
@@ -621,6 +623,7 @@ export async function batchAddressUsageGenerate(
         wallet.id,
         accountIndex,
         addrIdx,
+        DashHd.RECEIVE,
       )
     )
     addresses.push(
@@ -630,6 +633,7 @@ export async function batchAddressUsageGenerate(
         wallet.id,
         accountIndex,
         addrIdx,
+        DashHd.CHANGE,
       )
     )
   }
