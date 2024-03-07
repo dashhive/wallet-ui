@@ -463,48 +463,39 @@ export let sendOrReceiveRig = (async function (globals) {
               tmpAcctWallet.usageIndex,
             )
           } else {
-            // inWallet.addressIndex = inWallet.addressIndex + 1
-            receiveWallet = await deriveWalletData(
-              appState.phrase,
-              inWallet.accountIndex,
-              inWallet.addressIndex,
+            let tmpAcct = await store.accounts.getItem(
+              inWallet.xkeyId,
+            ) || {}
+            let tmpAcctWallet = getAddressIndexFromUsage(
+              {},
+              tmpAcct,
+              USAGE.RECEIVE,
             )
 
-            // await appTools.storedData.encryptItem(
-            //   store.contacts,
-            //   inWallet.xkeyId,
-            //   {
-            //     ...contact,
-            //     updatedAt: (new Date()).toISOString(),
-            //     incoming: {
-            //       ...contact.incoming,
-            //       [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
-            //         ...inWallet,
-            //         address: receiveWallet.address,
-            //         addressIndex: receiveWallet.addressIndex,
-            //       }
-            //     },
-            //   },
-            //   false,
-            // )
+            receiveWallet = await deriveWalletData(
+              appState.phrase,
+              tmpAcctWallet.accountIndex,
+              tmpAcctWallet.addressIndex,
+            )
 
-            // let tmpAcct = await store.accounts.getItem(
-            //   receiveWallet.xkeyId,
-            // ) || {}
-            // let changeWallet = {
-            //   ...receiveWallet,
-            //   usageIndex: USAGE.CHANGE,
-            // }
-            // let tmpAcctWallet = getAddressIndexFromUsage(
-            //   changeWallet,
-            //   tmpAcct,
-            // )
-            // let derivedChangeWallet = await deriveWalletData(
-            //   appState.phrase,
-            //   tmpAcctWallet.accountIndex,
-            //   tmpAcctWallet.addressIndex,
-            //   tmpAcctWallet.usageIndex,
-            // )
+            await appTools.storedData.encryptItem(
+              store.contacts,
+              inWallet.xkeyId,
+              {
+                ...contact,
+                updatedAt: (new Date()).toISOString(),
+                incoming: {
+                  ...contact.incoming,
+                  [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
+                    ...inWallet,
+                    ...tmpAcct,
+                    address: receiveWallet.address,
+                  }
+                },
+              },
+              false,
+            )
+
             // console.log(
             //   'derive change wallet',
             //   {

@@ -7,11 +7,13 @@ import {
   sortContactsByAlias,
   getStoreData,
   formDataEntries,
+  getAddressIndexFromUsage,
 } from './helpers/utils.js'
 
 import {
   DUFFS,
   OIDC_CLAIMS,
+  // USAGE,
 } from './helpers/constants.js'
 
 import {
@@ -180,7 +182,7 @@ let contactsList = await setupContactsList(
 
           let shareAccount = await deriveWalletData(
             appState.phrase,
-            contactAccountID
+            contactAccountID,
           )
 
           if (!contactData.outgoing) {
@@ -250,7 +252,7 @@ let contactsList = await setupContactsList(
 
             shareAccount = await deriveWalletData(
               appState.phrase,
-              accountIndex
+              accountIndex,
             )
 
             console.log('main.js contact account', shareAccount)
@@ -543,8 +545,8 @@ async function main() {
   })
 
   appDialogs.requestQr = await requestQrRig({
-    mainApp, setupDialog, appDialogs, appState, userInfo, store,
-    deriveWalletData, batchGenAcctAddrs,
+    mainApp, appDialogs, appState, appTools, userInfo, store,
+    setupDialog, deriveWalletData, batchGenAcctAddrs,
   })
 
   appDialogs.pairQr = await pairQrRig({
@@ -614,6 +616,19 @@ async function main() {
 
   if (appState.phrase && !wallet) {
     wallet = await deriveWalletData(appState.phrase)
+
+    let tmpAcct = await store.accounts.getItem(
+      wallet.xkeyId,
+    ) || {}
+    let tmpAcctWallet = getAddressIndexFromUsage(wallet, tmpAcct)
+
+    if (tmpAcctWallet?.addressIndex > 0) {
+      wallet = await deriveWalletData(
+        appState.phrase,
+        tmpAcctWallet?.accountIndex,
+        tmpAcctWallet?.addressIndex,
+      )
+    }
   }
 
   document.addEventListener('submit', async event => {

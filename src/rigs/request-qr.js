@@ -15,8 +15,8 @@ export let requestQrRig = (async function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, appState, userInfo, store,
-    deriveWalletData, batchGenAcctAddrs,
+    mainApp, appDialogs, appState, appTools, userInfo, store,
+    setupDialog, deriveWalletData, batchGenAcctAddrs,
   } = globals;
 
   let requestQr = await setupDialog(
@@ -177,6 +177,30 @@ export let requestQrRig = (async function (globals) {
       `,
       fields: html``,
       events: {
+        handleClose: (
+          state,
+          resolve = res=>{},
+          reject = res=>{},
+        ) => async event => {
+          event.preventDefault()
+          // event.stopPropagation()
+          state.removeAllListeners()
+
+          state.contact = null
+          state.amount = 0
+          state.to = null
+
+          if (state.elements.dialog.returnValue !== 'cancel') {
+            resolve(state.elements.dialog.returnValue)
+          } else {
+            resolve('cancel')
+          }
+
+          setTimeout(t => {
+            state.modal.rendered[state.slugs.dialog] = null
+            event?.target?.remove()
+          }, state.delay)
+        },
         handleClick: state => async event => {
           if (event.target === state.elements.dialog) {
             return state.elements.dialog.close('cancel')
@@ -229,7 +253,7 @@ export let requestQrRig = (async function (globals) {
             }
           }
         },
-        handleRender: state => {},
+        // handleRender: state => {},
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
@@ -293,6 +317,34 @@ export let requestQrRig = (async function (globals) {
                   a
                 )
               })
+
+            let contact, inWallet
+
+            if (state.to.startsWith('@')) {
+              contact = appState.contacts.find(
+                c => c.alias === state.to.substring(1)
+              )
+              inWallet = Object.values(contact?.incoming || {})?.[0]
+            }
+
+            if (contact) {
+              await appTools.storedData.encryptItem(
+                store.contacts,
+                tmpAcct.xkeyId,
+                {
+                  ...contact,
+                  updatedAt: (new Date()).toISOString(),
+                  incoming: {
+                    ...contact.incoming,
+                    [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
+                      ...inWallet,
+                      ...tmpAcct,
+                    }
+                  },
+                },
+                false,
+              )
+            }
 
             console.log(
               'GENERATE NEW ADDRESS',
