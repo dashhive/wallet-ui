@@ -385,6 +385,52 @@ export function envoy(obj, ...initListeners) {
   })
 }
 
+/**
+ * Creates a reactive signal
+ *
+ * Inspired By
+ * {@link https://gist.github.com/developit/a0430c500f5559b715c2dddf9c40948d Valoo} &
+ * {@link https://dev.to/ratiu5/implementing-signals-from-scratch-3e4c Signals from Scratch}
+ *
+ * @example
+ *    let count = createSignal(0)
+ *    console.log(count.value) // 0
+ *    count.value = 2
+ *    console.log(count.value) // 2
+ *
+ *    let off = count.on((value) => {
+ *      document.querySelector("body").innerHTML = value;
+ *    });
+ *
+ *    off(); // unsubscribe
+ *
+ * @param {Object} initialValue inital value
+*/
+export function createSignal(initialValue) {
+  let _value = initialValue;
+  let _last = _value;
+  const subs = [];
+
+  function pub() {
+    for (let s of subs) {
+      s && s(_value, _last);
+    }
+  }
+
+  return {
+    get value() { return _value; },
+    set value(v) {
+      _last = _value
+      _value = v;
+      pub();
+    },
+    on: s => {
+      const i = subs.push(s)-1;
+      return () => { subs[i] = 0; };
+    }
+  }
+}
+
 export async function restate(
   state = {},
   renderState = {},
