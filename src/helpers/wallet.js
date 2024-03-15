@@ -9,10 +9,13 @@ import {
 import {
   DatabaseSetup,
 } from './db.js'
-import { deriveWalletData } from './utils.js'
+import {
+  deriveWalletData,
+  getAddressIndexFromUsage,
+} from './utils.js'
 import {
   STOREAGE_SALT, OIDC_CLAIMS,
-  KS_CIPHER, KS_PRF,
+  KS_CIPHER, KS_PRF, USAGE,
 } from './constants.js'
 
 // @ts-ignore
@@ -563,18 +566,18 @@ export async function generateAddressIterator(
   let key = await xkey.deriveAddress(addressIndex);
   let address = await DashHd.toAddr(key.publicKey);
 
-  console.log(
-    'generateAddressIterator',
-    {xkey, xkeyId, key, address, accountIndex, addressIndex},
-  )
+  // console.log(
+  //   'generateAddressIterator',
+  //   {xkey, xkeyId, key, address, accountIndex, addressIndex},
+  // )
 
   store.addresses.getItem(address)
     .then(a => {
       let $addr = a || {}
-      console.log(
-        'generateAddressIterator store.addresses.getItem',
-        {address, $addr},
-      )
+      // console.log(
+      //   'generateAddressIterator store.addresses.getItem',
+      //   {address, $addr},
+      // )
 
       store.addresses.setItem(
         address,
@@ -827,13 +830,14 @@ export async function initWallet(
 // }
 
 export async function updateAddrFunds(
-  wallet, insightRes,
+  wallet, walletFunds, insightRes,
 ) {
   let updatedAt = Date.now()
   let { addrStr, ...res } = insightRes
   let $addr = await store.addresses.getItem(addrStr) || {}
   let {
     walletId,
+    xkeyId,
   } = $addr
 
   // console.log(
@@ -845,6 +849,9 @@ export async function updateAddrFunds(
   // )
 
   if (walletId && walletId === wallet?.id) {
+    let storedWallet = await store.wallets.getItem(walletId) || {}
+    let storedAccount = await store.accounts.getItem(xkeyId) || {}
+
     $addr.insight = {
       ...res,
       updatedAt,
@@ -854,6 +861,47 @@ export async function updateAddrFunds(
       addrStr,
       $addr,
     )
+
+    if (storedAccount.usage[$addr.usageIndex] < $addr.addressIndex) {
+      storedAccount.usage[$addr.usageIndex] = $addr.addressIndex
+      store.accounts.setItem(
+        xkeyId,
+        storedAccount
+      )
+    }
+    if (storedWallet.accountIndex < $addr.accountIndex) {
+      store.wallets.setItem(
+        walletId,
+        {
+          ...storedWallet,
+          accountIndex: $addr.accountIndex,
+        }
+      )
+      let storeAcctLen = (await store.accounts.length())-1
+
+      console.log('updateAddrFunds', {
+        acctIdx: $addr.accountIndex,
+        storeAcctLen,
+        sameOrBigger: $addr.accountIndex >= storeAcctLen,
+      })
+
+      if ($addr.accountIndex >= storeAcctLen) {
+        batchGenAccts(wallet.recoveryPhrase, $addr.accountIndex)
+          .then(() => {
+            // updateAllFunds(wallet, walletFunds)
+            batchGenAcctsAddrs(wallet)
+              .then(accts => {
+                console.log('batchGenAcctsAddrs', { accts })
+
+                updateAllFunds(wallet, walletFunds)
+                  .then(funds => {
+                    console.log('updateAllFunds then funds', funds)
+                  })
+                  .catch(err => console.error('catch updateAllFunds', err, wallet))
+              })
+          })
+      }
+    }
 
     return res
   }
@@ -889,7 +937,7 @@ export async function updateAllFunds(wallet, walletFunds) {
     if (addrIdx > -1) {
       addrKeys.splice(addrIdx, 1)
     }
-    funds += (await updateAddrFunds(wallet, insightRes))?.balance || 0
+    funds += (await updateAddrFunds(wallet, walletFunds, insightRes))?.balance || 0
     walletFunds.balance = funds
   }
 
@@ -952,6 +1000,61 @@ export async function getAddrsWithFunds(wallet) {
   })
 }
 
+export async function batchGenAccts(
+  phrase,
+  accountIndex = 0,
+  batchSize = 5,
+) {
+  let $accts = await getStoredItems(store.accounts)
+  // let $acctsArr = Object.values($accts)
+  let accts = {}
+  let batch = batchSize + accountIndex
+
+  console.log(
+    'BATCH GENERATED ACCOUNTS START',
+    {
+      $accts,
+      // $acctsArr,
+      accountIndex,
+      batch,
+    }
+  )
+
+  for (let i = accountIndex; i < batch; i++) {
+    let acctWallet = await deriveWalletData(
+      phrase,
+      i,
+    )
+
+    if (!$accts[acctWallet.xkeyId]) {
+      let newAccount = await store.accounts.setItem(
+        acctWallet.xkeyId,
+        {
+          createdAt: (new Date()).toISOString(),
+          updatedAt: (new Date()).toISOString(),
+          accountIndex: i,
+          usage: [0,0],
+          walletId: acctWallet.id,
+          xkeyId: acctWallet.xkeyId,
+          addressKeyId: acctWallet.addressKeyId,
+          address: acctWallet.address,
+        }
+      )
+
+      accts[`acct__${i}`] = [ acctWallet, newAccount ]
+    }
+
+    // accts[`acct__${i}`] = batchGenAcctAddrs(
+    //   acctWallet,
+    //   newAccount,
+    // )
+  }
+
+  // let allBatches = Promise.allSettled(Object.values(accts))
+
+  return accts
+}
+
 export async function batchGenAcctAddrs(
   wallet,
   account,
@@ -959,6 +1062,7 @@ export async function batchGenAcctAddrs(
   batchSize = 20,
 ) {
   console.log('batchGenAcctAddrs account', account, usageIndex)
+
   let filterQuery = {
     accountIndex: account.accountIndex,
   }
@@ -971,7 +1075,9 @@ export async function batchGenAcctAddrs(
     store.addresses,
     filterQuery,
   )
+
   console.log('getFilteredStoreLength res', acctAddrsLen)
+
   let addrUsageIdx = account.usage?.[usageIndex] || 0
   let addrIdx = addrUsageIdx
   let batSize = batchSize
@@ -1029,6 +1135,33 @@ export async function batchGenAcctsAddrs(
   }
 
   return accts
+}
+
+export async function getAccountWallet(wallet, phrase) {
+  let acctFromStore = await store.accounts.getItem(
+    wallet.xkeyId,
+  ) || {}
+  let acctFromStoreWallet = getAddressIndexFromUsage(
+    wallet,
+    acctFromStore,
+  )
+
+  if (acctFromStoreWallet?.addressIndex > 0) {
+    return {
+      wallet: await deriveWalletData(
+        phrase,
+        acctFromStoreWallet.accountIndex,
+        acctFromStoreWallet.addressIndex,
+        acctFromStoreWallet?.usageIndex ?? USAGE.RECEIVE,
+      ),
+      account: acctFromStore,
+    }
+  }
+
+  return {
+    wallet,
+    account: acctFromStore,
+  }
 }
 
 export async function forceInsightUpdateForAddress(addr) {

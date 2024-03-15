@@ -20,6 +20,7 @@ import {
   findInStore,
   initDashSocket,
   // batchAddressGenerate,
+  batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
   updateAllFunds,
@@ -32,6 +33,7 @@ import {
   getAddrsWithFunds,
   storedData,
   getUnusedChangeAddress,
+  getAccountWallet,
 } from './helpers/wallet.js'
 import {
   localForageBaseCfg,
@@ -283,7 +285,7 @@ let contactsList = await setupContactsList(
             let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
               wallet,
               newAccount,
-            )
+            ) ?? {}
 
             console.log(
               'share qr derived wallet',
@@ -313,7 +315,7 @@ let contactsList = await setupContactsList(
             appState.contacts.push(newContact)
 
             await contactsList.render(
-              appState.contacts.sort(sortContactsByAlias)
+              appState.contacts.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
             )
 
             console.log(
@@ -419,7 +421,7 @@ function getTarget(event, selector) {
     target = event?.target
   }
 
-  if (parentElement.id === selector) {
+  if (parentElement?.id === selector) {
     target = parentElement
   }
 
@@ -530,7 +532,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
-    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress,
+    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress, getAccountWallet,
   })
 
   appDialogs.txInfo = await txInfoRig({
@@ -617,19 +619,11 @@ async function main() {
 
   if (appState.phrase && !wallet) {
     wallet = await deriveWalletData(appState.phrase)
-
-    let tmpAcct = await store.accounts.getItem(
-      wallet.xkeyId,
-    ) || {}
-    let tmpAcctWallet = getAddressIndexFromUsage(wallet, tmpAcct)
-
-    if (tmpAcctWallet?.addressIndex > 0) {
-      wallet = await deriveWalletData(
-        appState.phrase,
-        tmpAcctWallet?.accountIndex,
-        tmpAcctWallet?.addressIndex,
-      )
-    }
+    let aw = await getAccountWallet(
+      wallet,
+      appState.phrase,
+    )
+    wallet = aw.wallet
   }
 
   document.addEventListener('submit', async event => {
@@ -662,18 +656,11 @@ async function main() {
         // }
 
         if (wallet?.xkeyId) {
-          let tmpAcct = await store.accounts.getItem(
-            wallet.xkeyId,
-          ) || {}
-          let tmpAcctWallet = getAddressIndexFromUsage(wallet, tmpAcct)
-
-          if (tmpAcctWallet?.addressIndex > 0) {
-            wallet = await deriveWalletData(
-              appState.phrase,
-              tmpAcctWallet?.accountIndex,
-              tmpAcctWallet?.addressIndex,
-            )
-          }
+          let aw = await getAccountWallet(
+            wallet,
+            appState.phrase,
+          )
+          wallet = aw.wallet
 
           // tmpAcct.usage = tmpAcct?.usage || [0,0]
           // tmpAcct.usage[
@@ -690,13 +677,16 @@ async function main() {
           //   }
           // )
 
-          batchGenAcctAddrs(receiveWallet, tmpAcct)
+          batchGenAcctAddrs(
+            receiveWallet,
+            aw.account,
+          )
 
           console.log(
             `${fde.intent} TO SELECTED WALLET`,
             {
               wallet,
-              tmpAcct,
+              account: aw.account,
             }
           )
 
@@ -741,9 +731,21 @@ async function main() {
     }
   })
 
-  // console.warn('batchGenAcctsAddrs', { wallet })
-  batchGenAcctsAddrs(wallet)
-    // .then(accts => console.warn('batchGenAcctsAddrs', { accts }))
+  batchGenAccts(appState.phrase, 1)
+    .then(async accts => {
+      console.log('batchGenAccts', { accts })
+
+      batchGenAcctsAddrs(wallet)
+        .then(accts => {
+          console.log('batchGenAcctsAddrs', { accts })
+
+          updateAllFunds(wallet, walletFunds)
+            .then(funds => {
+              console.log('updateAllFunds then funds', funds)
+            })
+            .catch(err => console.error('catch updateAllFunds', err, wallet))
+        })
+    })
 
   bodyNav.render({
     data: {
@@ -765,9 +767,11 @@ async function main() {
         appState.contacts = res
 
         contactsList.render({
-          contacts: res?.sort(sortContactsByAlias),
+          contacts: res?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias),
           userInfo,
         })
+
+        console.log('contacts', res)
       }
     },
     res => async v => {
@@ -779,7 +783,7 @@ async function main() {
 
   await contactsList.render({
     userInfo,
-    contacts: appState.contacts
+    contacts: appState.contacts?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
   })
   sendRequestBtn.render()
 
@@ -932,11 +936,11 @@ async function main() {
       })
     })
 
-  updateAllFunds(wallet, walletFunds)
-    .then(funds => {
-      console.log('updateAllFunds then funds', funds)
-    })
-    .catch(err => console.error('catch updateAllFunds', err, wallet))
+  // updateAllFunds(wallet, walletFunds)
+  //   .then(funds => {
+  //     console.log('updateAllFunds then funds', funds)
+  //   })
+  //   .catch(err => console.error('catch updateAllFunds', err, wallet))
 
   let storedAddrs = (await store.addresses.keys()) || []
 

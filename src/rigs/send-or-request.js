@@ -17,7 +17,7 @@ export let sendOrReceiveRig = (async function (globals) {
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
-    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress,
+    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress, getAccountWallet,
   } = globals
 
   let sendOrReceive = await setupDialog(
@@ -194,7 +194,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 spellcheck="false"
                 autocomplete="off"
                 autocapitalize="off"
-                list="contactAliases"
+                list="${state.action === 'receive' ? 'contactReceiveAliases' : 'contactSendAliases'}"
                 value="${state.to || ''}"
               />
 
@@ -449,34 +449,17 @@ export let sendOrReceiveRig = (async function (globals) {
             // ) + 1
             // state.wallet.addressIndex = state.wallet?.addressIndex ?? 0
             let mainWallet = await deriveWalletData(appState.phrase)
-            let tmpAcct = await store.accounts.getItem(
-              mainWallet.xkeyId,
-            ) || {}
-            let tmpAcctWallet = getAddressIndexFromUsage(
-              state.wallet,
-              tmpAcct
-            )
-            receiveWallet = await deriveWalletData(
+            let aw = await getAccountWallet(
+              mainWallet,
               appState.phrase,
-              tmpAcctWallet.accountIndex,
-              tmpAcctWallet.addressIndex,
-              tmpAcctWallet.usageIndex,
             )
+            receiveWallet = aw.wallet
           } else {
-            let tmpAcct = await store.accounts.getItem(
-              inWallet.xkeyId,
-            ) || {}
-            let tmpAcctWallet = getAddressIndexFromUsage(
-              {},
-              tmpAcct,
-              USAGE.RECEIVE,
-            )
-
-            receiveWallet = await deriveWalletData(
+            let aw = await getAccountWallet(
+              inWallet,
               appState.phrase,
-              tmpAcctWallet.accountIndex,
-              tmpAcctWallet.addressIndex,
             )
+            receiveWallet = aw.wallet
 
             await appTools.storedData.encryptItem(
               store.contacts,
@@ -488,7 +471,7 @@ export let sendOrReceiveRig = (async function (globals) {
                   ...contact.incoming,
                   [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
                     ...inWallet,
-                    ...tmpAcct,
+                    ...aw.account,
                     address: receiveWallet.address,
                   }
                 },
