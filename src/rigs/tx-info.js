@@ -1,10 +1,4 @@
 import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
-import {
-  setClipboard,
-  openBlobSVG,
-  generatePaymentRequestURI,
-} from '../helpers/utils.js'
 
 export let txInfoRig = (async function (globals) {
   'use strict';
