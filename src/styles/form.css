@@ -253,7 +253,8 @@ form > article > figure figcaption + div svg {
 form aside > article > figure figcaption + div sub,
 form > article > figure figcaption + div sub {
   align-self: self-end;
-  font-size: 2.75rem;
+  /* font-size: 2.75rem; */
+  font-size: 74%;
 }
 
 /* form fieldset div > input + button i {

@@ -49,7 +49,7 @@
   --bgc: var(--d);
   --fc: var(--l);
 
-  --emphasize: var(--l);
+  --emphasize: var(--f);
   --de-emphasize: var(--dark-600);
 
   --nav-bg: var(--dark-900);

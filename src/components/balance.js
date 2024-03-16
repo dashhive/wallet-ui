@@ -1,5 +1,5 @@
 import { lit as html } from '../helpers/lit.js'
-import { fixedDash, envoy, } from '../helpers/utils.js'
+import { envoy, formatDash, } from '../helpers/utils.js'
 import { updateAllFunds, } from '../helpers/wallet.js'
 
 const initialState = {
@@ -14,6 +14,7 @@ const initialState = {
   addr: null,
   maxlen: 10,
   fract: 8,
+  sigsplit: 4,
   render(
     renderState = {},
     position = 'afterbegin',
@@ -23,41 +24,19 @@ const initialState = {
     <figcaption>${state.name} ${state.id}</figcaption>
   `,
   content: state => {
-    let funds = 0
-    let balance = `${funds}`
-
-    if (state.walletFunds.balance) {
-      funds += state.walletFunds.balance
-      balance = fixedDash(funds, state.fract)
-      // TODO FIX: does not support large balances
-
-      // console.log('balance fixedDash', balance, balance.length)
-
-      let [fundsInt,fundsFract] = balance.split('.')
-      state.maxlen -= fundsInt.length
-
-      let fundsFraction = fundsFract?.substring(
-        0, Math.min(Math.max(0, state.maxlen), 3)
-      )
-
-      let fundsRemainder = fundsFract?.substring(
-        fundsFraction.length,
-        Math.max(0, state.maxlen)
-      )
-
-      balance = html`${
-        fundsInt
-      }<sub><span>.${
-        fundsFraction
-      }</span>${
-        fundsRemainder
-      }</sub>`
-    }
+    let balance = formatDash(
+      state.walletFunds.balance,
+      {
+        fract: state.fract,
+        maxlen: state.maxlen,
+        sigsplit: state.sigsplit,
+      }
+    )
 
     return html`
       ${state.header(state)}
 
-      <div title="${funds}">
+      <div title="${state.walletFunds.balance}">
         <svg width="32" height="33" viewBox="0 0 32 33">
           <use xlink:href="#icon-dash-mark"></use>
         </svg>

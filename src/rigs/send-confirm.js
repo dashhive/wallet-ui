@@ -3,6 +3,7 @@ import {
   formDataEntries,
   getStoreData,
   sortContactsByAlias,
+  formatDash,
 } from '../helpers/utils.js'
 
 export let sendConfirmRig = (async function (globals) {
@@ -64,6 +65,10 @@ export let sendConfirmRig = (async function (globals) {
       showAmount: state => {
         let output = html``
         if (state.fullAmount) {
+          let fullAmount = formatDash(
+            state.fullAmount,
+          )
+
           output = html`
             ${output}
             <article>
@@ -73,7 +78,7 @@ export let sendConfirmRig = (async function (globals) {
                   <svg width="26" height="27" viewBox="0 0 32 33">
                     <use xlink:href="#icon-dash-mark"></use>
                   </svg>
-                  ${state.fullAmount}
+                  ${fullAmount}
                 </div>
               </figure>
             </article>
@@ -85,16 +90,22 @@ export let sendConfirmRig = (async function (globals) {
         if (!state.fee?.dash || !state.fullAmount) {
           return ''
         }
+        let dashFee = formatDash(
+          state.fee.dash,
+        )
+        let totalAmount = formatDash(
+          Number(state.fullAmount) + Number(state.fee?.dash),
+        )
 
         return html`
           <article class="col rg-3">
             <figure>
               <figcaption>Dash Network Fee</figcaption>
-              <div class="small">
+              <div class="mid">
                 <svg width="22" height="23" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${state.fee?.dash}
+                ${dashFee}
               </div>
             </figure>
             <figure>
@@ -103,7 +114,7 @@ export let sendConfirmRig = (async function (globals) {
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${(Number(state.fullAmount) + Number(state.fee?.dash)).toFixed(8)}
+                ${totalAmount}
               </div>
             </figure>
           </article>

@@ -72,6 +72,7 @@ main header figure figcaption + div svg {
 main header figure figcaption + div sub {
   align-self: self-end;
   font-size: 2.75rem;
+  font-size: 74%;
 }
 main footer {
   text-align: center;

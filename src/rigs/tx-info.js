@@ -1,4 +1,7 @@
 import { lit as html } from '../helpers/lit.js'
+import {
+  formatDash,
+} from '../helpers/utils.js'
 
 export let txInfoRig = (async function (globals) {
   'use strict';
@@ -46,6 +49,9 @@ export let txInfoRig = (async function (globals) {
       showAmount: state => {
         let output = html``
         if (state.amount) {
+          let amount = formatDash(
+            state.amount,
+          )
           output = html`
             ${output}
             <article>
@@ -55,7 +61,7 @@ export let txInfoRig = (async function (globals) {
                   <svg width="26" height="27" viewBox="0 0 32 33">
                     <use xlink:href="#icon-dash-mark"></use>
                   </svg>
-                  ${state.amount}
+                  ${amount}
                 </div>
               </figure>
             </article>
@@ -67,16 +73,22 @@ export let txInfoRig = (async function (globals) {
         if (!state.fee || !state.amount) {
           return ''
         }
+        let dashFee = formatDash(
+          state.fee,
+        )
+        let totalAmount = formatDash(
+          Number(state.amount) + Number(state.fee),
+        )
 
         return html`
           <article class="col rg-3">
             <figure>
               <figcaption>Dash Network Fee</figcaption>
-              <div class="small">
+              <div class="mid">
                 <svg width="22" height="23" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${state.fee}
+                ${dashFee}
               </div>
             </figure>
             <figure>
@@ -85,7 +97,7 @@ export let txInfoRig = (async function (globals) {
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${(Number(state.amount) + Number(state.fee)).toFixed(8)}
+                ${totalAmount}
               </div>
             </figure>
           </article>

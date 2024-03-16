@@ -270,6 +270,50 @@ export function toDuff(dash) {
   return Math.round(parseFloat(dash) * DUFFS);
 }
 
+export function formatDash(
+  unformattedBalance,
+  options = {},
+) {
+  let opts = {
+    maxlen: 10,
+    fract: 8,
+    sigsplit: 4,
+    ...options,
+  }
+  let funds = 0
+  let balance = `${funds}`
+
+  if (unformattedBalance) {
+    funds += unformattedBalance
+    balance = fixedDash(funds, opts.fract)
+    // TODO FIX: does not support large balances
+
+    // console.log('balance fixedDash', balance, balance.length)
+
+    let [fundsInt,fundsFract] = balance.split('.')
+    opts.maxlen -= fundsInt.length
+
+    let fundsFraction = fundsFract?.substring(
+      0, Math.min(Math.max(0, opts.maxlen), opts.sigsplit)
+    )
+
+    let fundsRemainder = fundsFract?.substring(
+      fundsFraction.length,
+      Math.max(0, opts.maxlen)
+    )
+
+    balance = `${
+      fundsInt
+    }<sub><span>.${
+      fundsFraction
+    }</span>${
+      fundsRemainder
+    }</sub>`
+  }
+
+  return balance
+}
+
 export function formDataEntries(event) {
   let fd = new FormData(
     event.target,
