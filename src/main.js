@@ -377,6 +377,13 @@ async function getUserInfo() {
           ([k,v]) => userInfo[k] = v
         )
     })
+    .catch(err => {
+      showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+      })
+    })
   }
 }
 
@@ -428,6 +435,77 @@ function getTarget(event, selector) {
   return target
 }
 
+async function showNotification({
+  type = '',
+  title = '',
+  msg = '',
+  sticky = false,
+}) {
+  console.log('notification', {type, title, msg, sticky})
+}
+
+async function showErrorDialog(options) {
+  let opts = {
+    type: 'warn',
+    title: '⚠️ Error',
+    msg: '',
+    showCancelBtn: true,
+    showActBtn: true,
+    // timeout: null,
+    ...options,
+  }
+
+  if (opts.type === 'dang') {
+    console.error('showErrorDialog', opts.msg)
+  } else {
+    console.log('showErrorDialog', opts)
+  }
+
+  await appDialogs.confirmAction?.render({
+    name: opts.title,
+    actionTxt: 'Report Issue',
+    actionAlt: 'Report the error at GitHub',
+    action: 'lock',
+    cancelTxt: 'Close',
+    cancelAlt: `Close`,
+    // target: '',
+    // targetFallback: 'this wallet',
+    actionType: opts.type,
+    // action: 'disconnect',
+    // target: '',
+    // targetFallback: 'this wallet',
+    // actionType: 'dang',
+    showCancelBtn: opts.showCancelBtn,
+    showActBtn: opts.showActBtn,
+    submitIcon: state => `⚠️`,
+    alert: state => html``,
+    content: state => html`
+      ${state.header(state)}
+
+      <article class="px-3 col flex-fill ta-left mh-75">
+        <strong>
+          Looks like we encountered an error.
+        </strong>
+        <pre class="of-auto flex-fill">${opts.msg}</pre>
+      </article>
+
+      ${state.footer(state)}
+    `,
+    callback: () => {
+      let firstLineFromError = opts.msg.match(/[^\r\n]+/g)?.[0]
+
+      // console.log('firstLineFromError', firstLineFromError)
+
+      window.open(
+        `https://github.com/dashhive/wallet-ui/issues?q=${firstLineFromError}`,
+        '_blank',
+      )
+    },
+  })
+
+  return appDialogs.confirmAction?.showModal()
+}
+
 async function main() {
   appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
@@ -463,6 +541,11 @@ async function main() {
     }
   )
 
+  appDialogs.confirmAction = await confirmActionRig({
+    mainApp, setupDialog,
+    appDialogs, appState, appTools,
+  })
+
   appDialogs.walletEncrypt = await walletEncryptRig({
     setupDialog, appDialogs, appState, mainApp,
     wallet, wallets, bodyNav, dashBalance,
@@ -471,6 +554,7 @@ async function main() {
   appDialogs.walletDecrypt = await walletDecryptRig({
     setupDialog, appDialogs, appState, mainApp, importFromJson,
     wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
+    showErrorDialog,
   })
 
   appDialogs.walletBackup = await walletBackupRig({
@@ -503,11 +587,6 @@ async function main() {
     mainApp, wallet, userInfo, contactsList,
   })
 
-  appDialogs.confirmAction = await confirmActionRig({
-    mainApp, setupDialog,
-    appDialogs, appState, appTools,
-  })
-
   appDialogs.confirmDelete = await confirmDeleteRig({
     mainApp, setupDialog, appDialogs, appState, appTools,
     store, userInfo, contactsList,
@@ -532,7 +611,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
-    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress, getAccountWallet,
+    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress, getAccountWallet, showErrorDialog,
   })
 
   appDialogs.txInfo = await txInfoRig({
@@ -577,10 +656,15 @@ async function main() {
         ks,
       )
     } catch(err) {
-      console.error(
-        '[fail] unable to decrypt seed phrase',
-        err
-      )
+      // console.error(
+      //   '[fail] unable to decrypt seed phrase',
+      //   err
+      // )
+      await showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+      })
       sessionStorage.removeItem('encryptionPassword')
     }
   }
@@ -743,7 +827,14 @@ async function main() {
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
-            .catch(err => console.error('catch updateAllFunds', err, wallet))
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            })
         })
     })
 
@@ -940,9 +1031,21 @@ async function main() {
   //   .then(funds => {
   //     console.log('updateAllFunds then funds', funds)
   //   })
-  //   .catch(err => console.error('catch updateAllFunds', err, wallet))
+  //   .catch(err => {
+  //     // console.error('catch updateAllFunds', err, wallet)
+  //     showNotification({
+  //       type: 'error',
+  //       title: 'Update funds',
+  //       msg: err,
+  //     })
+  //   })
 
   let storedAddrs = (await store.addresses.keys()) || []
+
+  // showErrorDialog({
+  //   title: 'Test error',
+  //   msg: err,
+  // })
 
   initDashSocket({
     onMessage: async function (evname, data) {
@@ -968,7 +1071,14 @@ async function main() {
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
-            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            }),
           1000
         )
       }
@@ -1127,7 +1237,14 @@ async function main() {
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
-            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            }),
           1000
         )
       }

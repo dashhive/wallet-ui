@@ -17,7 +17,7 @@ export let sendOrReceiveRig = (async function (globals) {
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
-    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress, getAccountWallet,
+    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress, getAccountWallet, showErrorDialog,
   } = globals
 
   let sendOrReceive = await setupDialog(
@@ -516,7 +516,15 @@ export let sendOrReceiveRig = (async function (globals) {
               address = to
             }
 
-            if (amount > 0 && walletFunds.balance < amount) {
+            let leftoverBalance = walletFunds.balance - amount
+            // let fullTransfer = leftoverBalance <= 0.0010_0200
+            let fullTransfer = leftoverBalance <= 0.0001_0200
+
+            if (
+              amount > 0 &&
+              walletFunds.balance < amount &&
+              !fullTransfer
+            ) {
               console.log(
                 `INSUFFICIENT FUNDS IN WALLET`,
                 [
@@ -591,18 +599,28 @@ export let sendOrReceiveRig = (async function (globals) {
               fundingAddrs = Object.values(
                 fundingAddrs || {}
               )
-              let leftoverBalance = walletFunds.balance - amount
-              // let fullTransfer = leftoverBalance <= 0.0010_0200
-              let fullTransfer = leftoverBalance <= 0.0001_0200
 
-              let { tx, changeAddr, fee } = await createTx(
-                state.wallet,
-                fundingAddrs,
-                [changeAddress],
-                address,
-                amount,
-                fullTransfer,
-              )
+              let createdTx = {}
+
+              try {
+                createdTx = await createTx(
+                  state.wallet,
+                  fundingAddrs,
+                  [changeAddress],
+                  address,
+                  amount,
+                  fullTransfer,
+                )
+              } catch(err) {
+                await showErrorDialog({
+                  type: 'dang',
+                  title: 'Failed to create transaction',
+                  msg: err,
+                  // showActBtn: false,
+                })
+              }
+
+              let { tx, changeAddr, fee } = createdTx
 
               let fullAmount = 0
 
