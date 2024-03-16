@@ -761,7 +761,7 @@ export let sendOrReceiveRig = (async function (globals) {
               await appDialogs.requestQr.render(
                 {
                   name: 'Share to receive funds',
-                  submitTxt: `Select a Contact`,
+                  submitTxt: `Edit Amount or Contact`,
                   submitAlt: `Change the currently selected contact`,
                   // footer: state => html`<footer class="center">
                   //   <sub>Share this QR code to receive funds</sub>
