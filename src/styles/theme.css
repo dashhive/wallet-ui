@@ -512,3 +512,7 @@ figure figcaption + div sub span {
 ::-webkit-scrollbar-thumb:hover {
   background-color: var(--dark-100);
 }
+
+::-webkit-scrollbar-corner {
+  background-color: transparent;
+}
