@@ -95,6 +95,55 @@ figure h4 {
   font-size: 2rem;
 }
 
+.mh-25 {
+  max-height: 25%;
+}
+.mh-50 {
+  max-height: 50%;
+}
+.mh-75 {
+  max-height: 75%;
+}
+.mh-100 {
+  max-height: 100%;
+}
+
+.of-auto {
+  overflow: auto;
+}
+.ofx-auto {
+  overflow-x: auto;
+}
+.ofy-auto {
+  overflow-y: auto;
+}
+.of-scroll {
+  overflow: scroll;
+}
+.ofx-scroll {
+  overflow-x: scroll;
+}
+.ofy-scroll {
+  overflow-y: scroll;
+}
+.of-hidden {
+  overflow: hidden;
+}
+.ofx-hidden {
+  overflow-x: hidden;
+}
+.ofy-hidden {
+  overflow-y: hidden;
+}
+.of-visible {
+  overflow: visible;
+}
+.ofx-visible {
+  overflow-x: visible;
+}
+.ofy-visible {
+  overflow-y: visible;
+}
 
 .flex {
   display: flex;
