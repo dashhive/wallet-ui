@@ -1054,11 +1054,26 @@ export function getPartialHDPath(wallet) {
   ].join('/')
 }
 
-export function getAddressIndexFromUsage(wallet, account, usage) {
-  let usageIndex = usage ?? wallet.usageIndex
+export function getAddressIndexFromUsage(wallet, account, usageIdx) {
+  let usageIndex = usageIdx ?? wallet?.usageIndex ?? 0
+  let addressIndex = account.usage?.[usageIndex] ?? account.addressIndex ?? 0
+  let usage = account.usage ?? [
+    account.addressIndex ?? 0,
+    0
+  ]
+
+  // console.log(
+  //   'getAddressIndexFromUsage',
+  //   usageIndex,
+  //   addressIndex,
+  //   account,
+  //   usage,
+  // )
+
   return {
     ...account,
+    usage,
     usageIndex,
-    addressIndex: account.usage[usageIndex],
+    addressIndex,
   }
 }
