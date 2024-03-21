@@ -1028,20 +1028,90 @@ export async function getAvatar(c) {
   return `${avStr}">${initials}</div>`
 }
 
-export function readFile(file, callback) {
+export function fileIsSubType(file, type) {
+  const fileType = file?.type?.split('/')?.[1]
+
+  if (!fileType) {
+    return false
+  }
+
+  return fileType === type
+}
+
+// fileInTypes({type:'application/json'}, ['image/png'])
+export function fileInMIMETypes(file, types = []) {
+  const fileType = file?.type
+
+  if (!fileType) {
+    return false
+  }
+
+  return types.includes(fileType)
+}
+
+export function fileTypeInTypes(file, types = []) {
+  const fileType = file?.type?.split('/')?.[0]
+
+  if (!fileType) {
+    return false
+  }
+
+  return types.includes(fileType)
+}
+
+export function fileTypeInSubtype(file, subtypes = []) {
+  const fileSubType = file?.type?.split('/')?.[1]
+
+  if (!fileSubType) {
+    return false
+  }
+
+  return subtypes.includes(fileSubType)
+}
+
+export function readFile(file, options) {
+  let opts = {
+    expectedFileType: 'json',
+    denyFileTypes: ['audio','video','image','font','model'],
+    denyFileSubTypes: ['msword','xml'],
+    callback: () => {},
+    errorCallback: () => {},
+    ...options,
+  }
   let reader = new FileReader();
   let result
 
   reader.addEventListener('load', () => {
+    if (
+      fileTypeInTypes(
+        file,
+        opts.denyFileTypes,
+      ) || fileTypeInSubtype(
+        file,
+        opts.denyFileSubTypes,
+      )
+    ) {
+      return opts.errorCallback?.({
+        err: `Wrong file type: ${file.type}. Expected: ${opts.expectedFileType}.`,
+        file,
+      })
+    }
+
     try {
       // @ts-ignore
       result = JSON.parse(reader?.result || '{}');
 
-      console.log('parse loaded json', result);
-      callback?.(result)
+      // console.log('parse loaded json', result);
+
+      opts.callback?.(result, file)
 
       // state[key] = result
     } catch(err) {
+      opts.errorCallback?.({
+        err,
+        file,
+      })
+
       throw new Error(`failed to parse JSON data from ${file.name}`)
     }
   });

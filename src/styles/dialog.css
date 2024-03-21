@@ -102,6 +102,9 @@ dialog.responsive {
   margin: 0 auto;
   height: 100%;
 }
+dialog pre {
+  white-space: break-spaces;
+}
 dialog form {
   box-sizing: border-box;
   display: flex;
@@ -125,8 +128,9 @@ dialog > form > footer {
   font-size: 1.25rem;
   overflow: hidden;
 }
-dialog > form > footer {
-  column-gap: .25rem;
+dialog > form > footer,
+dialog > form > footer > .row {
+  column-gap: .5rem;
 }
 dialog > form sub {
   font-size: .75rem;
@@ -267,7 +271,7 @@ dialog.responsive footer button[type="submit"] {
   flex: 1 1 50%;
   border: 1px solid transparent;
   height: 100%;
-  line-height: 1;
+  /* line-height: 1; */
 }
 dialog.responsive footer button[type="reset"] {
   border: 1px solid var(--dark-200);
@@ -276,8 +280,8 @@ dialog.responsive footer button[type="reset"] {
 }
 dialog.responsive footer button[type="reset"]:hover {
   background-color: transparent;
-  border: 1px solid var(--dang);
-  color: var(--dang);
+  border: 1px solid var(--l);
+  color: var(--l);
   outline: 0;
 }
 /* dialog.responsive button[type="reset"] {

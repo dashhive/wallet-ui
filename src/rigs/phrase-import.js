@@ -3,6 +3,7 @@ import {
   formDataEntries,
   readFile,
   verifyPhrase,
+  fileIsSubType,
 } from '../helpers/utils.js'
 import {
   ALIAS_REGEX,
@@ -15,11 +16,36 @@ export let phraseImportRig = (async function (globals) {
   let {
     setupDialog, appDialogs, appState, store,
     mainApp, wallet, wallets, deriveWalletData,
+    showErrorDialog,
   } = globals;
 
-  const processFile = (state, event) => res => {
+  const displayError = (state, event) => ({err, file}) => {
+    let title = `failed to parse JSON data from ${file.name}`
+
+    if (!fileIsSubType(file, 'json')) {
+      title = `Invalid file type: ${file.type}`
+    }
+
+    showErrorDialog({
+      title,
+      msg: err,
+      showActBtn: false,
+      cancelCallback: () => {
+        clearFile(state)
+      },
+    })
+  }
+
+  const processFile = (state, event) => (res, file) => {
+    if (file?.type !== '' && !fileIsSubType(file, 'json')) {
+      return displayError(state, event)({
+        err: `Invalid file type: ${file.type}`,
+        file,
+      })
+    }
+
     if (res?.aliases) {
-      console.log('backup file', res)
+      console.log('backup file', { res, file })
       state.walletImportData = res
 
       appState.selectedAlias = Object.keys(
@@ -34,7 +60,7 @@ export let phraseImportRig = (async function (globals) {
       )?.[0]
       localStorage.selectedWallet = appState.selectedWallet
     } else {
-      console.log('kestore file', res)
+      console.log('kestore file', { res, file })
       state.keystoreData = res
     }
   }
@@ -106,7 +132,7 @@ export let phraseImportRig = (async function (globals) {
         return html`
           <button
             class="link clear"
-            type="submit"
+            type="reset"
             name="intent"
             value="clear"
             title="${state.clearAlt}"
@@ -237,8 +263,11 @@ export let phraseImportRig = (async function (globals) {
             resolve('cancel')
           }
           // console.log(
-          //   'DIALOG handleClose',
+          //   'PHRASE IMPORT handleClose',
           //   state.modal.rendered[state.slugs.dialog],
+          //   state.elements.dialog.returnValue,
+          //   event,
+          //   event?.target?.name,
           // )
 
           setTimeout(t => {
@@ -293,7 +322,10 @@ export let phraseImportRig = (async function (globals) {
                   const file = item.getAsFile();
                   readFile(
                     file,
-                    processFile(state, event),
+                    {
+                      callback: processFile(state, event),
+                      errorCallback: displayError(state, event),
+                    },
                   )
                   state.keystoreFile = file.name
                   state.render(state)
@@ -303,7 +335,10 @@ export let phraseImportRig = (async function (globals) {
               [...event.dataTransfer.files].forEach((file, i) => {
                 readFile(
                   file,
-                  processFile(state, event),
+                  {
+                    callback: processFile(state, event),
+                    errorCallback: displayError(state, event),
+                  },
                 )
                 state.keystoreFile = file.name
                 state.render(state)
@@ -318,7 +353,10 @@ export let phraseImportRig = (async function (globals) {
           if (event.target.files?.length > 0) {
             readFile(
               event.target.files[0],
-              processFile(state, event),
+              {
+                callback: processFile(state, event),
+                errorCallback: displayError(state, event),
+              },
             )
             state.keystoreFile = event.target.files[0].name
             state.render(state)
@@ -359,7 +397,26 @@ export let phraseImportRig = (async function (globals) {
             }
           }
         },
-        // PHRASE_REGEX
+        handleClick: state => event => {
+          let clearButton = state.elements?.dialog?.querySelector(
+            '.updrop > button[value=clear]'
+          )
+          if (
+            clearButton === event.target ||
+            clearButton?.contains(event.target)
+          ) {
+            clearFile(state)
+            return;
+          }
+          if (event.target === state.elements.dialog) {
+            // console.log(
+            //   'handle dialog backdrop click',
+            //   event,
+            //   event.target === state.elements.dialog
+            // )
+            state.elements.dialog.close('cancel')
+          }
+        },
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()

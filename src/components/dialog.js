@@ -267,7 +267,7 @@ const initialState = {
         // )
         state.elements.dialog.close('cancel')
       }
-    }
+    },
   },
 }
 

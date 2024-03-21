@@ -451,9 +451,29 @@ async function showErrorDialog(options) {
     msg: '',
     showCancelBtn: true,
     showActBtn: true,
+    cancelCallback: () => {},
     // timeout: null,
     ...options,
   }
+
+  opts.callback = opts.callback || (() => {
+    let firstLineFromError = ''
+    let { msg } = opts
+
+    if (typeof msg !== 'string' && msg.toString) {
+      msg = msg.toString()
+    }
+    if (typeof msg === 'string') {
+      firstLineFromError = msg.match(/[^\r\n]+/g)?.[0]
+    }
+
+    // console.log('firstLineFromError', firstLineFromError)
+
+    window.open(
+      `https://github.com/dashhive/wallet-ui/issues?q=${firstLineFromError}`,
+      '_blank',
+    )
+  })
 
   if (opts.type === 'dang') {
     console.error('showErrorDialog', opts.msg)
@@ -491,16 +511,8 @@ async function showErrorDialog(options) {
 
       ${state.footer(state)}
     `,
-    callback: () => {
-      let firstLineFromError = opts.msg.match(/[^\r\n]+/g)?.[0]
-
-      // console.log('firstLineFromError', firstLineFromError)
-
-      window.open(
-        `https://github.com/dashhive/wallet-ui/issues?q=${firstLineFromError}`,
-        '_blank',
-      )
-    },
+    cancelCallback: opts.cancelCallback,
+    callback: opts.callback,
   })
 
   return appDialogs.confirmAction?.showModal()
@@ -575,6 +587,7 @@ async function main() {
   appDialogs.phraseImport = await phraseImportRig({
     setupDialog, appDialogs, appState, store,
     mainApp, wallet, wallets, deriveWalletData,
+    showErrorDialog,
   })
 
   appDialogs.onboard = await onboardRig({
