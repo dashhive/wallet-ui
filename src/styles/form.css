@@ -495,8 +495,16 @@ div.switch {
 .switch input[type=checkbox] {
   display: none;
 }
+
 input[type=checkbox]:has(+ label.switch) {
   display: none;
+}
+
+#send_or_receive_dialog .switch {
+  justify-content: center;
+}
+#send_or_receive_dialog .switch label:first-child {
+  flex: none;
 }
 
 label.switch {

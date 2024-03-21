@@ -44,7 +44,7 @@
     "dashphrase": "^1.4.0",
     "dashsight": "^1.6.1",
     "dashtx": "^0.13.2",
-    "dashwallet": "^0.6.1",
+    "dashwallet": "^0.7.0-1",
     "html5-qrcode": "^2.3.8",
     "idb": "^8.0.0",
     "localforage": "^1.10.0",

@@ -1458,21 +1458,13 @@ export async function createStandardTx(
     dashsight,
   })
 
-  if (fullTransfer) {
-    selection = dashwallet.useAllCoins({
-      utxos: coreUtxos,
-      breakChange: false,
-    })
-    receiverOutput = selection.output
-  } else {
-    receiverOutput = DashWallet._parseSendInfo(dashwallet, amountSats);
+  receiverOutput = DashWallet._parseSendInfo(dashwallet, amountSats);
 
-    selection = dashwallet.useMatchingCoins({
-      output: receiverOutput,
-      utxos: coreUtxos,
-      breakChange: false,
-    })
-  }
+  selection = dashwallet.useMatchingCoins({
+    output: receiverOutput,
+    utxos: coreUtxos,
+    breakChange: false,
+  })
 
   console.log('coreUtxos', {
     coreUtxos,
@@ -1525,6 +1517,82 @@ export async function createStandardTx(
   ]
 }
 
+export async function createDraftTx(
+  fromWallet,
+  fundAddrs,
+  changeAddrs,
+  recipient,
+  amount,
+  fullTransfer = false,
+) {
+  const amountSats = DashTx.toSats(amount)
+
+  console.log('amount to send', {
+    amount,
+    amountSats,
+  })
+
+  let {
+    privateKeys,
+    coreUtxos,
+    cachedAddrs,
+  } = await deriveTxWallet(fromWallet, fundAddrs)
+  let changeAddr = changeAddrs[0]
+
+  let recipientAddr = recipient?.address || recipient
+
+  // @ts-ignore
+  let dashwallet = await DashWallet.create({
+    safe: {
+      cache: {
+        addresses: cachedAddrs
+      }
+    },
+    store: {
+      save: data => console.log('dashwallet.store.save', {data})
+    },
+    dashsight,
+  })
+
+  let utxos = null;
+  let inputs = null;
+  let output = {
+    address: recipientAddr,
+    satoshis: amountSats
+  };
+
+  if (coreUtxos) {
+    inputs = coreUtxos;
+    if (fullTransfer) {
+      output.satoshis = null;
+    }
+  } else {
+    utxos = coreUtxos;
+  }
+
+  let txDraft = await dashwallet.legacy.draftTx({
+    utxos,
+    inputs,
+    output,
+    feeSize: 'max',
+  })
+
+  if (txDraft.change) {
+    txDraft.change.address = changeAddr;
+  }
+
+  let keys = txDraft.inputs.map(
+    utxo => privateKeys[utxo.address]
+  )
+
+  let txSummary = await dashwallet.legacy.finalizeAndSignTx(txDraft, keys);
+
+  return {
+    ...txSummary,
+    changeAddr,
+  }
+}
+
 export async function createTx(
   fromWallet,
   fundAddrs,
@@ -1532,6 +1600,7 @@ export async function createTx(
   recipient,
   amount,
   fullTransfer = false,
+  mode = null,
 ) {
   let tmpTx
   let dashTx = DashTx.create({
@@ -1540,6 +1609,25 @@ export async function createTx(
   });
 
   if (fullTransfer) {
+    let tx = await createDraftTx(
+      fromWallet,
+      fundAddrs,
+      changeAddrs,
+      recipient,
+      amount,
+      fullTransfer,
+    )
+
+    console.log('fullTransfer tx', tx);
+
+    return {
+      tx,
+      changeAddr: tx.changeAddr,
+      fee: tx.fee,
+      // fee: inFee - outFee,
+    }
+  } else if (mode === 'cash') {
+    // Denominated TX
     tmpTx = await createStandardTx(
       fromWallet,
       fundAddrs,
@@ -1549,6 +1637,7 @@ export async function createTx(
       fullTransfer,
     )
   } else {
+    // Non-Denominated TX
     tmpTx = await createOptimalTx(
       fromWallet,
       fundAddrs,

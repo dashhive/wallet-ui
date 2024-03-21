@@ -41,12 +41,12 @@ export let sendOrReceiveRig = (async function (globals) {
       submitIcon: state => {
         const icon = {
           send: html`
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="22" height="22" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-up"></use>
             </svg>
           `,
           receive: html`
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="22" height="22" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-down"></use>
             </svg>
           `,
@@ -214,7 +214,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 <input
                   id="amount"
                   name="amount"
-                  placeholder="0.123456789"
+                  placeholder="0.12345678"
                   spellcheck="false"
                   autocomplete="off"
                   pattern="${AMOUNT_REGEX.source}"
@@ -228,17 +228,18 @@ export let sendOrReceiveRig = (async function (globals) {
                 ${state.fundAmountBtns(state)}
               </div>
             </div>
-            <!-- <div class="switch py-3 pr-3">
-              <label for="standardMode" class="jc-end">
-                Use Standard Send
+            <div class="switch py-3 pr-3">
+              <label for="cashSendMode" class="jc-end">
+                Use CashSend
               </label>
               <input
-                id="standardMode"
+                id="cashSendMode"
                 name="mode"
                 type="checkbox"
+                value="cash"
               />
-              <label for="standardMode" class="switch" title="Standard Send"></label>
-            </div> -->
+              <label for="cashSendMode" class="switch" title="CashSend"></label>
+            </div>
 
             <div class="error"></div>
           </article>
@@ -517,8 +518,8 @@ export let sendOrReceiveRig = (async function (globals) {
             }
 
             let leftoverBalance = walletFunds.balance - amount
-            // let fullTransfer = leftoverBalance <= 0.0010_0200
-            let fullTransfer = leftoverBalance <= 0.0001_0200
+            let fullTransfer = leftoverBalance <= 0.0010_0200
+            // let fullTransfer = leftoverBalance <= 0.0001_0200
 
             if (
               amount > 0 &&
@@ -610,9 +611,10 @@ export let sendOrReceiveRig = (async function (globals) {
                   address,
                   amount,
                   fullTransfer,
+                  fde.mode,
                 )
               } catch(err) {
-                await showErrorDialog({
+                return await showErrorDialog({
                   type: 'dang',
                   title: 'Failed to create transaction',
                   msg: err,
