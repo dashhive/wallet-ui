@@ -14,7 +14,7 @@ const initialState = {
   addr: null,
   maxlen: 10,
   fract: 8,
-  sigsplit: 4,
+  sigsplit: 3,
   render(
     renderState = {},
     position = 'afterbegin',

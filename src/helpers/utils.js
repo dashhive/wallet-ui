@@ -277,7 +277,7 @@ export function formatDash(
   let opts = {
     maxlen: 10,
     fract: 8,
-    sigsplit: 4,
+    sigsplit: 3,
     ...options,
   }
   let funds = 0
