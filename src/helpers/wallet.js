@@ -943,7 +943,7 @@ export async function updateAllFunds(wallet, walletFunds) {
 
   // remove insight balances from address
   for (const addr of addrKeys) {
-    let { _insight, ...$addr } = await store.addresses.getItem(addr) || {}
+    let { insight, ...$addr } = await store.addresses.getItem(addr) || {}
 
     // walletFunds.balance = funds - (_insight?.balance || 0)
 
