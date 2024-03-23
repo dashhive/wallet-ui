@@ -16,7 +16,9 @@ jobs:
     #   branch: ${{ steps.clean_branch.outputs.branch }}
     environment:
       name: wallet
-      url: ${{ vars.WEBSITE }}
+      # url: ${{ vars.WEBSITE }}
+      url: ${{ steps.clean_branch.outputs.page_url }}
+      # url: ${{ steps.run_deploy.outputs.deploy_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -28,16 +30,29 @@ jobs:
           node-version: 20
           cache: 'npm'
       - run: npm ci
-      - run: npm run deploy
       - name: Get clean branch name
         id: clean_branch
         env:
           REPLACE_SLASH: "/"
           WITH_DASH: "-"
+          BASE_DOMAIN: ${{ vars.BASE_DOMAIN }}
         run: |
           export BRANCH=${GITHUB_REF_NAME//$REPLACE_SLASH/$WITH_DASH}
+          export PAGE_URL=https://$BRANCH.$BASE_DOMAIN/
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+          echo "page_url=$PAGE_URL" >>  "$GITHUB_OUTPUT"
+          echo "name=page_url::$PAGE_URL" >> $GITHUB_OUTPUT
+      - name: Run deploy.js
+        id: run_deploy
+        env:
+          PAGE_URL: ${{ steps.clean_branch.outputs.page_url }}
+          GITHUB_REF_NAME: ${{ github.ref_name }}
+          GITHUB_OUTPUT: $GITHUB_OUTPUT
+        run: |
+          DEPLOY_URL=$(((node .github/workflows/deploy.js) 2>&1) || true)
+          echo "name=deploy_url::$DEPLOY_URL" >> $GITHUB_OUTPUT
       - name: Deploy via rsync
+        id: deployment
         uses: bnnanet/github-actions-rsync@master
         with:
           RSYNC_OPTIONS: -avzr --delete --exclude '.git*'

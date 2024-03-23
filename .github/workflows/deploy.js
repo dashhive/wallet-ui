@@ -4,7 +4,11 @@ process.removeAllListeners('warning');
 process.on('SIGTERM', () => process.exit());
 process.on('SIGINT', () => process.exit());
 
-const { BASE_HREF = '' } = process.env
+const {
+  BASE_HREF = '',
+  GITHUB_REF_NAME = '',
+  PAGE_URL = '',
+} = process.env
 
 import {
   readFile, writeFile, readdir,
@@ -16,6 +20,15 @@ const SRC = 'src/'
 const PUB = 'public/'
 const DIST = './dist/'
 const FAV = 'favicon.png'
+
+let footerReplacer = []
+
+if (GITHUB_REF_NAME && !['master','main'].includes(GITHUB_REF_NAME)) {
+  footerReplacer.push([
+    '<a target="_blank" href="https://github.com/dashhive/wallet-ui">Source Code</a>',
+    `<a target="_blank" href="https://github.com/dashhive/wallet-ui/tree/${GITHUB_REF_NAME}">Source Code</a> for <br/><output>${GITHUB_REF_NAME}</output>`,
+  ])
+}
 
 const walk = async (
   dirPath,
@@ -54,7 +67,8 @@ const fixOrCopy = async (
       [
         '../public/',
         '../public/'
-      ]
+      ],
+      ...footerReplacer,
     ],
   }
 ) => {
@@ -63,7 +77,7 @@ const fixOrCopy = async (
   await cp(sourceFile, targetFile, { recursive: true, });
 
   if (exts.includes(ext)) {
-    console.log('fix', sourceFile, targetFile, ext)
+    // console.log('fix', sourceFile, targetFile, ext)
     // console.log('fixOrCopy replacer', replacer[ext])
 
     let data = await readFile(sourceFile, 'utf-8');
@@ -127,6 +141,7 @@ try {
               '../public/',
               './public/'
             ],
+            ...footerReplacer,
           ],
           js: [
             [
@@ -141,6 +156,7 @@ try {
               '/src/manifest.webmanifest',
               '/manifest.webmanifest',
             ],
+            ...footerReplacer,
           ],
           json: [
             [
@@ -158,10 +174,13 @@ try {
   })
 
 
+  // console.log(
+  //   'prepare files for deployment',
+  //   allFiles
+  // );
   console.log(
-    'prepare files for deployment',
-    allFiles
+    PAGE_URL,
   );
 } catch (err) {
-  console.error(err);
+  // console.error(err);
 }
