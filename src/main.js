@@ -476,10 +476,12 @@ async function showErrorDialog(options) {
   })
 
   if (opts.type === 'dang') {
-    console.error('showErrorDialog', opts.msg)
+    console.error('showErrorDialog', opts)
   } else {
     console.log('showErrorDialog', opts)
   }
+
+  let outputMsg = opts.msg?.response || opts.msg?.stack || opts.msg
 
   await appDialogs.confirmAction?.render({
     name: opts.title,
@@ -503,10 +505,10 @@ async function showErrorDialog(options) {
       ${state.header(state)}
 
       <article class="px-3 col flex-fill ta-left mh-75">
-        <strong>
+        <!-- <strong>
           Looks like we encountered an error.
-        </strong>
-        <pre class="of-auto flex-fill">${opts.msg}</pre>
+        </strong> -->
+        <pre class="of-auto flex-fill">${outputMsg}</pre>
       </article>
 
       ${state.footer(state)}
@@ -636,7 +638,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools,
     store, userInfo, contactsList, walletFunds,
     setupDialog, deriveWalletData, getAddrsWithFunds,
-    sendTx, updateAllFunds,
+    sendTx, updateAllFunds, showErrorDialog,
   })
 
   appDialogs.requestQr = await requestQrRig({

@@ -11,7 +11,7 @@ export let sendConfirmRig = (async function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, appState, appTools,
-    sendTx, store, userInfo, contactsList,
+    sendTx, store, userInfo, contactsList, showErrorDialog,
   } = globals
 
   let sendConfirm = await setupDialog(
@@ -150,9 +150,18 @@ export let sendConfirmRig = (async function (globals) {
             }
 
             if (state.tx) {
-              txRes = await sendTx(
-                state.tx,
-              )
+              try {
+                txRes = await sendTx(
+                  state.tx,
+                )
+              } catch(err) {
+                return await showErrorDialog({
+                  type: 'dang',
+                  title: 'Failed to send transaction',
+                  msg: err,
+                  showActBtn: false,
+                })
+              }
             }
 
             if (txRes && addressIndex !== undefined) {
