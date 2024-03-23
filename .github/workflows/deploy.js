@@ -77,7 +77,7 @@ const fixOrCopy = async (
   await cp(sourceFile, targetFile, { recursive: true, });
 
   if (exts.includes(ext)) {
-    // console.log('fix', sourceFile, targetFile, ext)
+    console.log('fix', sourceFile, targetFile, ext)
     // console.log('fixOrCopy replacer', replacer[ext])
 
     let data = await readFile(sourceFile, 'utf-8');
@@ -95,7 +95,21 @@ const fixOrCopy = async (
 }
 
 let filterDirs = file => {
-  return !file?.name?.includes('.git') && !file?.name?.includes('dist/')
+  return ![
+    '.env',
+    '.git',
+    '.vscode',
+    '.nvmrc',
+    '.jshintrc',
+    '.github',
+    '.prettierignore',
+    '.prettierrc.json',
+    'jsconfig.json',
+    'package-lock.json',
+    'package.json',
+    'dist/',
+  ].includes(file?.name)
+  // return !file?.name?.includes('.git') && !file?.name?.includes('dist/')
 }
 
 try {
@@ -174,13 +188,13 @@ try {
   })
 
 
-  // console.log(
-  //   'prepare files for deployment',
-  //   allFiles
-  // );
   console.log(
-    PAGE_URL,
+    'prepare files for deployment',
+    allFiles
   );
+  // console.log(
+  //   PAGE_URL,
+  // );
 } catch (err) {
-  // console.error(err);
+  console.error(err);
 }

@@ -12,13 +12,9 @@ concurrency:
 
 jobs:
   deploy:
-    # outputs:
-    #   branch: ${{ steps.clean_branch.outputs.branch }}
     environment:
       name: wallet
-      # url: ${{ vars.WEBSITE }}
       url: ${{ steps.clean_branch.outputs.page_url }}
-      # url: ${{ steps.run_deploy.outputs.deploy_url }}
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -48,9 +44,7 @@ jobs:
           PAGE_URL: ${{ steps.clean_branch.outputs.page_url }}
           GITHUB_REF_NAME: ${{ github.ref_name }}
           GITHUB_OUTPUT: $GITHUB_OUTPUT
-        run: |
-          DEPLOY_URL=$(((node .github/workflows/deploy.js) 2>&1) || true)
-          echo "name=deploy_url::$DEPLOY_URL" >> $GITHUB_OUTPUT
+        run: npm run deploy
       - name: Deploy via rsync
         id: deployment
         uses: bnnanet/github-actions-rsync@master
