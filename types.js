@@ -27,6 +27,7 @@
  *  id: string;
  *  accountIndex: number;
  *  addressIndex: number;
+ *  usageIndex?: number;
  *  addressKeyId: string;
  *  addressKey: HDKey;
  *  address: string;

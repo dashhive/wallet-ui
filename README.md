@@ -52,9 +52,6 @@ See the [Stage 2](/../../milestone/2) milestone
 - [ ] Contact/Payment Share Features
   - [ ] SMS (sms:)
   - [ ] Email (mailto:)
-- [ ] Transactions view
-  - [ ] Table with filter/sort
-  - [ ] Select & Copy as CSV
 - [ ] View & manage addresses associated with Wallet
 - [ ] Coin Control
   - [ ] Set Fund Denomination for Send & Request payments

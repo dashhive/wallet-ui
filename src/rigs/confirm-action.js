@@ -30,36 +30,52 @@ export let confirmActionRig = (async function (globals) {
         warn: 'outline brd-warn warn dark-hover bg-warn-hover',
         dang: 'outline brd-dang dang light-hover bg-dang-hover',
       },
+      showCancelBtn: true,
+      showActBtn: true,
       // submitIcon: state => html`
       //   <svg class="trash-icon" width="16" height="16" viewBox="0 0 16 16">
       //     <use xlink:href="#icon-trash"></use>
       //   </svg>
       // `,
+      cancelBtn: state => {
+        if (!state.showCancelBtn) {
+          return ``
+        }
+
+        return html`<button
+          class="rounded outline"
+          type="reset"
+          name="intent"
+          value="cancel"
+          title="${state.cancelAlt}"
+        >
+          <span>${state.cancelTxt}</span>
+        </button>`
+      },
+      actionBtn: state => {
+        if (!state.showActBtn) {
+          return ``
+        }
+
+        return html`<button
+          class="rounded ${state.actionClasses[state.actionType]}"
+          type="submit"
+          name="intent"
+          value="act"
+          title="${state.actionAlt}"
+        >
+          ${state.submitIcon(state)}
+          <span>${state.actionTxt}</span>
+        </button>`
+      },
       submitIcon: state => `🔒`,
       footer: state => html`
         <footer class="inline col">
           ${state.alert(state)}
 
           <div class="flex row">
-            <button
-              class="rounded outline"
-              type="reset"
-              name="intent"
-              value="cancel"
-              title="${state.cancelAlt}"
-            >
-              <span>${state.cancelTxt}</span>
-            </button>
-            <button
-              class="rounded ${state.actionClasses[state.actionType]}"
-              type="submit"
-              name="intent"
-              value="act"
-              title="${state.actionAlt}"
-            >
-              ${state.submitIcon(state)}
-              <span>${state.actionTxt}</span>
-            </button>
+            ${state.cancelBtn(state)}
+            ${state.actionBtn(state)}
           </div>
         </footer>
       `,

@@ -7,17 +7,20 @@ import {
   sortContactsByAlias,
   getStoreData,
   formDataEntries,
+  getAddressIndexFromUsage,
 } from './helpers/utils.js'
 
 import {
   DUFFS,
   OIDC_CLAIMS,
+  // USAGE,
 } from './helpers/constants.js'
 
 import {
   findInStore,
   initDashSocket,
-  batchAddressGenerate,
+  // batchAddressGenerate,
+  batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
   updateAllFunds,
@@ -29,6 +32,8 @@ import {
   sendTx,
   getAddrsWithFunds,
   storedData,
+  getUnusedChangeAddress,
+  getAccountWallet,
 } from './helpers/wallet.js'
 import {
   localForageBaseCfg,
@@ -175,12 +180,12 @@ let contactsList = await setupContactsList(
           if (!contactData.incoming) {
             return;
           }
-          let contactAccountID = Object.values(contactData?.incoming || {})?.[0]?.accountIndex
+          let contactAccountID = Object.values(contactData.incoming || {})?.[0]?.accountIndex
           console.log('contact click data', contactData)
 
           let shareAccount = await deriveWalletData(
             appState.phrase,
-            contactAccountID
+            contactAccountID,
           )
 
           if (!contactData.outgoing) {
@@ -250,10 +255,14 @@ let contactsList = await setupContactsList(
 
             shareAccount = await deriveWalletData(
               appState.phrase,
-              accountIndex
+              accountIndex,
             )
 
+            console.log('main.js contact account', shareAccount)
+
             let created = (new Date()).toISOString()
+            let usage = [0,0]
+            // usage[shareAccount.usageIndex] = shareAccount.addressIndex
 
             newAccount = await store.accounts.setItem(
               shareAccount.xkeyId,
@@ -261,7 +270,10 @@ let contactsList = await setupContactsList(
                 createdAt: created,
                 updatedAt: (new Date()).toISOString(),
                 accountIndex,
-                addressIndex: shareAccount.addressIndex,
+                // addressIndex: shareAccount.addressIndex,
+                // changeIndex: shareAccount.addressIndex,
+                // usageIndex: shareAccount.usageIndex,
+                usage,
                 walletId: shareAccount.id,
                 xkeyId: shareAccount.xkeyId,
                 addressKeyId: shareAccount.addressKeyId,
@@ -273,7 +285,7 @@ let contactsList = await setupContactsList(
             let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
               wallet,
               newAccount,
-            )
+            ) ?? {}
 
             console.log(
               'share qr derived wallet',
@@ -303,7 +315,7 @@ let contactsList = await setupContactsList(
             appState.contacts.push(newContact)
 
             await contactsList.render(
-              appState.contacts.sort(sortContactsByAlias)
+              appState.contacts.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
             )
 
             console.log(
@@ -351,11 +363,26 @@ async function getUserInfo() {
         $alias
       )
       wallets = $wallets
+      console.log(
+        'getUserInfo $alias',
+        {
+          $alias,
+          $wallets,
+          $userInfo,
+        }
+      )
 
       Object.entries(($userInfo?.info || {}))
         .forEach(
           ([k,v]) => userInfo[k] = v
         )
+    })
+    .catch(err => {
+      showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+      })
     })
   }
 }
@@ -401,11 +428,96 @@ function getTarget(event, selector) {
     target = event?.target
   }
 
-  if (parentElement.id === selector) {
+  if (parentElement?.id === selector) {
     target = parentElement
   }
 
   return target
+}
+
+async function showNotification({
+  type = '',
+  title = '',
+  msg = '',
+  sticky = false,
+}) {
+  console.log('notification', {type, title, msg, sticky})
+}
+
+async function showErrorDialog(options) {
+  let opts = {
+    type: 'warn',
+    title: '⚠️ Error',
+    msg: '',
+    showCancelBtn: true,
+    showActBtn: true,
+    cancelCallback: () => {},
+    // timeout: null,
+    ...options,
+  }
+
+  opts.callback = opts.callback || (() => {
+    let firstLineFromError = ''
+    let { msg } = opts
+
+    if (typeof msg !== 'string' && msg.toString) {
+      msg = msg.toString()
+    }
+    if (typeof msg === 'string') {
+      firstLineFromError = msg.match(/[^\r\n]+/g)?.[0]
+    }
+
+    // console.log('firstLineFromError', firstLineFromError)
+
+    window.open(
+      `https://github.com/dashhive/wallet-ui/issues?q=${firstLineFromError}`,
+      '_blank',
+    )
+  })
+
+  if (opts.type === 'dang') {
+    console.error('showErrorDialog', opts)
+  } else {
+    console.log('showErrorDialog', opts)
+  }
+
+  let outputMsg = opts.msg?.response || opts.msg?.stack || opts.msg
+
+  await appDialogs.confirmAction?.render({
+    name: opts.title,
+    actionTxt: 'Report Issue',
+    actionAlt: 'Report the error at GitHub',
+    action: 'lock',
+    cancelTxt: 'Close',
+    cancelAlt: `Close`,
+    // target: '',
+    // targetFallback: 'this wallet',
+    actionType: opts.type,
+    // action: 'disconnect',
+    // target: '',
+    // targetFallback: 'this wallet',
+    // actionType: 'dang',
+    showCancelBtn: opts.showCancelBtn,
+    showActBtn: opts.showActBtn,
+    submitIcon: state => `⚠️`,
+    alert: state => html``,
+    content: state => html`
+      ${state.header(state)}
+
+      <article class="px-3 col flex-fill ta-left mh-75">
+        <!-- <strong>
+          Looks like we encountered an error.
+        </strong> -->
+        <pre class="of-auto flex-fill">${outputMsg}</pre>
+      </article>
+
+      ${state.footer(state)}
+    `,
+    cancelCallback: opts.cancelCallback,
+    callback: opts.callback,
+  })
+
+  return appDialogs.confirmAction?.showModal()
 }
 
 async function main() {
@@ -443,6 +555,11 @@ async function main() {
     }
   )
 
+  appDialogs.confirmAction = await confirmActionRig({
+    mainApp, setupDialog,
+    appDialogs, appState, appTools,
+  })
+
   appDialogs.walletEncrypt = await walletEncryptRig({
     setupDialog, appDialogs, appState, mainApp,
     wallet, wallets, bodyNav, dashBalance,
@@ -451,6 +568,7 @@ async function main() {
   appDialogs.walletDecrypt = await walletDecryptRig({
     setupDialog, appDialogs, appState, mainApp, importFromJson,
     wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
+    showErrorDialog,
   })
 
   appDialogs.walletBackup = await walletBackupRig({
@@ -471,6 +589,7 @@ async function main() {
   appDialogs.phraseImport = await phraseImportRig({
     setupDialog, appDialogs, appState, store,
     mainApp, wallet, wallets, deriveWalletData,
+    showErrorDialog,
   })
 
   appDialogs.onboard = await onboardRig({
@@ -481,11 +600,6 @@ async function main() {
     setupDialog, updateAllFunds,
     appDialogs, appState, appTools, store, walletFunds,
     mainApp, wallet, userInfo, contactsList,
-  })
-
-  appDialogs.confirmAction = await confirmActionRig({
-    mainApp, setupDialog,
-    appDialogs, appState, appTools,
   })
 
   appDialogs.confirmDelete = await confirmDeleteRig({
@@ -512,7 +626,7 @@ async function main() {
     mainApp, appDialogs, appState, appTools, store,
     wallet, account: appState.account, walletFunds,
     setupDialog, deriveWalletData, createTx,
-    getAddrsWithFunds, batchGenAcctAddrs,
+    getAddrsWithFunds, batchGenAcctAddrs, getUnusedChangeAddress, getAccountWallet, showErrorDialog,
   })
 
   appDialogs.txInfo = await txInfoRig({
@@ -524,11 +638,12 @@ async function main() {
     mainApp, appDialogs, appState, appTools,
     store, userInfo, contactsList, walletFunds,
     setupDialog, deriveWalletData, getAddrsWithFunds,
-    createTx, sendTx, updateAllFunds,
+    sendTx, updateAllFunds, showErrorDialog,
   })
 
   appDialogs.requestQr = await requestQrRig({
-    mainApp, setupDialog, appDialogs, appState, userInfo,
+    mainApp, appDialogs, appState, appTools, userInfo, store,
+    setupDialog, deriveWalletData, batchGenAcctAddrs,
   })
 
   appDialogs.pairQr = await pairQrRig({
@@ -556,10 +671,15 @@ async function main() {
         ks,
       )
     } catch(err) {
-      console.error(
-        '[fail] unable to decrypt seed phrase',
-        err
-      )
+      // console.error(
+      //   '[fail] unable to decrypt seed phrase',
+      //   err
+      // )
+      await showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+      })
       sessionStorage.removeItem('encryptionPassword')
     }
   }
@@ -598,6 +718,11 @@ async function main() {
 
   if (appState.phrase && !wallet) {
     wallet = await deriveWalletData(appState.phrase)
+    let aw = await getAccountWallet(
+      wallet,
+      appState.phrase,
+    )
+    wallet = aw.wallet
   }
 
   document.addEventListener('submit', async event => {
@@ -614,49 +739,60 @@ async function main() {
 
       if (fde.intent === 'receive') {
         let receiveWallet
+        let selectedWallet = wallets?.[appState.selectedWallet]
 
-        if (wallet?.xpub) {
-          wallet.addressIndex = (
-            appState.selectedWallet?.addressIndex || 0
-          ) + 1
-          receiveWallet = await deriveWalletData(
+        console.log('selectedWallet', wallet, selectedWallet)
+
+        // if (wallet?.xpub) {
+        //   wallet.addressIndex = (
+        //     selectedWallet?.addressIndex ?? -1
+        //   ) + 1
+        //   receiveWallet = await deriveWalletData(
+        //     appState.phrase,
+        //     wallet.accountIndex,
+        //     wallet.addressIndex,
+        //   )
+        // }
+
+        if (wallet?.xkeyId) {
+          let aw = await getAccountWallet(
+            wallet,
             appState.phrase,
-            wallet.accountIndex,
-            wallet.addressIndex,
           )
-        }
+          wallet = aw.wallet
 
-        if (receiveWallet?.xkeyId) {
-          let tmpWallet = await store.accounts.getItem(
-            receiveWallet.xkeyId,
-          )
+          // tmpAcct.usage = tmpAcct?.usage || [0,0]
+          // tmpAcct.usage[
+          //   wallet.usageIndex
+          // ] = wallet.addressIndex
 
           // state.wallet =
-          let tmpAcct = await store.accounts.setItem(
-            receiveWallet.xkeyId,
-            {
-              ...tmpWallet,
-              updatedAt: (new Date()).toISOString(),
-              address: receiveWallet.address,
-              addressIndex: receiveWallet.addressIndex,
-            }
+          // tmpAcct = await store.accounts.setItem(
+          //   wallet.xkeyId,
+          //   {
+          //     ...tmpAcct,
+          //     updatedAt: (new Date()).toISOString(),
+          //     address: wallet.address,
+          //   }
+          // )
+
+          batchGenAcctAddrs(
+            receiveWallet,
+            aw.account,
           )
 
-          batchGenAcctAddrs(receiveWallet, tmpAcct)
-
           console.log(
-            `${fde.intent} FROM CONTACT`,
+            `${fde.intent} TO SELECTED WALLET`,
             {
-              stateWallet: wallet,
-              receiveWallet,
-              tmpAcct,
+              wallet,
+              account: aw.account,
             }
           )
 
           await appDialogs.requestQr.render(
             {
               name: 'Share to receive funds',
-              submitTxt: `Select a Contact`,
+              submitTxt: `Edit Amount or Contact`,
               submitAlt: `Change the currently selected contact`,
               footer: state => html`
                 <footer class="inline col">
@@ -671,7 +807,8 @@ async function main() {
                   </button>
                 </footer>
               `,
-              wallet: receiveWallet,
+              amount: 0,
+              wallet,
               contacts: appState.contacts,
             },
             'afterend',
@@ -693,8 +830,28 @@ async function main() {
     }
   })
 
-  batchGenAcctsAddrs(wallet)
-    // .then(data => console.warn('batchGenAcctsAddrs', { data }))
+  batchGenAccts(appState.phrase, 1)
+    .then(async accts => {
+      console.log('batchGenAccts', { accts })
+
+      batchGenAcctsAddrs(wallet)
+        .then(accts => {
+          console.log('batchGenAcctsAddrs', { accts })
+
+          updateAllFunds(wallet, walletFunds)
+            .then(funds => {
+              console.log('updateAllFunds then funds', funds)
+            })
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            })
+        })
+    })
 
   bodyNav.render({
     data: {
@@ -707,7 +864,7 @@ async function main() {
 
   await getUserInfo()
 
-  console.log('appTools.storedData', appTools.storedData)
+  // console.log('appTools.storedData', appTools.storedData)
 
   getStoreData(
     store.contacts,
@@ -716,9 +873,11 @@ async function main() {
         appState.contacts = res
 
         contactsList.render({
-          contacts: res?.sort(sortContactsByAlias),
+          contacts: res?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias),
           userInfo,
         })
+
+        console.log('contacts', res)
       }
     },
     res => async v => {
@@ -730,7 +889,7 @@ async function main() {
 
   await contactsList.render({
     userInfo,
-    contacts: appState.contacts
+    contacts: appState.contacts?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
   })
   sendRequestBtn.render()
 
@@ -883,13 +1042,25 @@ async function main() {
       })
     })
 
-  updateAllFunds(wallet, walletFunds)
-    .then(funds => {
-      console.log('updateAllFunds then funds', funds)
-    })
-    .catch(err => console.error('catch updateAllFunds', err, wallet))
+  // updateAllFunds(wallet, walletFunds)
+  //   .then(funds => {
+  //     console.log('updateAllFunds then funds', funds)
+  //   })
+  //   .catch(err => {
+  //     // console.error('catch updateAllFunds', err, wallet)
+  //     showNotification({
+  //       type: 'error',
+  //       title: 'Update funds',
+  //       msg: err,
+  //     })
+  //   })
 
-  let addrs = (await store.addresses.keys()) || []
+  let storedAddrs = (await store.addresses.keys()) || []
+
+  // showErrorDialog({
+  //   title: 'Test error',
+  //   msg: err,
+  // })
 
   initDashSocket({
     onMessage: async function (evname, data) {
@@ -915,7 +1086,14 @@ async function main() {
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
-            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            }),
           1000
         )
       }
@@ -928,15 +1106,16 @@ async function main() {
       //   }
       // }
 
-      // console.log('init dash socket vout', data.vout)
+      // console.log('dash socket vout', data)
 
       let result = data.vout.filter(function (vout) {
         let v = Object.keys(vout)
         let addr = v[0]
-        let duffs = vout[addr];
-        let checkAddr = addrs.includes(addr)
+        let duffs = vout[addr]
+        let checkAddr = storedAddrs.includes(addr)
 
         if (!checkAddr) {
+
           if (
             appState?.sentTransactions?.[data.txid]
           ) {
@@ -950,18 +1129,26 @@ async function main() {
           return false
         }
 
+        // Updates Insight info for Change Address
         if (
-          checkAddr &&
+          // checkAddr &&
           appState?.sentTransactions?.[data.txid]
         ) {
+          // console.log('data.vout.filter', vout, data)
+
           txUpdates[data.txid] = true
           store.addresses.getItem(addr)
             .then(async storedAddr => {
               if (storedAddr?.insight?.updatedAt) {
+                // let tmpBalance = storedAddr.insight.balance
                 storedAddr.insight.balance = (duffs / DUFFS)
                 storedAddr.insight.balanceSat = duffs
                 storedAddr.insight.updatedAt = 0
                 store.addresses.setItem(addr, storedAddr)
+
+                // walletFunds.balance = (
+                //   walletFunds.balance - (tmpBalance - storedAddr.insight.balance)
+                // )
               }
             })
           return false
@@ -1011,6 +1198,36 @@ async function main() {
               storedAddr.insight.updatedAt = 0
               store.addresses.setItem(addr, storedAddr)
             }
+
+            // let selectedWallet = wallets?.[appState.selectedWallet]
+            // wallet.addressIndex = (
+            //   selectedWallet?.addressIndex || 0
+            // ) + 1
+            // let walletTemp = await deriveWalletData(
+            //   appState.phrase,
+            //   storedAddr.accountIndex,
+            //   storedAddr.addressIndex,
+            //   storedAddr.usageIndex,
+            // )
+
+            let tmpWalletAcct = await store.accounts.getItem(
+              storedAddr.xkeyId,
+            ) || {}
+
+            let batchAddrs = await batchGenAcctAddrs(
+              wallet,
+              tmpWalletAcct,
+              tmpWalletAcct.usage[storedAddr.usageIndex],
+            )
+
+            console.log(
+              'socket batch generate addresses for wallet',
+              {
+                // walletTemp,
+                tmpWalletAcct,
+                batchAddrs,
+              }
+            )
           })
 
         return newTx;
@@ -1035,7 +1252,14 @@ async function main() {
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
-            .catch(err => console.error('catch updateAllFunds', err, wallet)),
+            .catch(err => {
+              // console.error('catch updateAllFunds', err, wallet)
+              showNotification({
+                type: 'error',
+                title: 'Update funds',
+                msg: err,
+              })
+            }),
           1000
         )
       }

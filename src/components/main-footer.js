@@ -4,7 +4,7 @@ const initialState = {
   rendered: null,
   content: state => html`
     <footer>
-      <h4>Alpha stage, not production ready. <span>Use at your own risk.</span></h4>
+      <h4>Alpha stage, not production ready. <div>Use at your own risk.</div></h4>
       <h5>Checkout the <a target="_blank" href="https://github.com/dashhive/wallet-ui">Source Code</a></h5>
     </footer>
   `,

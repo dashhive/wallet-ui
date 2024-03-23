@@ -1,5 +1,5 @@
 import { lit as html } from '../helpers/lit.js'
-import { AMOUNT_REGEX } from '../helpers/constants.js'
+import { AMOUNT_REGEX, USAGE } from '../helpers/constants.js'
 import {
   formDataEntries,
   parseAddressField,
@@ -7,6 +7,8 @@ import {
   toDASH,
   toDash,
   roundUsing,
+  getPartialHDPath,
+  getAddressIndexFromUsage,
 } from '../helpers/utils.js'
 
 export let sendOrReceiveRig = (async function (globals) {
@@ -15,7 +17,7 @@ export let sendOrReceiveRig = (async function (globals) {
   let {
     mainApp, setupDialog, appDialogs, appState, appTools, store,
     createTx, deriveWalletData, getAddrsWithFunds, batchGenAcctAddrs,
-    wallet, wallets, accounts, walletFunds,
+    wallet, wallets, accounts, walletFunds, getUnusedChangeAddress, getAccountWallet, showErrorDialog,
   } = globals
 
   let sendOrReceive = await setupDialog(
@@ -39,12 +41,12 @@ export let sendOrReceiveRig = (async function (globals) {
       submitIcon: state => {
         const icon = {
           send: html`
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="22" height="22" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-up"></use>
             </svg>
           `,
           receive: html`
-            <svg width="24" height="24" viewBox="0 0 24 24">
+            <svg width="22" height="22" viewBox="0 0 24 24">
               <use xlink:href="#icon-arrow-circle-down"></use>
             </svg>
           `,
@@ -192,7 +194,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 spellcheck="false"
                 autocomplete="off"
                 autocapitalize="off"
-                list="contactAliases"
+                list="${state.action === 'receive' ? 'contactReceiveAliases' : 'contactSendAliases'}"
                 value="${state.to || ''}"
               />
 
@@ -212,11 +214,12 @@ export let sendOrReceiveRig = (async function (globals) {
                 <input
                   id="amount"
                   name="amount"
-                  placeholder="0.123456789"
+                  placeholder="0.12345678"
                   spellcheck="false"
                   autocomplete="off"
                   pattern="${AMOUNT_REGEX.source}"
                   title="Enter a valid number for the amount you wish to ${state.action}."
+                  value="${state.amount || ''}"
                 />
               </div>
             </div>
@@ -224,6 +227,18 @@ export let sendOrReceiveRig = (async function (globals) {
               <div class="row">
                 ${state.fundAmountBtns(state)}
               </div>
+            </div>
+            <div class="switch py-3 pr-3">
+              <label for="cashSendMode" class="jc-end">
+                Use CashSend
+              </label>
+              <input
+                id="cashSendMode"
+                name="mode"
+                type="checkbox"
+                value="cash"
+              />
+              <label for="cashSendMode" class="switch" title="CashSend"></label>
             </div>
 
             <div class="error"></div>
@@ -405,9 +420,9 @@ export let sendOrReceiveRig = (async function (globals) {
             return;
           }
 
-          let inWallet, outWallet, address, tx, contact
+          let inWallet, outWallet, address, changeAddress, contact
           let to = String(fde.to), amount = Number(fde.amount)
-          let receiveWallet = {}, sendWallet = {}
+          let fundWallet = {}, receiveWallet = {}, sendWallet = {}
 
           if (
             fde.intent === 'send' &&
@@ -427,6 +442,57 @@ export let sendOrReceiveRig = (async function (globals) {
             contact = state.contacts.find(c => c.alias === to.substring(1))
             outWallet = Object.values(contact?.outgoing)?.[0]
             inWallet = Object.values(contact?.incoming)?.[0]
+          }
+
+          if (!inWallet) {
+            // state.wallet.addressIndex = (
+            //   state.wallet?.addressIndex ?? -1
+            // ) + 1
+            // state.wallet.addressIndex = state.wallet?.addressIndex ?? 0
+            let mainWallet = await deriveWalletData(appState.phrase)
+            let aw = await getAccountWallet(
+              mainWallet,
+              appState.phrase,
+            )
+            receiveWallet = aw.wallet
+          } else {
+            let aw = await getAccountWallet(
+              inWallet,
+              appState.phrase,
+            )
+            receiveWallet = aw.wallet
+
+            await appTools.storedData.encryptItem(
+              store.contacts,
+              inWallet.xkeyId,
+              {
+                ...contact,
+                updatedAt: (new Date()).toISOString(),
+                incoming: {
+                  ...contact.incoming,
+                  [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
+                    ...inWallet,
+                    ...aw.account,
+                    address: receiveWallet.address,
+                  }
+                },
+              },
+              false,
+            )
+
+            // console.log(
+            //   'derive change wallet',
+            //   {
+            //     contact,
+            //     tmpAcct,
+            //     tmpAcctWallet,
+            //     receiveWallet,
+            //     changeWallet,
+            //     derivedChangeWallet,
+            //   }
+            // )
+
+            inWallet.address = receiveWallet.address
           }
 
           if (fde.intent === 'send') {
@@ -451,7 +517,15 @@ export let sendOrReceiveRig = (async function (globals) {
               address = to
             }
 
-            if (amount > 0 && walletFunds.balance < amount) {
+            let leftoverBalance = walletFunds.balance - amount
+            let fullTransfer = leftoverBalance <= 0.0010_0200
+            // let fullTransfer = leftoverBalance <= 0.0001_0200
+
+            if (
+              amount > 0 &&
+              walletFunds.balance < amount &&
+              !fullTransfer
+            ) {
               console.log(
                 `INSUFFICIENT FUNDS IN WALLET`,
                 [
@@ -459,10 +533,11 @@ export let sendOrReceiveRig = (async function (globals) {
                   `AVAILABLE Ð ${walletFunds?.balance}`,
                 ]
               )
-              state.wallet.addressIndex = (
-                state.wallet?.addressIndex || 0
-              ) + 1
-              receiveWallet = await deriveWalletData(
+              // state.wallet.addressIndex = (
+              //   state.wallet?.addressIndex ?? -1
+              // ) + 1
+              state.wallet.addressIndex = state.wallet?.addressIndex ?? 0
+              fundWallet = await deriveWalletData(
                 appState.phrase,
                 state.wallet.accountIndex,
                 state.wallet.addressIndex,
@@ -474,9 +549,10 @@ export let sendOrReceiveRig = (async function (globals) {
               await appDialogs.requestQr.render(
                 {
                   name: 'Insufficient wallet funds',
-                  wallet: receiveWallet,
-                  // contact,
-                  // to,
+                  wallet: fundWallet,
+                  selectedWallet: state.wallet,
+                  contact,
+                  to,
                   amount: amountNeeded,
                   // footer: state => html`<footer class="center">
                   //   <sub>Fund this wallet with at least Ð ${fixedDash(state.amount)} to complete this transaction</sub>
@@ -493,120 +569,170 @@ export let sendOrReceiveRig = (async function (globals) {
             }
 
             if (amount > 0) {
+              // let changeAddrs = await findInStore()
+
+              let tmpAcct = await store.accounts.getItem(
+                state.wallet.xkeyId,
+              ) || {}
+              let tmpAcctWallet = getAddressIndexFromUsage(
+                state.wallet,
+                tmpAcct,
+                USAGE.CHANGE,
+              )
+
+              changeAddress = await getUnusedChangeAddress(tmpAcctWallet)
+
+              console.log(
+                'derive change wallet',
+                {
+                  changeAddress,
+                  contact,
+                  tmpAcct,
+                  tmpAcctWallet,
+                  stateWallet: state.wallet,
+                  // derivedChangeWallet,
+                }
+              )
+
               let fundingAddrs = await getAddrsWithFunds(
                 state.wallet,
               )
               fundingAddrs = Object.values(
                 fundingAddrs || {}
               )
-              let leftoverBalance = walletFunds.balance - amount
-              let fullTransfer = leftoverBalance <= 0.0010_0200
 
-              let { tx: createdTx, changeAddr } = await createTx(
-                state.wallet,
-                fundingAddrs,
-                address,
-                amount,
-                fullTransfer,
-              )
-              tx = createdTx
+              let createdTx = {}
 
-              let amountToSend = 0
+              try {
+                createdTx = await createTx(
+                  state.wallet,
+                  fundingAddrs,
+                  [changeAddress],
+                  address,
+                  amount,
+                  fullTransfer,
+                  fde.mode,
+                )
+              } catch(err) {
+                return await showErrorDialog({
+                  type: 'dang',
+                  title: 'Failed to create transaction',
+                  msg: err,
+                  // showActBtn: false,
+                })
+              }
+
+              let { tx, changeAddr, fee } = createdTx
+
+              let fullAmount = 0
+
               tx.outputs
-                .filter(o => o.address !== changeAddr)
+                .filter(o => ![changeAddr].includes(o.address))
                 .forEach(o => {
-                  amountToSend += o.satoshis
-                  console.log('tx output loop', o, amountToSend)
+                  fullAmount += o.satoshis
+                  console.log('tx output loop', o, fullAmount)
                 })
 
+              let estimatedSatFee = fee * tx.outputs.length
+              let estimatedDashFee = toDash(fee)
+
               console.log(
-                `TX TO ${address}`,
-                `Ð ${amount || 0}`,
-                `Ð ${toDash(amountToSend)}`,
+                `TX TO ${address} for Ð ${amount || 0}`,
+              )
+              console.log([
+                `Actual Amount: Ð ${toDash(fullAmount)}`,
+                `SATS Fee: ${fee}`,
+                `Fee: ${estimatedDashFee}`,
+              ])
+              console.log({
                 contact,
                 tx,
-              )
+              })
               console.log(
                 `TX HEX`,
                 tx.transaction,
               )
+
+              await appDialogs.sendConfirm.render(
+                {
+                  wallet: state.wallet,
+                  // wallet: sendWallet,
+                  contact,
+                  to,
+                  amount,
+                  fullAmount: toDash(fullAmount),
+                  tx,
+                  fee: {
+                    sat: fee,
+                    dash: estimatedDashFee
+                  }
+                },
+                'afterend',
+              )
+
+              let showConfirm = await appDialogs.sendConfirm.showModal()
             }
-
-            await appDialogs.sendConfirm.render(
-              {
-                wallet: state.wallet,
-                // wallet: sendWallet,
-                contact,
-                to,
-                amount,
-                tx,
-              },
-              'afterend',
-            )
-
-            let showConfirm = await appDialogs.sendConfirm.showModal()
           }
 
           if (fde.intent === 'receive') {
+            console.log(
+              fde.intent,
+              state.wallet,
+              state.selectedWallet,
+              receiveWallet,
+            )
             if (!inWallet && !state.wallet?.xpub) {
               return;
             }
 
-            if (!inWallet) {
-              state.wallet.addressIndex = (
-                state.wallet?.addressIndex || 0
-              ) + 1
-              receiveWallet = await deriveWalletData(
-                appState.phrase,
-                state.wallet.accountIndex,
-                state.wallet.addressIndex,
-              )
-            } else {
-              inWallet.addressIndex = inWallet.addressIndex + 1
-              receiveWallet = await deriveWalletData(
-                appState.phrase,
-                inWallet.accountIndex,
-                inWallet.addressIndex,
-              )
-
-              await appTools.storedData.encryptItem(
-                store.contacts,
-                inWallet.xkeyId,
-                {
-                  ...contact,
-                  updatedAt: (new Date()).toISOString(),
-                  incoming: {
-                    ...contact.incoming,
-                    [`${inWallet.walletId}/${inWallet.xkeyId}`]: {
-                      ...inWallet,
-                      address: receiveWallet.address,
-                      addressIndex: receiveWallet.addressIndex,
-                    }
-                  },
-                },
-                false,
-              )
-
-              inWallet.address = receiveWallet.address
-            }
-
             if (receiveWallet?.xkeyId) {
-              let tmpWallet = await store.accounts.getItem(
+              let tmpAcct = await store.accounts.getItem(
                 receiveWallet.xkeyId,
+              ) || {}
+              let tmpAcctWallet = getAddressIndexFromUsage(state.wallet, tmpAcct)
+
+              let storedPath = getPartialHDPath(tmpAcctWallet)
+              let oldPath = getPartialHDPath(receiveWallet)
+
+              if (receiveWallet.xkeyId === state.wallet.xkeyId) {
+                state.wallet = await deriveWalletData(
+                  appState.phrase,
+                  tmpAcctWallet.accountIndex,
+                  (tmpAcctWallet?.addressIndex ?? 0),
+                  tmpAcctWallet.usageIndex,
+                )
+              }
+
+              tmpAcct.usage = tmpAcct?.usage // || [0,0]
+              tmpAcct.usage[
+                receiveWallet.usageIndex
+              ] = receiveWallet.addressIndex
+
+              let newPath = getPartialHDPath(receiveWallet)
+
+              batchGenAcctAddrs(
+                receiveWallet,
+                tmpAcct,
+                receiveWallet.usageIndex,
               )
+                .then(a => {
+                  console.log(
+                    `${fde.intent} BATCH GEN ADDRS`,
+                    a
+                  )
+                })
 
               // state.wallet =
-              let tmpAcct = await store.accounts.setItem(
-                receiveWallet.xkeyId,
-                {
-                  ...tmpWallet,
-                  updatedAt: (new Date()).toISOString(),
-                  address: receiveWallet.address,
-                  addressIndex: receiveWallet.addressIndex,
-                }
-              )
+              // let tmpAcct = await store.accounts.setItem(
+              //   receiveWallet.xkeyId,
+              //   {
+              //     ...tmpWallet,
+              //     updatedAt: (new Date()).toISOString(),
+              //     address: receiveWallet.address,
+              //   }
+              // )
 
-              batchGenAcctAddrs(receiveWallet, tmpAcct)
+              // batchGenAcctAddrs(receiveWallet, tmpAcct)
                 // .then(a => {
                 //   console.log(
                 //     `${fde.intent} TO CONTACT BATCH GEN ADDRS`,
@@ -618,12 +744,18 @@ export let sendOrReceiveRig = (async function (globals) {
                 `${fde.intent} FROM CONTACT`,
                 `Ð ${fde.amount || 0}`,
                 {
+                  to,
                   contact,
                   stateWallet: state.wallet,
                   inWallet,
                   receiveWallet,
                   amount,
-                }
+                },
+                [
+                  storedPath,
+                  oldPath,
+                  newPath,
+                ],
               )
 
               sendOrReceive.close(fde.intent)
@@ -631,7 +763,7 @@ export let sendOrReceiveRig = (async function (globals) {
               await appDialogs.requestQr.render(
                 {
                   name: 'Share to receive funds',
-                  submitTxt: `Select a Contact`,
+                  submitTxt: `Edit Amount or Contact`,
                   submitAlt: `Change the currently selected contact`,
                   // footer: state => html`<footer class="center">
                   //   <sub>Share this QR code to receive funds</sub>
@@ -650,6 +782,7 @@ export let sendOrReceiveRig = (async function (globals) {
                     </footer>
                   `,
                   wallet: receiveWallet,
+                  selectedWallet: state.wallet,
                   contact,
                   to,
                   amount: Number(fde.amount),

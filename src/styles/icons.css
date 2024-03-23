@@ -74,3 +74,7 @@
   line-height: 1;
   vertical-align: middle;
 }
+
+.rotate-x-to-plus {
+  transform: rotateZ(45deg);
+}

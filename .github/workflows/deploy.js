@@ -4,7 +4,11 @@ process.removeAllListeners('warning');
 process.on('SIGTERM', () => process.exit());
 process.on('SIGINT', () => process.exit());
 
-const { BASE_HREF = '' } = process.env
+const {
+  BASE_HREF = '',
+  GITHUB_REF_NAME = '',
+  PAGE_URL = '',
+} = process.env
 
 import {
   readFile, writeFile, readdir,
@@ -16,6 +20,15 @@ const SRC = 'src/'
 const PUB = 'public/'
 const DIST = './dist/'
 const FAV = 'favicon.png'
+
+let footerReplacer = []
+
+if (GITHUB_REF_NAME && !['master','main'].includes(GITHUB_REF_NAME)) {
+  footerReplacer.push([
+    '<a target="_blank" href="https://github.com/dashhive/wallet-ui">Source Code</a>',
+    `<a target="_blank" href="https://github.com/dashhive/wallet-ui/tree/${GITHUB_REF_NAME}">Source Code</a> for <br/><output>${GITHUB_REF_NAME}</output>`,
+  ])
+}
 
 const walk = async (
   dirPath,
@@ -54,7 +67,8 @@ const fixOrCopy = async (
       [
         '../public/',
         '../public/'
-      ]
+      ],
+      ...footerReplacer,
     ],
   }
 ) => {
@@ -81,7 +95,21 @@ const fixOrCopy = async (
 }
 
 let filterDirs = file => {
-  return !file?.name?.includes('.git') && !file?.name?.includes('dist/')
+  return ![
+    '.env',
+    '.git',
+    '.vscode',
+    '.nvmrc',
+    '.jshintrc',
+    '.github',
+    '.prettierignore',
+    '.prettierrc.json',
+    'jsconfig.json',
+    'package-lock.json',
+    'package.json',
+    'dist/',
+  ].includes(file?.name)
+  // return !file?.name?.includes('.git') && !file?.name?.includes('dist/')
 }
 
 try {
@@ -127,6 +155,7 @@ try {
               '../public/',
               './public/'
             ],
+            ...footerReplacer,
           ],
           js: [
             [
@@ -141,6 +170,7 @@ try {
               '/src/manifest.webmanifest',
               '/manifest.webmanifest',
             ],
+            ...footerReplacer,
           ],
           json: [
             [
@@ -162,6 +192,9 @@ try {
     'prepare files for deployment',
     allFiles
   );
+  // console.log(
+  //   PAGE_URL,
+  // );
 } catch (err) {
   console.error(err);
 }

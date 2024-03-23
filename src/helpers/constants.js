@@ -134,3 +134,11 @@ export const DASH_URI_REGEX = new RegExp(
   /^(?:web\+)?(?<protocol>dash)(?:[:])(?:\/\/)?(?<address>X[a-zA-Z0-9]{33})?(?:(?:[?])(?<params>.+))?/,
   'ig'
 )
+
+export const RECEIVE = 0 // DashHd.RECEIVE
+export const CHANGE = 1 // DashHd.CHANGE
+
+export const USAGE = {
+  RECEIVE,
+  CHANGE,
+}

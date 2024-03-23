@@ -13,6 +13,7 @@ export let walletDecryptRig = (async function (globals) {
     setupDialog, appDialogs, appState, mainApp,
     wallets, decryptKeystore, getUserInfo,
     store, deriveWalletData, importFromJson,
+    // showErrorDialog,
   } = globals;
 
   let walletDecrypt = await setupDialog(
@@ -168,13 +169,16 @@ export let walletDecryptRig = (async function (globals) {
 
               wallets = initialized.wallets
 
+              let usage = [0,0]
+              // usage[wallet.usageIndex] = wallet.addressIndex
+
               let newAccount = await store.accounts.setItem(
                 wallet.xkeyId,
                 {
                   createdAt: (new Date()).toISOString(),
                   updatedAt: (new Date()).toISOString(),
                   accountIndex: wallet.accountIndex,
-                  addressIndex: wallet.addressIndex,
+                  usage,
                   walletId: wallet.id,
                   xkeyId: wallet.xkeyId,
                   addressKeyId: wallet.addressKeyId,
@@ -187,7 +191,12 @@ export let walletDecryptRig = (async function (globals) {
 
             state.elements.dialog.returnValue = String(fde.intent)
           } catch(err) {
-            console.error('[fail] unable to decrypt seed phrase', err)
+            console.warn('[fail] unable to decrypt seed phrase', err)
+            // await showErrorDialog({
+            //   title: 'Unable to decrypt seed phrase',
+            //   msg: err,
+            //   showActBtn: false,
+            // })
             event.target.pass.setCustomValidity(
               'Unable to decrypt seed phrase. Did you type the correct encryption password?'
             )

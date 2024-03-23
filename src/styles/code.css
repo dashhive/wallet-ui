@@ -1,7 +1,12 @@
-pre {
+pre, output {
   background-color: var(--c);
   font-family: var(--fm);
   font-size: 14px;
+}
+output {
+  padding: .25rem;
+}
+pre {
   padding: 1rem;
   max-width: 100%;
   /* overflow: auto; */

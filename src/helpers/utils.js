@@ -18,7 +18,7 @@ import {
  * @param {String} [phraseOrXkey]
  * @param {Number} [accountIndex]
  * @param {Number} [addressIndex]
- * @param {Number} [use]
+ * @param {Number} [usageIndex]
  *
  * @returns {Promise<SeedWallet>}
  */
@@ -26,7 +26,7 @@ export async function deriveWalletData(
   phraseOrXkey,
   accountIndex = 0,
   addressIndex = 0,
-  use = DashHd.RECEIVE
+  usageIndex = DashHd.RECEIVE,
 ) {
   if (!phraseOrXkey) {
     throw new Error('Seed phrase or xkey value empty or invalid')
@@ -55,7 +55,7 @@ export async function deriveWalletData(
     wpub = await DashHd.toXPub(derivedWallet);
     id = await DashHd.toId(derivedWallet);
     account = await derivedWallet.deriveAccount(accountIndex);
-    xkey = await account.deriveXKey(use);
+    xkey = await account.deriveXKey(usageIndex);
     xprv = await DashHd.toXPrv(xkey);
   }
 
@@ -68,6 +68,7 @@ export async function deriveWalletData(
   return {
     id,
     accountIndex,
+    usageIndex,
     addressIndex,
     addressKeyId,
     addressKey,
@@ -175,34 +176,34 @@ export async function deriveAddressData(
   return address
 }
 
-export async function batchAddressGenerate(
-  wallet,
-  accountIndex = 0,
-  addressIndex = 0,
-  use = DashHd.RECEIVE,
-  batchSize = 20
-) {
-  let batchLimit = addressIndex + batchSize
-  let addresses = []
+// export async function batchAddressGenerate(
+//   wallet,
+//   accountIndex = 0,
+//   addressIndex = 0,
+//   use = DashHd.RECEIVE,
+//   batchSize = 20
+// ) {
+//   let batchLimit = addressIndex + batchSize
+//   let addresses = []
 
-  let account = await wallet.deriveAccount(accountIndex);
-  let xkey = await account.deriveXKey(use);
+//   let account = await wallet.deriveAccount(accountIndex);
+//   let xkey = await account.deriveXKey(use);
 
-  for (;addressIndex < batchLimit; addressIndex++) {
-    let key = await xkey.deriveAddress(addressIndex);
-    let address = await DashHd.toAddr(key.publicKey);
-    addresses.push({
-      address,
-      addressIndex,
-      accountIndex,
-    })
-  }
+//   for (;addressIndex < batchLimit; addressIndex++) {
+//     let key = await xkey.deriveAddress(addressIndex);
+//     let address = await DashHd.toAddr(key.publicKey);
+//     addresses.push({
+//       address,
+//       addressIndex,
+//       accountIndex,
+//     })
+//   }
 
-  return {
-    addresses,
-    finalAddressIndex: addressIndex,
-  }
-}
+//   return {
+//     addresses,
+//     finalAddressIndex: addressIndex,
+//   }
+// }
 
 export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   let words = phrase?.split(' ')
@@ -267,6 +268,50 @@ export function fixedDASH(dash, fix = 8) {
  */
 export function toDuff(dash) {
   return Math.round(parseFloat(dash) * DUFFS);
+}
+
+export function formatDash(
+  unformattedBalance,
+  options = {},
+) {
+  let opts = {
+    maxlen: 10,
+    fract: 8,
+    sigsplit: 3,
+    ...options,
+  }
+  let funds = 0
+  let balance = `${funds}`
+
+  if (unformattedBalance) {
+    funds += unformattedBalance
+    balance = fixedDash(funds, opts.fract)
+    // TODO FIX: does not support large balances
+
+    // console.log('balance fixedDash', balance, balance.length)
+
+    let [fundsInt,fundsFract] = balance.split('.')
+    opts.maxlen -= fundsInt.length
+
+    let fundsFraction = fundsFract?.substring(
+      0, Math.min(Math.max(0, opts.maxlen), opts.sigsplit)
+    )
+
+    let fundsRemainder = fundsFract?.substring(
+      fundsFraction.length,
+      Math.max(0, opts.maxlen)
+    )
+
+    balance = `${
+      fundsInt
+    }<sub><span>.${
+      fundsFraction
+    }</span>${
+      fundsRemainder
+    }</sub>`
+  }
+
+  return balance
 }
 
 export function formDataEntries(event) {
@@ -382,6 +427,52 @@ export function envoy(obj, ...initListeners) {
       return true
     }
   })
+}
+
+/**
+ * Creates a reactive signal
+ *
+ * Inspired By
+ * {@link https://gist.github.com/developit/a0430c500f5559b715c2dddf9c40948d Valoo} &
+ * {@link https://dev.to/ratiu5/implementing-signals-from-scratch-3e4c Signals from Scratch}
+ *
+ * @example
+ *    let count = createSignal(0)
+ *    console.log(count.value) // 0
+ *    count.value = 2
+ *    console.log(count.value) // 2
+ *
+ *    let off = count.on((value) => {
+ *      document.querySelector("body").innerHTML = value;
+ *    });
+ *
+ *    off(); // unsubscribe
+ *
+ * @param {Object} initialValue inital value
+*/
+export function createSignal(initialValue) {
+  let _value = initialValue;
+  let _last = _value;
+  const subs = [];
+
+  function pub() {
+    for (let s of subs) {
+      s && s(_value, _last);
+    }
+  }
+
+  return {
+    get value() { return _value; },
+    set value(v) {
+      _last = _value
+      _value = v;
+      pub();
+    },
+    on: s => {
+      const i = subs.push(s)-1;
+      return () => { subs[i] = 0; };
+    }
+  }
 }
 
 export async function restate(
@@ -937,20 +1028,90 @@ export async function getAvatar(c) {
   return `${avStr}">${initials}</div>`
 }
 
-export function readFile(file, callback) {
+export function fileIsSubType(file, type) {
+  const fileType = file?.type?.split('/')?.[1]
+
+  if (!fileType) {
+    return false
+  }
+
+  return fileType === type
+}
+
+// fileInTypes({type:'application/json'}, ['image/png'])
+export function fileInMIMETypes(file, types = []) {
+  const fileType = file?.type
+
+  if (!fileType) {
+    return false
+  }
+
+  return types.includes(fileType)
+}
+
+export function fileTypeInTypes(file, types = []) {
+  const fileType = file?.type?.split('/')?.[0]
+
+  if (!fileType) {
+    return false
+  }
+
+  return types.includes(fileType)
+}
+
+export function fileTypeInSubtype(file, subtypes = []) {
+  const fileSubType = file?.type?.split('/')?.[1]
+
+  if (!fileSubType) {
+    return false
+  }
+
+  return subtypes.includes(fileSubType)
+}
+
+export function readFile(file, options) {
+  let opts = {
+    expectedFileType: 'json',
+    denyFileTypes: ['audio','video','image','font','model'],
+    denyFileSubTypes: ['msword','xml'],
+    callback: () => {},
+    errorCallback: () => {},
+    ...options,
+  }
   let reader = new FileReader();
   let result
 
   reader.addEventListener('load', () => {
+    if (
+      fileTypeInTypes(
+        file,
+        opts.denyFileTypes,
+      ) || fileTypeInSubtype(
+        file,
+        opts.denyFileSubTypes,
+      )
+    ) {
+      return opts.errorCallback?.({
+        err: `Wrong file type: ${file.type}. Expected: ${opts.expectedFileType}.`,
+        file,
+      })
+    }
+
     try {
       // @ts-ignore
       result = JSON.parse(reader?.result || '{}');
 
-      console.log('parse loaded json', result);
-      callback?.(result)
+      // console.log('parse loaded json', result);
+
+      opts.callback?.(result, file)
 
       // state[key] = result
     } catch(err) {
+      opts.errorCallback?.({
+        err,
+        file,
+      })
+
       throw new Error(`failed to parse JSON data from ${file.name}`)
     }
   });
@@ -997,4 +1158,36 @@ export async function getUniqueAlias(aliases, preferredAlias) {
   }
 
   return uniqueAlias
+}
+
+export function getPartialHDPath(wallet) {
+  return [
+    wallet.accountIndex,
+    wallet.usageIndex,
+    wallet.addressIndex,
+  ].join('/')
+}
+
+export function getAddressIndexFromUsage(wallet, account, usageIdx) {
+  let usageIndex = usageIdx ?? wallet?.usageIndex ?? 0
+  let addressIndex = account.usage?.[usageIndex] ?? account.addressIndex ?? 0
+  let usage = account.usage ?? [
+    account.addressIndex ?? 0,
+    0
+  ]
+
+  // console.log(
+  //   'getAddressIndexFromUsage',
+  //   usageIndex,
+  //   addressIndex,
+  //   account,
+  //   usage,
+  // )
+
+  return {
+    ...account,
+    usage,
+    usageIndex,
+    addressIndex,
+  }
 }

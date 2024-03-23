@@ -3,6 +3,7 @@ import {
   formDataEntries,
   getStoreData,
   sortContactsByAlias,
+  formatDash,
 } from '../helpers/utils.js'
 
 export let sendConfirmRig = (async function (globals) {
@@ -10,7 +11,7 @@ export let sendConfirmRig = (async function (globals) {
 
   let {
     mainApp, setupDialog, appDialogs, appState, appTools,
-    sendTx, store, userInfo, contactsList,
+    sendTx, store, userInfo, contactsList, showErrorDialog,
   } = globals
 
   let sendConfirm = await setupDialog(
@@ -57,24 +58,63 @@ export let sendConfirmRig = (async function (globals) {
           to = `@${state.contact?.alias}`
         }
         if (!to) {
-          to = state.to
+          to = state.to || ''
         }
         return to
       },
       showAmount: state => {
-        if (!state.amount) {
+        let output = html``
+        if (state.fullAmount) {
+          let fullAmount = formatDash(
+            state.fullAmount,
+          )
+
+          output = html`
+            ${output}
+            <article>
+              <figure>
+                <figcaption class="txt-small">To <span>${state.getContact(state)}</span></figcaption>
+                <div class="big">
+                  <svg width="26" height="27" viewBox="0 0 32 33">
+                    <use xlink:href="#icon-dash-mark"></use>
+                  </svg>
+                  ${fullAmount}
+                </div>
+              </figure>
+            </article>
+          `
+        }
+        return output
+      },
+      showFeeAndTotal: state => {
+        if (!state.fee?.dash || !state.fullAmount) {
           return ''
         }
+        let dashFee = formatDash(
+          state.fee.dash,
+        )
+        let totalAmount = formatDash(
+          Number(state.fullAmount) + Number(state.fee?.dash),
+        )
 
         return html`
-          <article>
+          <article class="col rg-3">
             <figure>
-              <figcaption>Amount</figcaption>
+              <figcaption>Dash Network Fee</figcaption>
+              <div class="mid">
+                <svg width="22" height="23" viewBox="0 0 32 33">
+                  <use xlink:href="#icon-dash-mark"></use>
+                </svg>
+                ${dashFee}
+              </div>
+            </figure>
+            <figure>
+              <figcaption>Total</figcaption>
               <div class="big">
                 <svg width="32" height="33" viewBox="0 0 32 33">
                   <use xlink:href="#icon-dash-mark"></use>
                 </svg>
-                ${state.amount}
+                ${totalAmount}
               </div>
             </figure>
           </article>
@@ -83,14 +123,9 @@ export let sendConfirmRig = (async function (globals) {
       content: state => html`
         ${state.header(state)}
 
-        <article>
-          <figure>
-            <figcaption>To</figcaption>
-            <div>${state.getContact(state)}</div>
-          </figure>
-        </article>
-
         ${state.showAmount(state)}
+
+        ${state.showFeeAndTotal(state)}
 
         ${state.footer(state)}
       `,
@@ -115,9 +150,18 @@ export let sendConfirmRig = (async function (globals) {
             }
 
             if (state.tx) {
-              txRes = await sendTx(
-                state.tx,
-              )
+              try {
+                txRes = await sendTx(
+                  state.tx,
+                )
+              } catch(err) {
+                return await showErrorDialog({
+                  type: 'dang',
+                  title: 'Failed to send transaction',
+                  msg: err,
+                  showActBtn: false,
+                })
+              }
             }
 
             if (txRes && addressIndex !== undefined) {
@@ -180,7 +224,8 @@ export let sendConfirmRig = (async function (globals) {
             await appDialogs.txInfo.render(
               {
                 contact: state.contact,
-                amount: state.amount,
+                amount: state.fullAmount,
+                fee: state.fee?.dash,
                 txRes,
               },
               'afterend',
