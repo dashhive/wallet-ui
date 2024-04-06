@@ -91,7 +91,16 @@
   align-items: flex-start;
   gap: 0.375rem;
   font-style: normal;
+  flex: 1 1 auto;
 }
+.contacts > div > a > aside {
+  display: flex;
+}
+.contacts > div > a > aside > button {
+  padding: 0.5rem;
+}
+
+
 
 @media (min-width: 650px) {
   .contacts {

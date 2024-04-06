@@ -87,7 +87,7 @@ export let confirmDeleteRig = (async function (globals) {
                   appState.contacts = res
 
                   return contactsList.restate({
-                    contacts: res?.sort(sortContactsByAlias),
+                    contacts: res,
                     userInfo,
                   })
                 }

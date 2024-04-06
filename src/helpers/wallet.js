@@ -361,7 +361,8 @@ export async function decryptData(
 }
 
 export function storedData(
-  encryptionPassword, keystore,
+  encryptionPassword,
+  keystore,
 ) {
   const SD = {}
 

@@ -3,6 +3,8 @@ import {
   envoy,
   restate,
   sortContactsByAlias,
+  filterPairedContacts,
+  filterUnpairedContacts,
   timeago,
   getAvatar,
 } from '../helpers/utils.js'
@@ -15,6 +17,7 @@ const initialState = {
   placement: 'contacts',
   rendered: null,
   responsive: true,
+  showUnpaired: false,
   delay: 500,
   wallet: {},
   contacts: [],
@@ -25,7 +28,23 @@ const initialState = {
   ) {},
   header: state => html`
     <header>
-      <h6>Contacts (${state.contacts.length})</h6>
+      <div class="inline row gap-2">
+        <h5 class="lh-2">Contacts</h5>
+        <button
+          id="paired_contacts"
+          class="pill rounded${!state.showUnpaired ? ' active' : ''}"
+          title="Paired Contacts"
+        >
+          Paired <span class="indicator">${state.contacts.filter(filterPairedContacts).length}</span>
+        </button>
+        <button
+          id="unpaired_contacts"
+          class="pill rounded${state.showUnpaired ? ' active' : ''}"
+          title="Unpaired Contacts"
+        >
+          Unpaired <span class="indicator">${state.contacts.filter(filterUnpairedContacts).length}</span>
+        </button>
+      </div>
       <button
         id="add_contact"
         class="pill rounded"
@@ -43,10 +62,17 @@ const initialState = {
 
     <div>
       ${
-        state.contacts.length > 0
+        state.contacts?.length > 0
           ? (
             await Promise.all(
-              state.contacts.map(async c => await state.item(c))
+              state.contacts
+                .filter(
+                  state.showUnpaired
+                    ? filterUnpairedContacts
+                    : filterPairedContacts
+                )
+                .sort(sortContactsByAlias)
+                .map(async c => await state.item(c)),
             )
           ).join('')
           : ''
@@ -60,7 +86,6 @@ const initialState = {
     ${await state.footer(state)}
   `,
   item: async c => {
-    // console.warn('contact list item', c)
     if ('string' === typeof c) {
       return html`
         <article>
@@ -118,6 +143,18 @@ const initialState = {
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
         </address>
+        <!-- <aside class="inline row">
+          <button class="pill rounded">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-arrow-circle-up"></use>
+            </svg>
+          </button>
+          <button class="pill rounded">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+              <use xlink:href="#icon-arrow-circle-down"></use>
+            </svg>
+          </button>
+        </aside> -->
       </a>
     `
   },
@@ -170,30 +207,19 @@ const initialState = {
   elements: {
   },
   events: {
-    // handleChange: state => event => {
-    //   event.preventDefault()
-    //   // console.log(
-    //   //   'handle balance change',
-    //   //   [event.target],
-    //   // )
-    // },
     handleClick: state => event => {
       event.preventDefault()
-      // console.log(
-      //   'handle contacts click',
-      //   event,
-      //   state,
-      // )
+      event.stopPropagation()
+      console.log(
+        'handle contacts click',
+        event,
+        state,
+      )
     },
     handleContactsChange: (newState, oldState) => {
       if (newState.contacts !== oldState.contacts) {
-        // console.log(
-        //   'handle contacts update',
-        //   {newState, oldState}
-        // )
-
         newState.render?.({
-          contacts: newState.contacts?.sort(sortContactsByAlias),
+          contacts: newState.contacts
         })
       }
     }
@@ -208,27 +234,18 @@ let state = envoy(
 export async function setupContactsList(
   el, setupState = {}
 ) {
-  console.log(
-    'setupContactsList state.contacts',
-    state.contacts
-  )
   restate(state, setupState)
-  // if (setupState?.events?.handleContactsChange) {
-  //   state._listeners = [
-  //     setupState?.events?.handleContactsChange
-  //   ]
-  // }
 
   state.slugs.section = `${state.name}_${state.id}`
     .toLowerCase().replace(' ', '_')
 
   const section = document.createElement('section')
 
-  state.elements.section = section
-
   section.id = state.slugs.section
   section.classList.add(state.placement || '')
   section.innerHTML = await state.content(state)
+
+  state.elements.section = section
 
   function addListener(
     node,
@@ -240,21 +257,8 @@ export async function setupContactsList(
     node.addEventListener(event, handler, capture)
   }
 
-  function addListeners() {
-    // addListener(
-    //   section,
-    //   'close',
-    //   state.events.handleChange(state)
-    // )
-    addListener(
-      section,
-      'click',
-      state.events.handleClick(state),
-    )
-  }
-
   function removeAllListeners(
-    targets = [section],
+    targets = [state.elements.section],
   ) {
     _handlers = _handlers
       .filter(({ node, event, handler, capture }) => {
@@ -266,7 +270,16 @@ export async function setupContactsList(
       })
   }
 
+  function addListeners() {
+    addListener(
+      state.elements.section,
+      'click',
+      state.events.handleClick(state),
+    )
+  }
+
   state.removeAllListeners = removeAllListeners
+  state.addListeners = addListeners
 
   async function render(
     renderState = {},
@@ -274,11 +287,11 @@ export async function setupContactsList(
   ) {
     await restate(state, renderState)
 
-    section.id = state.slugs.section
-    section.innerHTML = await state.content(state)
+    state.elements.section.id = state.slugs.section
+    state.elements.section.innerHTML = await state.content(state)
 
-    removeAllListeners()
-    addListeners()
+    state.removeAllListeners()
+    state.addListeners()
 
     if (!state.rendered) {
       el.insertAdjacentElement(position, section)

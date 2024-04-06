@@ -473,6 +473,10 @@ th {
   background-color: var(--dark-600);
 }
 
+.contacts > div .pill:not(:disabled):hover {
+  background-color: var(--dark-500);
+}
+
 .avatar {
   background-color: var(--dark-500);
   color: var(--dark-100);

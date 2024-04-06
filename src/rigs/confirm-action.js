@@ -7,8 +7,7 @@ export let confirmActionRig = (async function (globals) {
   'use strict';
 
   let {
-    mainApp, setupDialog, appDialogs, appState, appTools,
-    store, userInfo, contactsList,
+    mainApp, setupDialog,
   } = globals
 
   let confirmAction = await setupDialog(

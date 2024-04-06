@@ -69,7 +69,7 @@ export let addContactRig = (async function (globals) {
 
     state.contact = newContact
 
-    console.log('debounceField', field, localName, newContact)
+    // console.log('debounceField', field, localName, newContact)
 
     getStoreData(
       store.contacts,
@@ -78,7 +78,7 @@ export let addContactRig = (async function (globals) {
           appState.contacts = res
 
           return contactsList.restate({
-            contacts: res?.sort(sortContactsByAlias),
+            contacts: res,
             userInfo,
           })
         }
@@ -157,11 +157,11 @@ export let addContactRig = (async function (globals) {
         },
       }
 
-      console.log(
-        'add contact handleInput parsedAddr',
-        value,
-        xkey,
-      )
+      // console.log(
+      //   'add contact handleInput parsedAddr',
+      //   value,
+      //   xkey,
+      // )
     }
 
     if (existingContacts?.length > 0) {
@@ -202,7 +202,7 @@ export let addContactRig = (async function (globals) {
           appState.contacts = res
 
           return contactsList.restate({
-            contacts: res?.sort(sortContactsByAlias),
+            contacts: res,
             userInfo,
           })
         }
@@ -566,7 +566,7 @@ export let addContactRig = (async function (globals) {
           )
 
           pairedContact.then(pc => {
-            console.log('pairedContact', pc)
+            // console.log('pairedContact', pc)
 
             getStoreData(
               store.contacts,
@@ -576,12 +576,12 @@ export let addContactRig = (async function (globals) {
 
                   updateAllFunds(state.wallet, walletFunds)
                     .then(funds => {
-                      console.log('updateAllFunds then funds', funds)
+                      // console.log('updateAllFunds then funds', funds)
                     })
                     .catch(err => console.error('catch updateAllFunds', err, state.wallet))
 
                   return contactsList.restate({
-                    contacts: res?.sort(sortContactsByAlias),
+                    contacts: res,
                     userInfo,
                   })
                 }

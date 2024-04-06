@@ -1,17 +1,10 @@
 import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
 import {
   deriveWalletData,
   formDataEntries,
-  setClipboard,
-  openBlobSVG,
-  sortContactsByAlias,
-  // sortContactsByName,
   parseAddressField,
-  generateContactPairingURI,
   getStoreData,
   debounce,
-  // nobounce,
   getAvatar,
   getUniqueAlias,
   isUniqueAlias,
@@ -27,8 +20,7 @@ export let editContactRig = (async function (globals) {
 
   let {
     setupDialog, appDialogs, appState, appTools, store,
-    mainApp, wallet, userInfo, contactsList,
-    updateAllFunds, walletFunds,
+    mainApp, userInfo, contactsList,
   } = globals;
 
   let aliases = {}
@@ -69,7 +61,7 @@ export let editContactRig = (async function (globals) {
 
     state.contact = modifyContact
 
-    console.log('debounceField', field, localName, modifyContact)
+    // console.log('debounceField', field, localName, modifyContact)
 
     getStoreData(
       store.contacts,
@@ -78,7 +70,7 @@ export let editContactRig = (async function (globals) {
           appState.contacts = res
 
           return contactsList.restate({
-            contacts: res?.sort(sortContactsByAlias),
+            contacts: res,
             userInfo,
           })
         }
@@ -223,7 +215,8 @@ export let editContactRig = (async function (globals) {
           event.target.reportValidity()
 
           if (event.target?.name === 'contactAddr') {
-            if (event.target?.value) {
+            let ca = event.target?.value
+            if (ca && ca.length >= 34) {
               let {
                 address,
                 xpub,
@@ -269,11 +262,11 @@ export let editContactRig = (async function (globals) {
                   xkey,
                 )
 
-                console.log(
-                  'add contact handleChange parsedAddr',
-                  event.target.value,
-                  xkey,
-                )
+                // console.log(
+                //   'add contact handleChange parsedAddr',
+                //   event.target.value,
+                //   xkey,
+                // )
 
                 outgoing = {
                   ...(state.contact.outgoing || {}),
@@ -313,7 +306,7 @@ export let editContactRig = (async function (globals) {
                     appState.contacts = res
 
                     return contactsList.restate({
-                      contacts: res?.sort(sortContactsByAlias),
+                      contacts: res,
                       userInfo,
                     })
                   }
@@ -417,11 +410,11 @@ export let editContactRig = (async function (globals) {
             state.shareAccount.xkeyId,
           )
 
-          console.log(
-            'edit contact intent',
-            fde?.intent,
-            storedContact,
-          )
+          // console.log(
+          //   'edit contact intent',
+          //   fde?.intent,
+          //   storedContact,
+          // )
 
           if (['send','receive'].includes(String(fde?.intent))) {
             editContact.close()
