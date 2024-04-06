@@ -222,11 +222,6 @@ let contactsList = await setupContactsList(
           event.preventDefault()
           event.stopPropagation()
 
-          // console.log(
-          //   'paired_contacts',
-          //   event
-          // )
-
           await contactsList.render({
             userInfo,
             contacts: appState.contacts,
@@ -239,11 +234,6 @@ let contactsList = await setupContactsList(
         ) {
           event.preventDefault()
           event.stopPropagation()
-
-          // console.log(
-          //   'unpaired_contacts',
-          //   event
-          // )
 
           await contactsList.render({
             userInfo,
@@ -442,6 +432,8 @@ function getTarget(event, selector) {
     id,
     // @ts-ignore
     parentElement,
+    // @ts-ignore
+    parentNode,
   } = event?.target
 
   let target
@@ -452,6 +444,10 @@ function getTarget(event, selector) {
 
   if (parentElement?.id === selector) {
     target = parentElement
+  }
+
+  if (parentNode?.id === selector) {
+    target = parentNode
   }
 
   return target

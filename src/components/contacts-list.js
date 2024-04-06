@@ -57,30 +57,29 @@ const initialState = {
       </button>
     </header>
   `,
+  list: async state => {
+    if (state.contacts?.length === 0) {
+      return html`<span class="flex flex-fill center">No Contacts found</span>`
+    }
+
+    return (
+      await Promise.all(
+        state.contacts
+          .filter(
+            state.showUnpaired
+              ? filterUnpairedContacts
+              : filterPairedContacts
+          )
+          .sort(sortContactsByAlias)
+          .map(async c => await state.item(c)),
+      )
+    ).join('')
+  },
   content: async state => html`
     ${state.header(state)}
 
     <div>
-      ${
-        state.contacts?.length > 0
-          ? (
-            await Promise.all(
-              state.contacts
-                .filter(
-                  state.showUnpaired
-                    ? filterUnpairedContacts
-                    : filterPairedContacts
-                )
-                .sort(sortContactsByAlias)
-                .map(async c => await state.item(c)),
-            )
-          ).join('')
-          : ''
-      }
-      ${
-        state.contacts.length === 0 ?
-        html`<span class="flex flex-fill center">No Contacts found</span>` : ''
-      }
+      ${await state.list(state)}
     </div>
 
     ${await state.footer(state)}
@@ -158,47 +157,36 @@ const initialState = {
       </a>
     `
   },
+  datalist: async (state, direction = 'outgoing') => {
+    if (state.contacts?.length === 0) {
+      return ''
+    }
+
+    return (
+      await Promise.all(
+        state.contacts
+          .filter(
+            c => c.alias &&
+            Object.keys(c[direction] || {}).length > 0
+          ).map(contact => {
+            return html`<option value="@${
+              contact.alias
+            }">${
+              contact.info?.name || contact.alias
+            }</option>`
+          })
+      )
+    ).join('')
+  },
   footer: async state => html`
     <datalist id="contactSendAliases">
       ${
-        state.contacts.length > 0
-          ? (
-              await Promise.all(
-                state.contacts
-                  .filter(
-                    c => c.alias &&
-                    Object.keys(c.outgoing || {}).length > 0
-                  ).map(contact => {
-                    return html`<option value="@${
-                      contact.alias
-                    }">${
-                      contact.info?.name || contact.alias
-                    }</option>`
-                  })
-              )
-            ).join('')
-          : ''
+        await state.datalist(state, 'outgoing')
       }
     </datalist>
     <datalist id="contactReceiveAliases">
       ${
-        state.contacts.length > 0
-          ? (
-              await Promise.all(
-                state.contacts
-                  .filter(
-                    c => c.alias &&
-                    Object.keys(c.incoming || {}).length > 0
-                  ).map(contact => {
-                    return html`<option value="@${
-                      contact.alias
-                    }">${
-                      contact.info?.name || contact.alias
-                    }</option>`
-                  })
-              )
-            ).join('')
-          : ''
+        await state.datalist(state, 'incoming')
       }
     </datalist>
   `,
@@ -247,6 +235,22 @@ export async function setupContactsList(
 
   state.elements.section = section
 
+  const list = section.querySelector('& > div')
+  const sendDataList = section.querySelector('#contactSendAliases')
+  const receiveDataList = section.querySelector('#contactReceiveAliases')
+  const hdrPaired = section.querySelector('#paired_contacts')
+  const hdrUnpaired = section.querySelector('#unpaired_contacts')
+  const hdrPairedIndicator = hdrPaired.querySelector('.indicator')
+  const hdrUnpairedIndicator = hdrUnpaired.querySelector('.indicator')
+
+  state.elements.list = list
+  state.elements.sendDataList = sendDataList
+  state.elements.receiveDataList = receiveDataList
+  state.elements.hdrPaired = hdrPaired
+  state.elements.hdrUnpaired = hdrUnpaired
+  state.elements.hdrPairedIndicator = hdrPairedIndicator
+  state.elements.hdrUnpairedIndicator = hdrUnpairedIndicator
+
   function addListener(
     node,
     event,
@@ -288,7 +292,22 @@ export async function setupContactsList(
     await restate(state, renderState)
 
     state.elements.section.id = state.slugs.section
-    state.elements.section.innerHTML = await state.content(state)
+    // state.elements.section.innerHTML = await state.content(state)
+
+    state.elements.list.innerHTML = await state.list(state)
+    state.elements.sendDataList.innerHTML = await state.datalist(state, 'outgoing')
+    state.elements.receiveDataList.innerHTML = await state.datalist(state, 'incoming')
+
+    if (state.showUnpaired) {
+      state.elements.hdrPaired.classList.remove('active')
+      state.elements.hdrUnpaired.classList.add('active')
+    } else {
+      state.elements.hdrPaired.classList.add('active')
+      state.elements.hdrUnpaired.classList.remove('active')
+    }
+
+    state.elements.hdrPairedIndicator.innerText = state.contacts.filter(filterPairedContacts).length
+    state.elements.hdrUnpairedIndicator.innerText = state.contacts.filter(filterUnpairedContacts).length
 
     state.removeAllListeners()
     state.addListeners()
