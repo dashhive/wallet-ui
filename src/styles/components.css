@@ -21,13 +21,19 @@
   padding: 0;
   min-height: initial;
 }
-.contacts > header > button {
+.contacts > header > button,
+.contacts > header > div > button,
+.contacts > header > form > button {
   color: var(--dark-200);
 
   font-size: 0.75rem;
   font-style: normal;
   font-weight: 700;
   line-height: normal;
+}
+.contacts > header > form,
+.contacts > header > div {
+  display: flex;
 }
 .contacts > div > a,
 .contacts > div > article {
@@ -49,7 +55,7 @@
   margin: 0;
   font-style: normal;
   font-weight: 500;
-  line-height: normal;
+  line-height: 2;
   font-size: .75rem;
 }
 .contacts h4 {

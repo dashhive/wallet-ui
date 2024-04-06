@@ -228,6 +228,22 @@ figure h4 {
   vertical-align: baseline;
 }
 
+.lh-0 {
+  line-height: 0;
+}
+.lh-0p5 {
+  line-height: 0.5;
+}
+.lh-1 {
+  line-height: 1;
+}
+.lh-1p5 {
+  line-height: 1.5;
+}
+.lh-2 {
+  line-height: 2;
+}
+
 .gap-0 {
   gap: 0;
 }
