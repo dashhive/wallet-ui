@@ -488,6 +488,14 @@ export async function restate(
   return state
 }
 
+export function filterPairedContacts(contact) {
+  return !!contact.alias || !!contact.info?.name?.trim()
+}
+
+export function filterUnpairedContacts(contact) {
+  return !filterPairedContacts(contact)
+}
+
 export function sortContactsByAlias(a, b) {
   const aliasA = a.alias || a.info?.preferred_username?.toUpperCase() || 'zzz';
   const aliasB = b.alias || b.info?.preferred_username?.toUpperCase() || 'zzz';

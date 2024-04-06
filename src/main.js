@@ -67,6 +67,7 @@ import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
 import txInfoRig from './rigs/tx-info.js'
+import showErrorDialog from './rigs/show-error.js'
 
 // app/data state
 let accounts
@@ -157,29 +158,27 @@ let contactsList = await setupContactsList(
     events: {
       handleClick: state => async event => {
         event.preventDefault()
-        // console.log(
-        //   'handle contacts click',
-        //   event.target,
-        //   state,
-        // )
 
         let contactArticle = event.target?.closest('a, article')
 
         if (
-          // event.target?.nodeName === 'ARTICLE'
           contactArticle !== null
         ) {
           let contactID = contactArticle.dataset.id
+
           if (!contactID) {
             return;
           }
+
           let contactData = await appTools.storedData?.decryptItem?.(
             store.contacts,
             contactID,
           )
+
           if (!contactData.incoming) {
             return;
           }
+
           let contactAccountID = Object.values(contactData.incoming || {})?.[0]?.accountIndex
           console.log('contact click data', contactData)
 
@@ -218,8 +217,43 @@ let contactsList = await setupContactsList(
         }
 
         if (
-          event.target?.id === 'add_contact' ||
-          event.target?.parentNode?.id === 'add_contact'
+          getTarget(event, 'paired_contacts')
+        ) {
+          event.preventDefault()
+          event.stopPropagation()
+
+          // console.log(
+          //   'paired_contacts',
+          //   event
+          // )
+
+          await contactsList.render({
+            userInfo,
+            contacts: appState.contacts,
+            showUnpaired: false,
+          })
+        }
+
+        if (
+          getTarget(event, 'unpaired_contacts')
+        ) {
+          event.preventDefault()
+          event.stopPropagation()
+
+          // console.log(
+          //   'unpaired_contacts',
+          //   event
+          // )
+
+          await contactsList.render({
+            userInfo,
+            contacts: appState.contacts,
+            showUnpaired: true,
+          })
+        }
+
+        if (
+          getTarget(event, 'add_contact')
         ) {
           await getUserInfo()
 
@@ -262,7 +296,6 @@ let contactsList = await setupContactsList(
 
             let created = (new Date()).toISOString()
             let usage = [0,0]
-            // usage[shareAccount.usageIndex] = shareAccount.addressIndex
 
             newAccount = await store.accounts.setItem(
               shareAccount.xkeyId,
@@ -270,9 +303,6 @@ let contactsList = await setupContactsList(
                 createdAt: created,
                 updatedAt: (new Date()).toISOString(),
                 accountIndex,
-                // addressIndex: shareAccount.addressIndex,
-                // changeIndex: shareAccount.addressIndex,
-                // usageIndex: shareAccount.usageIndex,
                 usage,
                 walletId: shareAccount.id,
                 xkeyId: shareAccount.xkeyId,
@@ -292,9 +322,7 @@ let contactsList = await setupContactsList(
               accountIndex,
               finalAddressIndex,
               addresses,
-              // shareAccount?.xkeyId,
               shareAccount,
-              // wallet,
             )
 
             newContact = await appTools.storedData.encryptItem(
@@ -314,9 +342,10 @@ let contactsList = await setupContactsList(
 
             appState.contacts.push(newContact)
 
-            await contactsList.render(
-              appState.contacts.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
-            )
+            await contactsList.render({
+              userInfo,
+              contacts: appState.contacts,
+            })
 
             console.log(
               'share qr new contact',
@@ -350,10 +379,7 @@ async function getUserInfo() {
       appState.encryptionPassword,
       ks,
     )
-    // console.log(
-    //   'getUserInfo selectedAlias',
-    //   appState.selectedAlias,
-    // )
+
     await appTools.storedData?.decryptItem(
       store.aliases,
       appState.selectedAlias,
@@ -382,6 +408,7 @@ async function getUserInfo() {
         title: 'Unable to decrypt seed phrase',
         msg: err,
         showActBtn: false,
+        confirmAction: appDialogs.confirmAction,
       })
     })
   }
@@ -392,11 +419,6 @@ async function handlePasswordToggle(event) {
     // @ts-ignore
     name: fieldName, form,
   } = event?.target
-
-  // console.log('handlePasswordToggle', {
-  //   fieldName,
-  //   form,
-  // })
 
   if (
     fieldName === 'show_pass'
@@ -442,82 +464,6 @@ async function showNotification({
   sticky = false,
 }) {
   console.log('notification', {type, title, msg, sticky})
-}
-
-async function showErrorDialog(options) {
-  let opts = {
-    type: 'warn',
-    title: '⚠️ Error',
-    msg: '',
-    showCancelBtn: true,
-    showActBtn: true,
-    cancelCallback: () => {},
-    // timeout: null,
-    ...options,
-  }
-
-  opts.callback = opts.callback || (() => {
-    let firstLineFromError = ''
-    let { msg } = opts
-
-    if (typeof msg !== 'string' && msg.toString) {
-      msg = msg.toString()
-    }
-    if (typeof msg === 'string') {
-      firstLineFromError = msg.match(/[^\r\n]+/g)?.[0]
-    }
-
-    // console.log('firstLineFromError', firstLineFromError)
-
-    window.open(
-      `https://github.com/dashhive/wallet-ui/issues?q=${firstLineFromError}`,
-      '_blank',
-    )
-  })
-
-  if (opts.type === 'dang') {
-    console.error('showErrorDialog', opts)
-  } else {
-    console.log('showErrorDialog', opts)
-  }
-
-  let outputMsg = opts.msg?.response || opts.msg?.stack || opts.msg
-
-  await appDialogs.confirmAction?.render({
-    name: opts.title,
-    actionTxt: 'Report Issue',
-    actionAlt: 'Report the error at GitHub',
-    action: 'lock',
-    cancelTxt: 'Close',
-    cancelAlt: `Close`,
-    // target: '',
-    // targetFallback: 'this wallet',
-    actionType: opts.type,
-    // action: 'disconnect',
-    // target: '',
-    // targetFallback: 'this wallet',
-    // actionType: 'dang',
-    showCancelBtn: opts.showCancelBtn,
-    showActBtn: opts.showActBtn,
-    submitIcon: state => `⚠️`,
-    alert: state => html``,
-    content: state => html`
-      ${state.header(state)}
-
-      <article class="px-3 col flex-fill ta-left mh-75">
-        <!-- <strong>
-          Looks like we encountered an error.
-        </strong> -->
-        <pre class="of-auto flex-fill">${outputMsg}</pre>
-      </article>
-
-      ${state.footer(state)}
-    `,
-    cancelCallback: opts.cancelCallback,
-    callback: opts.callback,
-  })
-
-  return appDialogs.confirmAction?.showModal()
 }
 
 async function main() {
@@ -671,14 +617,11 @@ async function main() {
         ks,
       )
     } catch(err) {
-      // console.error(
-      //   '[fail] unable to decrypt seed phrase',
-      //   err
-      // )
       await showErrorDialog({
         title: 'Unable to decrypt seed phrase',
         msg: err,
         showActBtn: false,
+        confirmAction: appDialogs.confirmAction,
       })
       sessionStorage.removeItem('encryptionPassword')
     }
@@ -741,53 +684,28 @@ async function main() {
         let receiveWallet
         let selectedWallet = wallets?.[appState.selectedWallet]
 
-        console.log('selectedWallet', wallet, selectedWallet)
-
-        // if (wallet?.xpub) {
-        //   wallet.addressIndex = (
-        //     selectedWallet?.addressIndex ?? -1
-        //   ) + 1
-        //   receiveWallet = await deriveWalletData(
-        //     appState.phrase,
-        //     wallet.accountIndex,
-        //     wallet.addressIndex,
-        //   )
-        // }
+        // console.log('selectedWallet', wallet, selectedWallet)
 
         if (wallet?.xkeyId) {
           let aw = await getAccountWallet(
             wallet,
             appState.phrase,
           )
+
           wallet = aw.wallet
-
-          // tmpAcct.usage = tmpAcct?.usage || [0,0]
-          // tmpAcct.usage[
-          //   wallet.usageIndex
-          // ] = wallet.addressIndex
-
-          // state.wallet =
-          // tmpAcct = await store.accounts.setItem(
-          //   wallet.xkeyId,
-          //   {
-          //     ...tmpAcct,
-          //     updatedAt: (new Date()).toISOString(),
-          //     address: wallet.address,
-          //   }
-          // )
 
           batchGenAcctAddrs(
             receiveWallet,
             aw.account,
           )
 
-          console.log(
-            `${fde.intent} TO SELECTED WALLET`,
-            {
-              wallet,
-              account: aw.account,
-            }
-          )
+          // console.log(
+          //   `${fde.intent} TO SELECTED WALLET`,
+          //   {
+          //     wallet,
+          //     account: aw.account,
+          //   }
+          // )
 
           await appDialogs.requestQr.render(
             {
@@ -873,7 +791,7 @@ async function main() {
         appState.contacts = res
 
         contactsList.render({
-          contacts: res?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias),
+          contacts: res,
           userInfo,
         })
 
@@ -882,14 +800,12 @@ async function main() {
     },
     res => async v => {
       res.push(await appTools.storedData?.decryptData?.(v) || v)
-      // appTools.storedData.decryptData(v)
-      //   .then(ev => res.push(ev))
     }
   )
 
   await contactsList.render({
     userInfo,
-    contacts: appState.contacts?.filter(c => !!c.alias || !!c.info?.name?.trim()).sort(sortContactsByAlias)
+    contacts: appState.contacts,
   })
   sendRequestBtn.render()
 
@@ -897,8 +813,6 @@ async function main() {
     let {
       // @ts-ignore
       id,
-      // @ts-ignore
-      nextElementSibling,
       // @ts-ignore
       parentElement,
     } = event?.target
@@ -912,10 +826,6 @@ async function main() {
       console.log('click alias', [aliasTarg])
 
       aliasTarg?.nextElementSibling.classList.toggle('hidden')
-      // @ts-ignore
-      // targ?.closest?.('menu.user')?.classList?.toggle('hidden')
-
-      // event.target.next
     }
     if (id === 'nav-edit-profile') {
       event.preventDefault()
@@ -963,8 +873,6 @@ async function main() {
         actionTxt: 'Lock it!',
         actionAlt: 'Lock the wallet',
         action: 'lock',
-        // target: '',
-        // targetFallback: 'this wallet',
         actionType: 'warn',
         alert: state => html``,
         callback: () => {
@@ -986,8 +894,6 @@ async function main() {
         actionTxt: 'Disconnect',
         actionAlt: 'Clear all wallet data stored in browser',
         action: 'disconnect',
-        // target: '',
-        // targetFallback: 'this wallet',
         actionType: 'dang',
         submitIcon: state => `🧹`, // `💣`,
         alert: state => html`
@@ -1013,8 +919,6 @@ async function main() {
       appDialogs.confirmAction.showModal()
     }
 
-    // @ts-ignore
-    // event.target?.closest?.('menu menu:not(.hidden)')?.classList?.add('hidden')
     if ((
       !id?.startsWith('nav-')
     ) && (
@@ -1042,25 +946,7 @@ async function main() {
       })
     })
 
-  // updateAllFunds(wallet, walletFunds)
-  //   .then(funds => {
-  //     console.log('updateAllFunds then funds', funds)
-  //   })
-  //   .catch(err => {
-  //     // console.error('catch updateAllFunds', err, wallet)
-  //     showNotification({
-  //       type: 'error',
-  //       title: 'Update funds',
-  //       msg: err,
-  //     })
-  //   })
-
   let storedAddrs = (await store.addresses.keys()) || []
-
-  // showErrorDialog({
-  //   title: 'Test error',
-  //   msg: err,
-  // })
 
   initDashSocket({
     onMessage: async function (evname, data) {
@@ -1099,12 +985,6 @@ async function main() {
       }
 
       let now = Date.now();
-      // if (mempoolTx?.timestamp) {
-      //   // don't wait longer than 3s for a txlock
-      //   if (now - mempoolTx.timestamp > maxTxLockWait) {
-      //     return mempoolTx;
-      //   }
-      // }
 
       // console.log('dash socket vout', data)
 
@@ -1131,7 +1011,6 @@ async function main() {
 
         // Updates Insight info for Change Address
         if (
-          // checkAddr &&
           appState?.sentTransactions?.[data.txid]
         ) {
           // console.log('data.vout.filter', vout, data)
@@ -1140,23 +1019,14 @@ async function main() {
           store.addresses.getItem(addr)
             .then(async storedAddr => {
               if (storedAddr?.insight?.updatedAt) {
-                // let tmpBalance = storedAddr.insight.balance
                 storedAddr.insight.balance = (duffs / DUFFS)
                 storedAddr.insight.balanceSat = duffs
                 storedAddr.insight.updatedAt = 0
                 store.addresses.setItem(addr, storedAddr)
-
-                // walletFunds.balance = (
-                //   walletFunds.balance - (tmpBalance - storedAddr.insight.balance)
-                // )
               }
             })
           return false
         }
-
-        // if (amount && duffs !== amount) {
-        //   return false;
-        // }
 
         let newTx = {
           address: addr,
@@ -1169,26 +1039,12 @@ async function main() {
 
         walletFunds.balance = walletFunds?.balance + newTx.dash
 
-        // dashBalance?.restate({
-        //   wallet,
-        //   walletFunds: {
-        //     balance: walletFunds?.balance || 0
-        //   }
-        // })
-
-        // if ("txlock" !== evname) {
-        //   if (!mempoolTx) {
-        //     mempoolTx = newTx;
-        //   }
-        //   return false;
-        // }
-
-        // result = newTx;
         console.log(
           'found address in store',
           addr,
           newTx,
         )
+
         updates[addr] = newTx
         store.addresses.getItem(addr)
           .then(async storedAddr => {
@@ -1198,17 +1054,6 @@ async function main() {
               storedAddr.insight.updatedAt = 0
               store.addresses.setItem(addr, storedAddr)
             }
-
-            // let selectedWallet = wallets?.[appState.selectedWallet]
-            // wallet.addressIndex = (
-            //   selectedWallet?.addressIndex || 0
-            // ) + 1
-            // let walletTemp = await deriveWalletData(
-            //   appState.phrase,
-            //   storedAddr.accountIndex,
-            //   storedAddr.addressIndex,
-            //   storedAddr.usageIndex,
-            // )
 
             let tmpWalletAcct = await store.accounts.getItem(
               storedAddr.xkeyId,
@@ -1267,7 +1112,6 @@ async function main() {
 
       Object.keys(txUpdates).forEach(
         txid => {
-          // let txs = appState?.sentTransactions
           if (txs?.[txid]) {
             delete txs[txid]
           }

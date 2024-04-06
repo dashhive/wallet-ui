@@ -619,6 +619,7 @@ export let sendOrReceiveRig = (async function (globals) {
                   title: 'Failed to create transaction',
                   msg: err,
                   // showActBtn: false,
+                  confirmAction: appDialogs.confirmAction,
                 })
               }
 

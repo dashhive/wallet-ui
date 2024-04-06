@@ -160,6 +160,7 @@ export let sendConfirmRig = (async function (globals) {
                   title: 'Failed to send transaction',
                   msg: err,
                   showActBtn: false,
+                  confirmAction: appDialogs.confirmAction,
                 })
               }
             }
@@ -193,7 +194,7 @@ export let sendConfirmRig = (async function (globals) {
                       appState.contacts = res
 
                       return contactsList.restate({
-                        contacts: res?.sort(sortContactsByAlias),
+                        contacts: res,
                         userInfo,
                       })
                     }

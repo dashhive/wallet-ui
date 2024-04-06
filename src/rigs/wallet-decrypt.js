@@ -196,6 +196,7 @@ export let walletDecryptRig = (async function (globals) {
             //   title: 'Unable to decrypt seed phrase',
             //   msg: err,
             //   showActBtn: false,
+            //   confirmAction: appDialogs.confirmAction,
             // })
             event.target.pass.setCustomValidity(
               'Unable to decrypt seed phrase. Did you type the correct encryption password?'

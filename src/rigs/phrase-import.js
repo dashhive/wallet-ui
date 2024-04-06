@@ -33,6 +33,7 @@ export let phraseImportRig = (async function (globals) {
       cancelCallback: () => {
         clearFile(state)
       },
+      confirmAction: appDialogs.confirmAction,
     })
   }
 
