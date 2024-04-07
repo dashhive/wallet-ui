@@ -271,6 +271,7 @@ form fieldset.share {
   align-items: center;
   flex: 1 1 auto;
   margin: 0;
+  padding: 0;
 }
 form fieldset.share aside {
   display: flex;
@@ -287,6 +288,8 @@ form fieldset.share aside input:read-only {
 }
 form fieldset.share section + aside {
   border-top: 1px solid var(--dark-600);
+  max-width: 98vw;
+  padding: 2rem 2rem 0;
 }
 form fieldset.share aside label {
   display: block;
@@ -754,14 +757,13 @@ form[name="network"] {
   }
   form fieldset.share {
     flex-direction: row;
-  }
-  form fieldset.share aside {
-    padding-left: 2rem;
-    padding-right: 1rem;
+    padding: 0 1rem;
   }
   form fieldset.share section + aside {
     max-width: 16rem;
-    /* max-width: 305px; */
+    padding: 0;
+    padding-left: 2rem;
+    padding-right: 1rem;
     border-top: 0 solid transparent;
     border-left: 1px solid var(--dark-600);
   }
