@@ -455,27 +455,37 @@ th {
   border-radius: 6.25rem;
 }
 
-.contacts > div {
+.cols > section > div {
   background-color: var(--nav-bg);
 }
-.contacts > div > span {
+.cols > section > div > span {
   color: var(--dark-400);
 }
-.contacts > div > a,
-.contacts > div > article {
+.cols > section > div > a,
+.cols > section > div > article {
   border-bottom: 3px solid var(--bgc);
   transition: background-color var(--ease);
 }
-.contacts > div > a:focus,
-.contacts > div > a:hover,
-.contacts > div > article:focus,
-.contacts > div > article:hover {
+.cols > section > div > a:focus,
+.cols > section > div > a:hover,
+.cols > section > div > article:focus,
+.cols > section > div > article:hover {
   background-color: var(--dark-600);
 }
 
-.contacts > div .pill:not(:disabled):hover {
+.cols > section > div .pill:not(:disabled):hover {
   background-color: var(--dark-500);
 }
+
+.cols > .transactions {
+  opacity: 0.4;
+  cursor: not-allowed;
+  cursor: wait;
+  user-select: none;
+}
+/* .cols > .transactions > div {
+  background-color: var(--dark-500);
+} */
 
 .avatar {
   background-color: var(--dark-500);

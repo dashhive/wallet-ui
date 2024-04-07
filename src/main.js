@@ -148,12 +148,22 @@ let bodyNav
 let dashBalance
 let mainApp = document.querySelector('main#app')
 
+mainApp.insertAdjacentHTML('afterbegin', html`
+  <div class="cols integration-sect">
+  </div>
+  <div class="cols main-sect">
+  </div>
+`)
+
+let integrationsSection = mainApp.querySelector('.integration-sect')
+let mainAppGrid = mainApp.querySelector('.main-sect')
+
 // init components
 let mainFtr = await setupMainFooter(mainApp)
 let sendRequestBtn = await setupSendRequestBtns(mainApp)
 let svgSprite = await setupSVGSprite(mainApp)
 let contactsList = await setupContactsList(
-  mainApp,
+  mainAppGrid,
   {
     events: {
       handleClick: state => async event => {
@@ -804,6 +814,33 @@ async function main() {
     contacts: appState.contacts,
   })
   sendRequestBtn.render()
+
+  integrationsSection.insertAdjacentHTML('beforeend', html`
+    <section>
+      <header>
+        <h5 class="lh-2">Coming soon</h5>
+        <h4 class="lh-2">Earn interest with</h4>
+      </header>
+      <div>
+        <a href="https://app.crowdnode.io/" target="_blank" rel="noreferrer">
+          <img src="/public/icons/crowdnode-logo-1000.png" height="50" />
+        </a>
+        <a href="https://www.mayascan.org/earn" target="_blank" rel="noreferrer">
+          <img src="/public/icons/maya-protocol.png" height="50" />
+        </a>
+      </div>
+    </section>
+  `)
+  mainAppGrid.insertAdjacentHTML('beforeend', html`
+    <section class="transactions">
+      <header>
+        <h5 class="lh-2">Transactions</h5>
+      </header>
+      <div>
+      <span class="flex flex-fill center">Coming soon</span>
+      </div>
+    </section>
+  `)
 
   document.addEventListener('click', async event => {
     let {

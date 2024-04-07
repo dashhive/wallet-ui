@@ -134,6 +134,22 @@ const initialState = {
     let itemSub = inId
       ? `href="/#!/contact/${atUser || inId}" data-id="${inId}"`
       : ''
+    let itemCtrls = paired
+      ? html`<aside class="inline row">
+        <button class="pill rounded">
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use xlink:href="#icon-arrow-circle-up"></use>
+          </svg>
+        </button>
+        <button class="pill rounded">
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <use xlink:href="#icon-arrow-circle-down"></use>
+          </svg>
+        </button>
+      </aside>`
+      : ''
+
+    itemCtrls = '' // temp override
 
     return html`
       <a ${itemSub}>
@@ -142,18 +158,7 @@ const initialState = {
           <h4>${itemAlias}</h4>
           <h5>${itemName}</h5>
         </address>
-        <!-- <aside class="inline row">
-          <button class="pill rounded">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <use xlink:href="#icon-arrow-circle-up"></use>
-            </svg>
-          </button>
-          <button class="pill rounded">
-            <svg width="24" height="24" viewBox="0 0 24 24">
-              <use xlink:href="#icon-arrow-circle-down"></use>
-            </svg>
-          </button>
-        </aside> -->
+        ${itemCtrls}
       </a>
     `
   },

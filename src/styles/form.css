@@ -1,7 +1,7 @@
 main form {
   display: flex;
   gap: .5rem;
-  padding: 0 2rem;
+  padding: 0 1rem;
   /* flex-direction: column; */
   /* margin: 0 auto;
   justify-content: center; */
@@ -267,9 +267,9 @@ form > article > figure figcaption + div sub {
 
 form fieldset.share {
   /* flex-direction: row-reverse; */
-  flex-direction: row;
+  /* flex-direction: row; */
   align-items: center;
-  flex: none;
+  flex: 1 1 auto;
   margin: 0;
 }
 form fieldset.share aside {
@@ -286,9 +286,7 @@ form fieldset.share aside input:read-only {
   text-align: center;
 }
 form fieldset.share section + aside {
-  max-width: 16rem;
-  /* max-width: 305px; */
-  border-left: 1px solid var(--dark-600);
+  border-top: 1px solid var(--dark-600);
 }
 form fieldset.share aside label {
   display: block;
@@ -754,9 +752,18 @@ form[name="network"] {
     padding: 1rem;
     position: relative;
   }
+  form fieldset.share {
+    flex-direction: row;
+  }
   form fieldset.share aside {
     padding-left: 2rem;
     padding-right: 1rem;
+  }
+  form fieldset.share section + aside {
+    max-width: 16rem;
+    /* max-width: 305px; */
+    border-top: 0 solid transparent;
+    border-left: 1px solid var(--dark-600);
   }
   /* form aside > article > figure figcaption + div.mid,
   form > article > figure figcaption + div.mid {

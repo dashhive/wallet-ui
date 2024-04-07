@@ -414,13 +414,11 @@ dialog.responsive fieldset.share section {
   gap: 1rem;
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 dialog.responsive fieldset.share section article {
   flex-direction: column;
   align-items: stretch;
-}
-dialog.responsive fieldset.share:not(.solo) {
-  min-width: 44rem;
 }
 
 
@@ -515,6 +513,12 @@ dialog .txid {
   dialog.responsive form > fieldset:first-child > input,
   dialog.responsive fieldset:last-of-type:not(:first-of-type) {
     flex: none;
+  }
+  dialog.responsive fieldset.share:not(.solo) {
+    min-width: 44rem;
+  }
+  dialog.responsive fieldset.share section {
+    width: auto;
   }
   /* dialog.responsive button[type="submit"] {
     flex: none;

@@ -31,7 +31,7 @@ main h1 { text-align: center; }
 
 main header {
   margin: 2.5rem auto 0;
-  padding: 0 2rem;
+  padding: 0 1rem;
   /* max-width: 1100px; */
   min-height: 85px;
   width: 100%;
@@ -458,6 +458,10 @@ main > header + section button {
 }
 
 @media (min-width: 650px) {
+  main {
+    max-width: 60rem;
+    padding: 0 1rem;
+  }
   main header {
     padding: 0;
   }
@@ -485,5 +489,10 @@ main > header + section button {
   }
   header {
     flex-direction: row;
+  }
+}
+@media (min-width: 980px) {
+  main {
+    padding: 0;
   }
 }

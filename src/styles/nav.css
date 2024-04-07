@@ -97,7 +97,8 @@ nav a sub {
   align-self: center;
 }
 nav a svg {
-  margin: 0 auto;
+  margin: 0;
+  margin-left: 1.25rem;
   display: block;
   height: 100%;
   max-width: 50%;
@@ -108,7 +109,7 @@ nav .alias {
   font-weight: 400;
   line-height: 1;
   padding: 1rem;
-  margin-right: 2.5rem;
+  margin-right: 1.25rem;
 }
 nav .alias span {
   padding: 1rem;
