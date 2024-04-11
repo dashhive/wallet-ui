@@ -110,7 +110,7 @@ const initialState = {
     let name = c.info?.name
 
     if (
-      !name &&
+      !name?.trim() &&
       !user &&
       !out?.xkeyId &&
       out?.address

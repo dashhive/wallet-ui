@@ -489,7 +489,8 @@ export async function restate(
 }
 
 export function filterPairedContacts(contact) {
-  return !!contact.alias || !!contact.info?.name?.trim()
+  let outLen = Object.keys(contact.outgoing || {}).length
+  return outLen > 0 // && !!contact.alias
 }
 
 export function filterUnpairedContacts(contact) {
