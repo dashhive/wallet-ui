@@ -46,6 +46,7 @@ import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
 import setupSendRequestBtns from './components/send-request-btns.js'
 import setupContactsList from './components/contacts-list.js'
+import setupTransactionsList from './components/transactions-list.js'
 import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 
@@ -85,6 +86,11 @@ let appState = envoy(
     sentTransactions: {},
     account: {},
   },
+  // async (state, oldState, prop) => {
+  //   if (prop === 'sentTransactions') {
+  //     console.log(prop, state[prop])
+  //   }
+  // },
 )
 let appTools = envoy(
   {
@@ -115,7 +121,7 @@ let userInfo = envoy(
         false,
       )
     }
-  }
+  },
 )
 
 // rigs
@@ -368,6 +374,21 @@ let contactsList = await setupContactsList(
     },
   }
 )
+let transactionsList = await setupTransactionsList(mainAppGrid, {
+  events: {
+    handleClick: state => async event => {
+      event.preventDefault()
+
+      let txArticle = event.target?.closest('a, article')
+
+      console.log(
+        'setupTransactionsList click event',
+        event.target,
+        txArticle,
+      )
+    },
+  },
+})
 
 async function getUserInfo() {
   let ks = wallets?.[appState.selectedWallet]?.keystore
@@ -831,16 +852,10 @@ async function main() {
       </div>
     </section>
   `)
-  mainAppGrid.insertAdjacentHTML('beforeend', html`
-    <section class="transactions">
-      <header>
-        <h5 class="lh-2">Transactions</h5>
-      </header>
-      <div>
-      <span class="flex flex-fill center">Coming soon</span>
-      </div>
-    </section>
-  `)
+
+  await transactionsList.render({
+    // transactions: appState.transactions,
+  })
 
   document.addEventListener('click', async event => {
     let {
@@ -1141,7 +1156,9 @@ async function main() {
           1000
         )
       }
+
       let txs = appState?.sentTransactions
+      let txsStartLen = Object.keys(txs).length
 
       Object.keys(txUpdates).forEach(
         txid => {
@@ -1151,7 +1168,9 @@ async function main() {
         }
       )
 
-      appState.sentTransactions = txs
+      if (txsStartLen > Object.keys(txs).length) {
+        appState.sentTransactions = txs
+      }
     },
   })
 }
