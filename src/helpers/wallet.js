@@ -926,6 +926,11 @@ export async function updateAllFunds(wallet, walletFunds) {
   )
 
   let balances = await dashsight.getInstantBalances(addrKeys)
+  let txs = await dashsight.getAllTxs(
+    addrKeys
+  )
+
+  console.log('getAllTxs', txs)
 
   if (balances.length >= 0) {
     walletFunds.balance = funds
@@ -1270,6 +1275,7 @@ export async function deriveTxWallet(
   let cachedAddrs = {}
   let privateKeys = {}
   let coreUtxos
+  let txs
   let tmpWallet
 
   if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
@@ -1296,6 +1302,9 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getMultiCoreUtxos(
       Object.keys(privateKeys)
     )
+    txs = await dashsight.getAllTxs(
+      Object.keys(privateKeys)
+    )
   } else {
     tmpWallet = await deriveWalletData(
       fromWallet.recoveryPhrase,
@@ -1315,7 +1324,12 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getCoreUtxos(
       tmpWallet.address
     )
+    txs = await dashsight.getAllTxs(
+      [tmpWallet.address]
+    )
   }
+
+  console.log('getAllTxs', txs)
 
   return {
     privateKeys,
