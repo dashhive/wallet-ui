@@ -17,6 +17,7 @@ import {
   batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
+  batchXkeyAddressGenerate,
   updateAllFunds,
   decryptKeystore,
   getStoredItems,
@@ -28,6 +29,7 @@ import {
   storedData,
   getUnusedChangeAddress,
   getAccountWallet,
+  dashsight,
 } from './helpers/wallet.js'
 
 import {
@@ -499,8 +501,8 @@ async function main() {
   })
 
   appDialogs.addContact = await addContactRig({
-    setupDialog, updateAllFunds,
-    appDialogs, appState, appTools, store,
+    setupDialog, updateAllFunds, batchXkeyAddressGenerate,
+    appDialogs, appState, appTools, store, dashsight,
     mainApp, wallet, userInfo, contactsList,
   })
 
@@ -742,7 +744,7 @@ async function main() {
 
   getStoreData(
     store.contacts,
-    res => {
+    async res => {
       if (res) {
         appState.contacts = res
 
@@ -751,7 +753,101 @@ async function main() {
           userInfo,
         })
 
-        console.log('contacts', res)
+        let allContactAddrs = {}
+
+        for await (let c of appState.contacts) {
+          let og = Object.values(c.outgoing)?.[0]
+          let xkey = og.xpub || og.xprv
+          if (xkey) {
+            let contactWallet = await deriveWalletData(
+              xkey,
+            )
+            let contactAddrs = await batchXkeyAddressGenerate(
+              contactWallet,
+              contactWallet.addressIndex,
+            )
+
+            contactAddrs.addresses.forEach(g => {
+              allContactAddrs[g.address] = {
+                alias: c.alias,
+                xkeyId: contactWallet.xkeyId,
+              }
+            })
+          }
+        }
+
+        dashsight.getAllTxs(
+          Object.keys(allContactAddrs)
+        ).then(txs => {
+          console.log('contacts txs', txs)
+          let contactTxs = {}
+          let contactTxsByAlias = {}
+
+          for (let tx of txs) {
+            let conAddr
+            for (let vin of tx.vin) {
+              let addr = vin.addr
+              conAddr = allContactAddrs[
+                addr
+              ]
+              if (conAddr) {
+                contactTxsByAlias[conAddr.alias] = {
+                  ...(contactTxsByAlias[conAddr.alias] || []),
+                  [tx.txid]: {
+                    addr,
+                    ...tx,
+                    ...conAddr,
+                  }
+                }
+                contactTxs[addr] = [
+                  ...(contactTxs[addr] || []),
+                  {
+                    ...tx,
+                    ...conAddr,
+                  }
+                ]
+
+                console.log(
+                  'contact tx',
+                  conAddr.alias, conAddr.xkeyId, tx,
+                )
+              }
+            }
+            for (let vout of tx.vout) {
+              let addr = vout.scriptPubKey.addresses[0]
+              conAddr = allContactAddrs[
+                addr
+              ]
+              if (conAddr) {
+                contactTxsByAlias[conAddr.alias] = {
+                  ...(contactTxsByAlias[conAddr.alias] || []),
+                  [tx.txid]: {
+                    addr,
+                    ...tx,
+                    ...conAddr,
+                  }
+                }
+                contactTxs[addr] = [
+                  ...(contactTxs[addr] || []),
+                  {
+                    ...tx,
+                    ...conAddr,
+                  }
+                ]
+
+                console.log(
+                  'contact tx',
+                  conAddr.alias, conAddr.xkeyId, tx,
+                )
+              }
+            }
+          }
+
+          console.log('contactTxsByAlias', contactTxsByAlias)
+          console.log('contactTxs', contactTxs)
+        })
+
+        console.log('contacts', res, allContactAddrs)
       }
     },
     res => async v => {
