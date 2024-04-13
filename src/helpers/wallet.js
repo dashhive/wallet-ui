@@ -17,6 +17,9 @@ import {
   STOREAGE_SALT, OIDC_CLAIMS,
   KS_CIPHER, KS_PRF, USAGE,
 } from './constants.js'
+import {
+  walletFunds,
+} from '../state/index.js'
 
 // @ts-ignore
 import blake from 'blakejs'
@@ -831,7 +834,7 @@ export async function initWallet(
 // }
 
 export async function updateAddrFunds(
-  wallet, walletFunds, insightRes,
+  wallet, insightRes,
 ) {
   let updatedAt = Date.now()
   let { addrStr, ...res } = insightRes
@@ -889,12 +892,12 @@ export async function updateAddrFunds(
       if ($addr.accountIndex >= storeAcctLen) {
         batchGenAccts(wallet.recoveryPhrase, $addr.accountIndex)
           .then(() => {
-            // updateAllFunds(wallet, walletFunds)
+            // updateAllFunds(wallet)
             batchGenAcctsAddrs(wallet)
               .then(accts => {
                 console.log('batchGenAcctsAddrs', { accts })
 
-                updateAllFunds(wallet, walletFunds)
+                updateAllFunds(wallet)
                   .then(funds => {
                     console.log('updateAllFunds then funds', funds)
                   })
@@ -910,7 +913,7 @@ export async function updateAddrFunds(
   return { balance: 0 }
 }
 
-export async function updateAllFunds(wallet, walletFunds) {
+export async function updateAllFunds(wallet) {
   let funds = 0
   let addrKeys = await store.addresses.keys()
 
@@ -943,7 +946,7 @@ export async function updateAllFunds(wallet, walletFunds) {
     if (addrIdx > -1) {
       addrKeys.splice(addrIdx, 1)
     }
-    funds += (await updateAddrFunds(wallet, walletFunds, insightRes))?.balance || 0
+    funds += (await updateAddrFunds(wallet, insightRes))?.balance || 0
     walletFunds.balance = funds
   }
 
@@ -1275,7 +1278,7 @@ export async function deriveTxWallet(
   let cachedAddrs = {}
   let privateKeys = {}
   let coreUtxos
-  let txs
+  let transactions
   let tmpWallet
 
   if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
@@ -1302,7 +1305,7 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getMultiCoreUtxos(
       Object.keys(privateKeys)
     )
-    txs = await dashsight.getAllTxs(
+    transactions = await dashsight.getAllTxs(
       Object.keys(privateKeys)
     )
   } else {
@@ -1324,17 +1327,18 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getCoreUtxos(
       tmpWallet.address
     )
-    txs = await dashsight.getAllTxs(
+    transactions = await dashsight.getAllTxs(
       [tmpWallet.address]
     )
   }
 
-  console.log('getAllTxs', txs)
+  console.log('getAllTxs', transactions)
 
   return {
     privateKeys,
     cachedAddrs,
     coreUtxos,
+    transactions,
   }
 }
 

@@ -3,23 +3,17 @@ import { lit as html } from './helpers/lit.js'
 import {
   generateWalletData,
   deriveWalletData,
-  envoy,
-  sortContactsByAlias,
   getStoreData,
   formDataEntries,
-  getAddressIndexFromUsage,
 } from './helpers/utils.js'
 
 import {
   DUFFS,
-  OIDC_CLAIMS,
-  // USAGE,
 } from './helpers/constants.js'
 
 import {
   findInStore,
   initDashSocket,
-  // batchAddressGenerate,
   batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
@@ -35,12 +29,21 @@ import {
   getUnusedChangeAddress,
   getAccountWallet,
 } from './helpers/wallet.js'
+
 import {
   localForageBaseCfg,
   importFromJson,
   exportWalletData,
   saveJsonToFile,
 } from './helpers/db.js'
+
+import {
+  appState,
+  appTools,
+  appDialogs,
+  userInfo,
+  walletFunds,
+} from './state/index.js'
 
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
@@ -74,80 +77,6 @@ import showErrorDialog from './rigs/show-error.js'
 let accounts
 let wallets
 let wallet
-
-let appState = envoy(
-  {
-    phrase: null,
-    encryptionPassword: null,
-    selectedWallet: '',
-    selectedAlias: '',
-    aliasInfo: {},
-    contacts: [],
-    sentTransactions: {},
-    account: {},
-  },
-  // async (state, oldState, prop) => {
-  //   if (prop === 'sentTransactions') {
-  //     console.log(prop, state[prop])
-  //   }
-  // },
-)
-let appTools = envoy(
-  {
-    storedData: {},
-  },
-)
-let userInfo = envoy(
-  {
-    ...OIDC_CLAIMS,
-  },
-  async (state, oldState, prop) => {
-    if (state[prop] !== oldState[prop]) {
-      let decryptedAlias = await appTools.storedData.decryptItem(
-        store.aliases,
-        appState.selectedAlias,
-      )
-      appTools.storedData.encryptItem(
-        store.aliases,
-        appState.selectedAlias,
-        {
-          ...decryptedAlias,
-          updatedAt: (new Date()).toISOString(),
-          info: {
-            ...decryptedAlias.info,
-            [prop]: state[prop],
-          },
-        },
-        false,
-      )
-    }
-  },
-)
-
-// rigs
-let appDialogs = envoy(
-  {
-    onboard: {},
-    phraseBackup: {},
-    phraseGenerate: {},
-    phraseImport: {},
-    walletEncrypt: {},
-    walletDecrypt: {},
-    addContact: {},
-    editContact: {},
-    editProfile: {},
-    scanContact: {},
-    sendOrReceive: {},
-    sendConfirm: {},
-    requestQr: {},
-  },
-)
-
-let walletFunds = envoy(
-  {
-    balance: 0
-  },
-)
 
 // element
 let bodyNav
@@ -571,7 +500,7 @@ async function main() {
 
   appDialogs.addContact = await addContactRig({
     setupDialog, updateAllFunds,
-    appDialogs, appState, appTools, store, walletFunds,
+    appDialogs, appState, appTools, store,
     mainApp, wallet, userInfo, contactsList,
   })
 
@@ -783,7 +712,7 @@ async function main() {
         .then(accts => {
           console.log('batchGenAcctsAddrs', { accts })
 
-          updateAllFunds(wallet, walletFunds)
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
@@ -1016,7 +945,7 @@ async function main() {
         )
 
         setTimeout(() =>
-          updateAllFunds(wallet, walletFunds)
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
@@ -1141,7 +1070,7 @@ async function main() {
         }
 
         setTimeout(() =>
-          updateAllFunds(wallet, walletFunds)
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
