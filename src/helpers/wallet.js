@@ -27,7 +27,7 @@ import blake from 'blakejs'
 import { keccak_256 } from '@noble/hashes/sha3'
 
 // @ts-ignore
-let dashsight = DashSight.create({
+export const dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
 });
@@ -561,14 +561,32 @@ export async function encryptKeystore(
 export async function generateAddressIterator(
   xkey,
   xkeyId,
+  addressIndex,
+) {
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  return {
+    address,
+    addressIndex,
+    usageIndex: xkey.index,
+    xkeyId,
+  }
+}
+
+export async function generateAndStoreAddressIterator(
+  xkey,
+  xkeyId,
   walletId,
   accountIndex,
   addressIndex,
   usageIndex = DashHd.RECEIVE,
 ) {
-  // let xkeyId = await DashHd.toId(xkey);
-  let key = await xkey.deriveAddress(addressIndex);
-  let address = await DashHd.toAddr(key.publicKey);
+  let { address } = await generateAddressIterator(
+    xkey,
+    xkeyId,
+    addressIndex,
+  )
 
   // console.log(
   //   'generateAddressIterator',
@@ -606,6 +624,30 @@ export async function generateAddressIterator(
   }
 }
 
+export async function batchXkeyAddressGenerate(
+  wallet,
+  addressIndex = 0,
+  batchSize = 20,
+) {
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAddressIterator(
+        wallet.xkey,
+        wallet.xkeyId,
+        addrIdx,
+      )
+    )
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+
 export async function batchAddressGenerate(
   wallet,
   accountIndex = 0,
@@ -628,7 +670,7 @@ export async function batchAddressGenerate(
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkey,
         xkeyId,
         wallet.id,
@@ -667,7 +709,7 @@ export async function batchAddressUsageGenerate(
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkeyReceive,
         xkeyId,
         wallet.id,
@@ -677,7 +719,7 @@ export async function batchAddressUsageGenerate(
       )
     )
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkeyChange,
         xkeyId,
         wallet.id,
@@ -1305,9 +1347,9 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getMultiCoreUtxos(
       Object.keys(privateKeys)
     )
-    transactions = await dashsight.getAllTxs(
-      Object.keys(privateKeys)
-    )
+    // transactions = await dashsight.getAllTxs(
+    //   Object.keys(privateKeys)
+    // )
   } else {
     tmpWallet = await deriveWalletData(
       fromWallet.recoveryPhrase,
@@ -1327,9 +1369,9 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getCoreUtxos(
       tmpWallet.address
     )
-    transactions = await dashsight.getAllTxs(
-      [tmpWallet.address]
-    )
+    // transactions = await dashsight.getAllTxs(
+    //   [tmpWallet.address]
+    // )
   }
 
   console.log('getAllTxs', transactions)
