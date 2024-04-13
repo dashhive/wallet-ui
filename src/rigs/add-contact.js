@@ -5,7 +5,7 @@ import {
   formDataEntries,
   setClipboard,
   openBlobSVG,
-  sortContactsByAlias,
+  // sortContactsByAlias,
   // sortContactsByName,
   parseAddressField,
   generateContactPairingURI,
@@ -28,7 +28,7 @@ export let addContactRig = (async function (globals) {
   let {
     setupDialog, appDialogs, appState, appTools, store,
     mainApp, wallet, userInfo, contactsList,
-    updateAllFunds, walletFunds,
+    updateAllFunds,
   } = globals;
 
   let aliases = {}
@@ -164,6 +164,8 @@ export let addContactRig = (async function (globals) {
       // )
     }
 
+    let newContact
+
     if (existingContacts?.length > 0) {
       console.warn(
         `You've already paired with this contact`,
@@ -175,53 +177,75 @@ export let addContactRig = (async function (globals) {
           }
         }
       )
-    }
 
-    let newContact = await appTools.storedData.encryptItem(
-      store.contacts,
-      state.wallet.xkeyId,
-      {
-        ...state.contact,
-        updatedAt: (new Date()).toISOString(),
-        info: {
-          ...OIDC_CLAIMS,
-          ...(state.contact.info || {}),
-          ...info,
-        },
-        outgoing,
-        alias: preferredAlias,
-        uri: value,
-      },
-      false,
-    )
+      // newContact = existingContacts[0]
 
-    getStoreData(
-      store.contacts,
-      res => {
-        if (res) {
-          appState.contacts = res
-
-          return contactsList.restate({
-            contacts: res,
-            userInfo,
-          })
-        }
-      },
-      res => async v => {
-        res.push(await appTools.storedData.decryptData(v))
+      let pairings = existingContacts.map(c => `@${c.alias}`)
+      if (pairings.length > 1) {
+        let lastPairing = pairings.pop()
+        pairings = `${pairings.join(', ')} & ${lastPairing}`
+      } else {
+        pairings = pairings[0]
       }
-    )
 
-    state.contact = newContact
+      // TODO: maybe prompt to show original pairing info
+      // in the scenario where your contact
+      // lost their contacts list
+      target.contactAddr.setCustomValidity(
+        `You've already paired with this contact (@${preferred_username}) as ${pairings}`,
+      )
+      target.reportValidity()
+      return;
+    } else {
+      newContact = await appTools.storedData.encryptItem(
+        store.contacts,
+        state.wallet.xkeyId,
+        {
+          ...state.contact,
+          updatedAt: (new Date()).toISOString(),
+          info: {
+            ...OIDC_CLAIMS,
+            ...(state.contact.info || {}),
+            ...info,
+          },
+          outgoing,
+          alias: preferredAlias,
+          uri: value,
+        },
+        false,
+      )
 
-    if (xkeyOrAddr) {
-      target.contactAddr.value = xkeyOrAddr
-    }
-    if (name) {
-      target.contactName.value = name
-    }
-    if (preferred_username) {
-      target.contactAlias.value = preferredAlias
+      getStoreData(
+        store.contacts,
+        res => {
+          if (res) {
+            appState.contacts = res
+
+            return contactsList.restate({
+              contacts: res,
+              userInfo,
+            })
+          }
+        },
+        res => async v => {
+          res.push(await appTools.storedData.decryptData(v))
+        }
+      )
+
+      state.contact = newContact
+
+      if (value) {
+        target.contactURI.value = value
+      }
+      if (xkeyOrAddr) {
+        target.contactAddr.value = xkeyOrAddr
+      }
+      if (name) {
+        target.contactName.value = name
+      }
+      if (preferred_username) {
+        target.contactAlias.value = preferredAlias
+      }
     }
 
     return
@@ -303,6 +327,12 @@ export let addContactRig = (async function (globals) {
                   </span>
                 </button>
               </div>
+              <input
+                id="contactURI"
+                type="hidden"
+                name="contactURI"
+                value=""
+              />
               <p>Paste a Dash Address, Xprv/Xpub, or Link</p>
 
               <div class="error"></div>
@@ -559,7 +589,7 @@ export let addContactRig = (async function (globals) {
                 sub: parsedAddr?.sub || '',
                 name: event.target.contactName.value,
               },
-              uri: event.target.contactAddr.value,
+              uri: event.target.contactURI.value,
               alias: currentAlias || event.target.contactAlias.value,
             },
             false,
@@ -574,7 +604,7 @@ export let addContactRig = (async function (globals) {
                 if (res) {
                   appState.contacts = res
 
-                  updateAllFunds(state.wallet, walletFunds)
+                  updateAllFunds(state.wallet)
                     .then(funds => {
                       // console.log('updateAllFunds then funds', funds)
                     })
