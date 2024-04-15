@@ -808,11 +808,18 @@ async function main() {
     </section>
   `)
 
+  let txs = await getTxs(
+    appState,
+    Object.values(appState.transactions || {})
+  )
+
   await transactionsList.render({
-    // transactions: appState.transactions,
+    userInfo,
+    contacts: appState.contacts,
+    transactions: Object.values(txs.byTx),
   })
 
-  let txs = await getTxs(appState)
+  txs = await getTxs(appState)
 
   console.log('main getTxs', txs)
 

@@ -1800,9 +1800,12 @@ export function processInOut({
 
 export async function getAddrsTransactions({
   appState, addrs, contactAddrs = {},
+  txs = [],
 }) {
   let storeAddrs = await loadStoreObject(store.addresses)
-  let txs = await dashsight.getAllTxs(addrs)
+  if (txs.length === 0) {
+    txs = await dashsight.getAllTxs(addrs)
+  }
   let byAddress = {}
   let byAlias = {}
   let byTx = {}
@@ -1891,8 +1894,8 @@ export async function getContactsByXkeyId(
   let contactsXkeys = {}
 
   for await (let c of appState.contacts) {
-    let og = Object.values(c.outgoing || [])?.[0]
-    let ic = Object.values(c.incoming || [])?.[0]
+    let og = Object.values(c.outgoing || {})?.[0]
+    let ic = Object.values(c.incoming || {})?.[0]
 
     if (og) {
       contactsXkeys[og.xkeyId] = {
@@ -1941,7 +1944,7 @@ export async function deriveContactAddrs(
   let addrs = {}
 
   for await (let c of appState.contacts) {
-    let og = Object.values(c[dir] || [])?.[0]
+    let og = Object.values(c[dir] || {})?.[0]
     let xkey = og?.xpub || og?.xprv
 
     if (xkey) {
@@ -1971,7 +1974,7 @@ export async function deriveContactAddrs(
   return addrs
 }
 
-export async function getTxs(appState) {
+export async function getTxs(appState, transactions = []) {
   let contactAddrs = await getContactsFromAddrs(appState)
   let contactOutAddrs = await deriveContactAddrs(appState)
 
@@ -1991,6 +1994,7 @@ export async function getTxs(appState) {
 
   let txs = await getAddrsTransactions({
     appState, addrs, contactAddrs,
+    txs: transactions,
   })
 
   // console.log('getTxs', {
