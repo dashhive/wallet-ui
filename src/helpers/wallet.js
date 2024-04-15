@@ -1891,16 +1891,20 @@ export async function getContactsByXkeyId(
   let contactsXkeys = {}
 
   for await (let c of appState.contacts) {
-    let og = Object.values(c.outgoing)?.[0]
-    let ic = Object.values(c.incoming)?.[0]
+    let og = Object.values(c.outgoing || [])?.[0]
+    let ic = Object.values(c.incoming || [])?.[0]
 
-    contactsXkeys[og.xkeyId] = {
-      ...c,
-      dir: 'outgoing',
+    if (og) {
+      contactsXkeys[og.xkeyId] = {
+        ...c,
+        dir: 'outgoing',
+      }
     }
-    contactsXkeys[ic.xkeyId] = {
-      ...c,
-      dir: 'incoming',
+    if (ic) {
+      contactsXkeys[ic.xkeyId] = {
+        ...c,
+        dir: 'incoming',
+      }
     }
   }
 
@@ -1937,8 +1941,8 @@ export async function deriveContactAddrs(
   let addrs = {}
 
   for await (let c of appState.contacts) {
-    let og = Object.values(c[dir])?.[0]
-    let xkey = og.xpub || og.xprv
+    let og = Object.values(c[dir] || [])?.[0]
+    let xkey = og?.xpub || og?.xprv
 
     if (xkey) {
       let contactWallet = await deriveWalletData(
