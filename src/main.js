@@ -4,6 +4,7 @@ import {
   generateWalletData,
   deriveWalletData,
   getStoreData,
+  loadStoreObject,
   formDataEntries,
 } from './helpers/utils.js'
 
@@ -30,6 +31,9 @@ import {
   getUnusedChangeAddress,
   getAccountWallet,
   dashsight,
+  getAddrsTransactions,
+  getTransactionsByContactAlias,
+  getTxs,
 } from './helpers/wallet.js'
 
 import {
@@ -308,9 +312,12 @@ let contactsList = await setupContactsList(
 let transactionsList = await setupTransactionsList(mainAppGrid, {
   events: {
     handleClick: state => async event => {
-      event.preventDefault()
-
       let txArticle = event.target?.closest('a, article')
+
+      if (!txArticle) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
 
       console.log(
         'setupTransactionsList click event',
@@ -465,7 +472,7 @@ async function main() {
   })
 
   appDialogs.walletEncrypt = await walletEncryptRig({
-    setupDialog, appDialogs, appState, mainApp,
+    setupDialog, appDialogs, appState, appTools, mainApp,
     wallet, wallets, bodyNav, dashBalance,
   })
 
@@ -502,6 +509,7 @@ async function main() {
 
   appDialogs.addContact = await addContactRig({
     setupDialog, updateAllFunds, batchXkeyAddressGenerate,
+    getAddrsTransactions,
     appDialogs, appState, appTools, store, dashsight,
     mainApp, wallet, userInfo, contactsList,
   })
@@ -599,7 +607,7 @@ async function main() {
     ...walletFunds._listeners,
     (state, oldState) => {
       if (state.balance !== oldState.balance) {
-        dashBalance?.restate({
+        appTools.balance?.restate({
           wallet,
           walletFunds: {
             balance: state.balance
@@ -740,119 +748,23 @@ async function main() {
 
   await getUserInfo()
 
-  // console.log('appTools.storedData', appTools.storedData)
+  // contactsList.render({
+  //   contacts: appState.contacts,
+  //   userInfo,
+  // })
 
-  getStoreData(
+  appState.transactions = await loadStoreObject(
+    store.transactions,
+  )
+
+  // console.log('appState.transactions', appState.transactions)
+
+  appState.contacts = await getStoreData(
     store.contacts,
-    async res => {
-      if (res) {
-        appState.contacts = res
-
-        contactsList.render({
-          contacts: res,
-          userInfo,
-        })
-
-        let allContactAddrs = {}
-
-        for await (let c of appState.contacts) {
-          let og = Object.values(c.outgoing)?.[0]
-          let xkey = og.xpub || og.xprv
-          if (xkey) {
-            let contactWallet = await deriveWalletData(
-              xkey,
-            )
-            let contactAddrs = await batchXkeyAddressGenerate(
-              contactWallet,
-              contactWallet.addressIndex,
-            )
-
-            contactAddrs.addresses.forEach(g => {
-              allContactAddrs[g.address] = {
-                alias: c.alias,
-                xkeyId: contactWallet.xkeyId,
-              }
-            })
-          }
-        }
-
-        dashsight.getAllTxs(
-          Object.keys(allContactAddrs)
-        ).then(txs => {
-          console.log('contacts txs', txs)
-          let contactTxs = {}
-          let contactTxsByAlias = {}
-
-          for (let tx of txs) {
-            let conAddr
-            for (let vin of tx.vin) {
-              let addr = vin.addr
-              conAddr = allContactAddrs[
-                addr
-              ]
-              if (conAddr) {
-                contactTxsByAlias[conAddr.alias] = {
-                  ...(contactTxsByAlias[conAddr.alias] || []),
-                  [tx.txid]: {
-                    addr,
-                    ...tx,
-                    ...conAddr,
-                  }
-                }
-                contactTxs[addr] = [
-                  ...(contactTxs[addr] || []),
-                  {
-                    ...tx,
-                    ...conAddr,
-                  }
-                ]
-
-                console.log(
-                  'contact tx',
-                  conAddr.alias, conAddr.xkeyId, tx,
-                )
-              }
-            }
-            for (let vout of tx.vout) {
-              let addr = vout.scriptPubKey.addresses[0]
-              conAddr = allContactAddrs[
-                addr
-              ]
-              if (conAddr) {
-                contactTxsByAlias[conAddr.alias] = {
-                  ...(contactTxsByAlias[conAddr.alias] || []),
-                  [tx.txid]: {
-                    addr,
-                    ...tx,
-                    ...conAddr,
-                  }
-                }
-                contactTxs[addr] = [
-                  ...(contactTxs[addr] || []),
-                  {
-                    ...tx,
-                    ...conAddr,
-                  }
-                ]
-
-                console.log(
-                  'contact tx',
-                  conAddr.alias, conAddr.xkeyId, tx,
-                )
-              }
-            }
-          }
-
-          console.log('contactTxsByAlias', contactTxsByAlias)
-          console.log('contactTxs', contactTxs)
-        })
-
-        console.log('contacts', res, allContactAddrs)
-      }
-    },
+    getTransactionsByContactAlias(appState),
     res => async v => {
       res.push(await appTools.storedData?.decryptData?.(v) || v)
-    }
+    },
   )
 
   await contactsList.render({
@@ -860,6 +772,24 @@ async function main() {
     contacts: appState.contacts,
   })
   sendRequestBtn.render()
+
+  mainApp.insertAdjacentHTML('afterbegin', html`
+    <header></header>
+  `)
+
+  import('./components/balance.js')
+    .then(async ({ setupBalance }) => {
+      appTools.balance = await setupBalance(
+        mainApp.querySelector('& > header'),
+        {
+          wallet,
+        }
+      )
+      appTools.balance.render({
+        wallet,
+        walletFunds,
+      })
+    })
 
   integrationsSection.insertAdjacentHTML('beforeend', html`
     <section>
@@ -880,6 +810,16 @@ async function main() {
 
   await transactionsList.render({
     // transactions: appState.transactions,
+  })
+
+  let txs = await getTxs(appState)
+
+  console.log('main getTxs', txs)
+
+  transactionsList.render({
+    userInfo,
+    contacts: appState.contacts,
+    transactions: Object.values(txs.byTx),
   })
 
   document.addEventListener('click', async event => {
@@ -1001,24 +941,6 @@ async function main() {
     }
   })
 
-  mainApp.insertAdjacentHTML('afterbegin', html`
-    <header></header>
-  `)
-
-  import('./components/balance.js')
-    .then(async ({ setupBalance }) => {
-      dashBalance = await setupBalance(
-        mainApp.querySelector('& > header'),
-        {
-          wallet,
-        }
-      )
-      dashBalance.render({
-        wallet,
-        walletFunds,
-      })
-    })
-
   let storedAddrs = (await store.addresses.keys()) || []
 
   initDashSocket({
@@ -1040,7 +962,7 @@ async function main() {
           appState?.sentTransactions?.[data.txid]
         )
 
-        setTimeout(() =>
+        setTimeout(() => {
           updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
@@ -1052,7 +974,18 @@ async function main() {
                 title: 'Update funds',
                 msg: err,
               })
-            }),
+            })
+
+            getTxs(appState).then(txs => {
+              console.log('socket main getTxs', txs)
+
+              transactionsList.render({
+                userInfo,
+                contacts: appState.contacts,
+                transactions: Object.values(txs.byTx),
+              })
+            })
+          },
           1000
         )
       }
@@ -1165,7 +1098,7 @@ async function main() {
           appDialogs.requestQr.close()
         }
 
-        setTimeout(() =>
+        setTimeout(() => {
           updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
@@ -1177,7 +1110,18 @@ async function main() {
                 title: 'Update funds',
                 msg: err,
               })
-            }),
+            })
+
+            getTxs(appState).then(txs => {
+              console.log('socket main getTxs', txs)
+
+              transactionsList.render({
+                userInfo,
+                contacts: appState.contacts,
+                transactions: Object.values(txs.byTx),
+              })
+            })
+          },
           1000
         )
       }

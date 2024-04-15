@@ -27,7 +27,7 @@ export let addContactRig = (async function (globals) {
 
   let {
     setupDialog, appDialogs, appState, appTools, store,
-    mainApp, wallet, userInfo, contactsList,
+    mainApp, wallet, userInfo, contactsList, getAddrsTransactions,
     updateAllFunds, batchXkeyAddressGenerate, dashsight,
   } = globals;
 
@@ -200,22 +200,31 @@ export let addContactRig = (async function (globals) {
       return;
     } else {
       if (Object.keys(outgoing).length > 0 && contactWallet) {
-        let contactAddrs = await batchXkeyAddressGenerate(
+        let xkeyAddrs = await batchXkeyAddressGenerate(
           contactWallet,
           contactWallet.addressIndex,
         )
-        let addresses = contactAddrs.addresses.map(g => g.address)
+        let contactAddrs = {}
+        let addresses = xkeyAddrs.addresses.map(g => {
+          contactAddrs[g.address] = {
+            alias: preferredAlias,
+            xkeyId: contactWallet.xkeyId,
+          }
+          return g.address
+        })
 
-        let txs = await dashsight.getAllTxs(
-          addresses
-        )
+        let txs = await getAddrsTransactions({
+          appState,
+          addrs: addresses,
+          contactAddrs,
+        })
 
         // outgoing[contactWallet.xkeyId] = {
         //   ...(outgoing[contactWallet.xkeyId] || {}),
-        //   addressIndex: contactAddrs.finalAddressIndex,
+        //   addressIndex: xkeyAddrs.finalAddressIndex,
         // }
 
-        console.log('contactAddrs', {addresses, txs})
+        // console.log('xkeyAddrs', {addresses, txs})
       }
 
       newContact = await appTools.storedData.encryptItem(

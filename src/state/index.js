@@ -35,7 +35,7 @@ export const appState = envoy(
     aliasInfo: {},
     contacts: [],
     sentTransactions: {},
-    transactions: [],
+    transactions: {},
     account: {},
   },
   // async (state, oldState, prop) => {
@@ -48,6 +48,7 @@ export const appState = envoy(
 export const appTools = envoy(
   {
     storedData: {},
+    balance: {},
   },
 )
 

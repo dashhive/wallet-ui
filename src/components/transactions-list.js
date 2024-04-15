@@ -2,11 +2,9 @@ import { lit as html } from '../helpers/lit.js'
 import {
   envoy,
   restate,
-  // sortContactsByAlias,
-  // filterPairedContacts,
-  // filterUnpairedContacts,
-  // timeago,
-  // getAvatar,
+  sortTransactionsByTime,
+  timeago,
+  getAvatar,
 } from '../helpers/utils.js'
 
 let _handlers = []
@@ -36,16 +34,20 @@ const initialState = {
       return html`<span class="flex flex-fill center">No Transactions found</span>`
     }
 
+    let contact
+
     return (
       await Promise.all(
         state.transactions
-          // .filter(
-          //   state.showUnpaired
-          //     ? filterUnpairedContacts
-          //     : filterPairedContacts
-          // )
-          // .sort(sortContactsByAlias)
-          .map(async c => await state.item(c)),
+          .sort(sortTransactionsByTime)
+          .map(async tx => {
+            if (state.contacts?.length > 0) {
+              contact = state.contacts.find(
+                c => c.alias === tx.alias
+              )
+            }
+            return await state.item(tx, contact)
+          }),
       )
     ).join('')
   },
@@ -56,84 +58,66 @@ const initialState = {
       ${await state.list(state)}
     </div>
   `,
-  item: async c => {
-    // if ('string' === typeof c) {
+  item: async (tx, cnt) => {
+    if ('string' === typeof tx) {
       return html`
         <article>
           <address>
-            <h4><!-- Encrypted --> Transaction</h4>
+            <h4>Transaction</h4>
           </address>
         </article>
       `
-    // }
+    }
 
-    // let outgoing = Object.values(c?.outgoing || {})
-    // let paired = outgoing.length > 0
-    // let out = outgoing?.[0]
-    // let created = c.createdAt
-    //   ? timeago(Date.now() - (new Date(c.createdAt)).getTime())
-    //   : ''
-    // let user = c.alias || c.info?.preferred_username
-    // let finishPairing = !paired
-    //   ? 'Finish pairing with contact'
-    //   : ''
-    // let enterContactInfo = !paired || !user
-    //   ? `Enter contact information for`
-    //   : ''
-    // let name = c.info?.name
+    let time
+    let txDate = new Date(tx.time * 1000)
+    let user = cnt?.alias || cnt?.info?.preferred_username || tx?.alias || ''
+    let name = cnt?.info?.name
+    let addr = tx?.vout?.[0]?.scriptPubKey?.addresses?.[0]
 
-    // if (
-    //   !name &&
-    //   !user &&
-    //   !out?.xkeyId &&
-    //   out?.address
-    // ) {
-    //   name = out?.address
-    // } else if (!name) {
-    //   name = created
-    // }
+    if (tx?.dir !== 'sent') {
+      addr = tx?.vin?.[0]?.addr
+    }
+    if (tx.time) {
+      time = timeago(Date.now() - txDate.getTime())
+    }
 
-    // let inId = Object.keys(c?.incoming || {})?.[0]?.split('/')[1]
+    if (
+      !name && user
+    ) {
+      name = `@${user}`
+    } else if (
+      !name && !user
+    ) {
+      name = html`<span title="${addr}">${addr.substring(0,3)}...${addr.substring(addr.length - 3)}</span>`
+    }
 
-    // let atUser = user
-    //   ? `@${user}`
-    //   : ''
-    // let itemAlias = user
-    //   ? `${atUser}${ !paired ? ' - ' : '' }${finishPairing}`
-    //   : finishPairing || enterContactInfo
-    // let itemName = name
-    //   ? `${name}`
-    //   : ''
-    // let itemSub = inId
-    //   ? `href="/#!/contact/${atUser || inId}" data-id="${inId}"`
-    //   : ''
-    // let itemCtrls = paired
-    //   ? html`<aside class="inline row">
-    //     <button class="pill rounded">
-    //       <svg width="24" height="24" viewBox="0 0 24 24">
-    //         <use xlink:href="#icon-arrow-circle-up"></use>
-    //       </svg>
-    //     </button>
-    //     <button class="pill rounded">
-    //       <svg width="24" height="24" viewBox="0 0 24 24">
-    //         <use xlink:href="#icon-arrow-circle-down"></use>
-    //       </svg>
-    //     </button>
-    //   </aside>`
-    //   : ''
+    let itemAmount = tx.receivedAmount || tx.valueOut || 0
 
-    // itemCtrls = '' // temp override
+    let itemCtrls = html`<aside class="inline row dang">
+      -${itemAmount}
+    </aside>`
+    let itemTitle = `Sent on`
+    let itemDir = `To <strong>${name}</strong>`
 
-    // return html`
-    //   <a ${itemSub}>
-    //     ${await getAvatar(c)}
-    //     <address>
-    //       <h4>${itemAlias}</h4>
-    //       <h5>${itemName}</h5>
-    //     </address>
-    //     ${itemCtrls}
-    //   </a>
-    // `
+    if (tx?.dir !== 'sent') {
+      itemTitle = `Received on`
+      itemDir = `From <strong>${name}</strong>`
+      itemCtrls = html`<aside class="inline row succ">
+        +${itemAmount}
+      </aside>`
+    }
+
+    return html`
+      <a href="https://insight.dash.org/insight/tx/${tx?.txid}" target="_blank" rel="noreferrer" title="${itemTitle} ${txDate.toLocaleString()}">
+        ${await getAvatar(cnt)}
+        <address>
+          <h4>${itemDir}</h4>
+          <h5>${time}</h5>
+        </address>
+        ${itemCtrls}
+      </a>
+    `
   },
   footer: async state => html``,
   slugs: {
