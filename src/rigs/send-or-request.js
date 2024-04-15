@@ -518,8 +518,8 @@ export let sendOrReceiveRig = (async function (globals) {
             }
 
             let leftoverBalance = walletFunds.balance - amount
-            // let fullTransfer = leftoverBalance <= 0.0010_0200
-            let fullTransfer = leftoverBalance <= 0.0001_0200
+            let fullTransfer = leftoverBalance <= 0.0010_0200
+            // let fullTransfer = leftoverBalance <= 0.0001_0200
 
             if (
               amount > 0 &&
