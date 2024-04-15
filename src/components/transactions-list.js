@@ -75,7 +75,7 @@ const initialState = {
     let name = cnt?.info?.name
     let addr = tx?.vout?.[0]?.scriptPubKey?.addresses?.[0]
 
-    if (tx?.dir !== 'sent') {
+    if (!['sent', 'outgoing'].includes(tx?.dir)) {
       addr = tx?.vin?.[0]?.addr
     }
     if (tx.time) {
@@ -100,7 +100,7 @@ const initialState = {
     let itemTitle = `Sent on`
     let itemDir = `To <strong>${name}</strong>`
 
-    if (tx?.dir !== 'sent') {
+    if (!['sent', 'outgoing'].includes(tx?.dir)) {
       itemTitle = `Received on`
       itemDir = `From <strong>${name}</strong>`
       itemCtrls = html`<aside class="inline row succ">
