@@ -3,26 +3,22 @@ import { lit as html } from './helpers/lit.js'
 import {
   generateWalletData,
   deriveWalletData,
-  envoy,
-  sortContactsByAlias,
   getStoreData,
+  loadStoreObject,
   formDataEntries,
-  getAddressIndexFromUsage,
 } from './helpers/utils.js'
 
 import {
   DUFFS,
-  OIDC_CLAIMS,
-  // USAGE,
 } from './helpers/constants.js'
 
 import {
   findInStore,
   initDashSocket,
-  // batchAddressGenerate,
   batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
+  batchXkeyAddressGenerate,
   updateAllFunds,
   decryptKeystore,
   getStoredItems,
@@ -34,7 +30,12 @@ import {
   storedData,
   getUnusedChangeAddress,
   getAccountWallet,
+  dashsight,
+  getAddrsTransactions,
+  getTransactionsByContactAlias,
+  getTxs,
 } from './helpers/wallet.js'
+
 import {
   localForageBaseCfg,
   importFromJson,
@@ -42,10 +43,19 @@ import {
   saveJsonToFile,
 } from './helpers/db.js'
 
+import {
+  appState,
+  appTools,
+  appDialogs,
+  userInfo,
+  walletFunds,
+} from './state/index.js'
+
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
 import setupSendRequestBtns from './components/send-request-btns.js'
 import setupContactsList from './components/contacts-list.js'
+import setupTransactionsList from './components/transactions-list.js'
 import setupSVGSprite from './components/svg-sprite.js'
 import setupDialog from './components/dialog.js'
 
@@ -73,75 +83,6 @@ import showErrorDialog from './rigs/show-error.js'
 let accounts
 let wallets
 let wallet
-
-let appState = envoy(
-  {
-    phrase: null,
-    encryptionPassword: null,
-    selectedWallet: '',
-    selectedAlias: '',
-    aliasInfo: {},
-    contacts: [],
-    sentTransactions: {},
-    account: {},
-  },
-)
-let appTools = envoy(
-  {
-    storedData: {},
-  },
-)
-let userInfo = envoy(
-  {
-    ...OIDC_CLAIMS,
-  },
-  async (state, oldState, prop) => {
-    if (state[prop] !== oldState[prop]) {
-      let decryptedAlias = await appTools.storedData.decryptItem(
-        store.aliases,
-        appState.selectedAlias,
-      )
-      appTools.storedData.encryptItem(
-        store.aliases,
-        appState.selectedAlias,
-        {
-          ...decryptedAlias,
-          updatedAt: (new Date()).toISOString(),
-          info: {
-            ...decryptedAlias.info,
-            [prop]: state[prop],
-          },
-        },
-        false,
-      )
-    }
-  }
-)
-
-// rigs
-let appDialogs = envoy(
-  {
-    onboard: {},
-    phraseBackup: {},
-    phraseGenerate: {},
-    phraseImport: {},
-    walletEncrypt: {},
-    walletDecrypt: {},
-    addContact: {},
-    editContact: {},
-    editProfile: {},
-    scanContact: {},
-    sendOrReceive: {},
-    sendConfirm: {},
-    requestQr: {},
-  },
-)
-
-let walletFunds = envoy(
-  {
-    balance: 0
-  },
-)
 
 // element
 let bodyNav
@@ -368,6 +309,24 @@ let contactsList = await setupContactsList(
     },
   }
 )
+let transactionsList = await setupTransactionsList(mainAppGrid, {
+  events: {
+    handleClick: state => async event => {
+      let txArticle = event.target?.closest('a, article')
+
+      if (!txArticle) {
+        event.preventDefault()
+        event.stopPropagation()
+      }
+
+      console.log(
+        'setupTransactionsList click event',
+        event.target,
+        txArticle,
+      )
+    },
+  },
+})
 
 async function getUserInfo() {
   let ks = wallets?.[appState.selectedWallet]?.keystore
@@ -513,7 +472,7 @@ async function main() {
   })
 
   appDialogs.walletEncrypt = await walletEncryptRig({
-    setupDialog, appDialogs, appState, mainApp,
+    setupDialog, appDialogs, appState, appTools, mainApp,
     wallet, wallets, bodyNav, dashBalance,
   })
 
@@ -549,8 +508,9 @@ async function main() {
   })
 
   appDialogs.addContact = await addContactRig({
-    setupDialog, updateAllFunds,
-    appDialogs, appState, appTools, store, walletFunds,
+    setupDialog, updateAllFunds, batchXkeyAddressGenerate,
+    getAddrsTransactions,
+    appDialogs, appState, appTools, store, dashsight,
     mainApp, wallet, userInfo, contactsList,
   })
 
@@ -647,7 +607,7 @@ async function main() {
     ...walletFunds._listeners,
     (state, oldState) => {
       if (state.balance !== oldState.balance) {
-        dashBalance?.restate({
+        appTools.balance?.restate({
           wallet,
           walletFunds: {
             balance: state.balance
@@ -762,7 +722,7 @@ async function main() {
         .then(accts => {
           console.log('batchGenAcctsAddrs', { accts })
 
-          updateAllFunds(wallet, walletFunds)
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
@@ -788,25 +748,23 @@ async function main() {
 
   await getUserInfo()
 
-  // console.log('appTools.storedData', appTools.storedData)
+  // contactsList.render({
+  //   contacts: appState.contacts,
+  //   userInfo,
+  // })
 
-  getStoreData(
+  appState.transactions = await loadStoreObject(
+    store.transactions,
+  )
+
+  // console.log('appState.transactions', appState.transactions)
+
+  appState.contacts = await getStoreData(
     store.contacts,
-    res => {
-      if (res) {
-        appState.contacts = res
-
-        contactsList.render({
-          contacts: res,
-          userInfo,
-        })
-
-        console.log('contacts', res)
-      }
-    },
+    getTransactionsByContactAlias(appState),
     res => async v => {
       res.push(await appTools.storedData?.decryptData?.(v) || v)
-    }
+    },
   )
 
   await contactsList.render({
@@ -814,6 +772,24 @@ async function main() {
     contacts: appState.contacts,
   })
   sendRequestBtn.render()
+
+  mainApp.insertAdjacentHTML('afterbegin', html`
+    <header></header>
+  `)
+
+  import('./components/balance.js')
+    .then(async ({ setupBalance }) => {
+      appTools.balance = await setupBalance(
+        mainApp.querySelector('& > header'),
+        {
+          wallet,
+        }
+      )
+      appTools.balance.render({
+        wallet,
+        walletFunds,
+      })
+    })
 
   integrationsSection.insertAdjacentHTML('beforeend', html`
     <section>
@@ -831,16 +807,27 @@ async function main() {
       </div>
     </section>
   `)
-  mainAppGrid.insertAdjacentHTML('beforeend', html`
-    <section class="transactions">
-      <header>
-        <h5 class="lh-2">Transactions</h5>
-      </header>
-      <div>
-      <span class="flex flex-fill center">Coming soon</span>
-      </div>
-    </section>
-  `)
+
+  let txs = await getTxs(
+    appState,
+    Object.values(appState.transactions || {})
+  )
+
+  await transactionsList.render({
+    userInfo,
+    contacts: appState.contacts,
+    transactions: Object.values(txs.byTx),
+  })
+
+  txs = await getTxs(appState)
+
+  console.log('main getTxs', txs)
+
+  transactionsList.render({
+    userInfo,
+    contacts: appState.contacts,
+    transactions: Object.values(txs.byTx),
+  })
 
   document.addEventListener('click', async event => {
     let {
@@ -961,24 +948,6 @@ async function main() {
     }
   })
 
-  mainApp.insertAdjacentHTML('afterbegin', html`
-    <header></header>
-  `)
-
-  import('./components/balance.js')
-    .then(async ({ setupBalance }) => {
-      dashBalance = await setupBalance(
-        mainApp.querySelector('& > header'),
-        {
-          wallet,
-        }
-      )
-      dashBalance.render({
-        wallet,
-        walletFunds,
-      })
-    })
-
   let storedAddrs = (await store.addresses.keys()) || []
 
   initDashSocket({
@@ -1000,8 +969,8 @@ async function main() {
           appState?.sentTransactions?.[data.txid]
         )
 
-        setTimeout(() =>
-          updateAllFunds(wallet, walletFunds)
+        setTimeout(() => {
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
@@ -1012,7 +981,18 @@ async function main() {
                 title: 'Update funds',
                 msg: err,
               })
-            }),
+            })
+
+            getTxs(appState).then(txs => {
+              console.log('socket main getTxs', txs)
+
+              transactionsList.render({
+                userInfo,
+                contacts: appState.contacts,
+                transactions: Object.values(txs.byTx),
+              })
+            })
+          },
           1000
         )
       }
@@ -1125,8 +1105,8 @@ async function main() {
           appDialogs.requestQr.close()
         }
 
-        setTimeout(() =>
-          updateAllFunds(wallet, walletFunds)
+        setTimeout(() => {
+          updateAllFunds(wallet)
             .then(funds => {
               console.log('updateAllFunds then funds', funds)
             })
@@ -1137,11 +1117,24 @@ async function main() {
                 title: 'Update funds',
                 msg: err,
               })
-            }),
+            })
+
+            getTxs(appState).then(txs => {
+              console.log('socket main getTxs', txs)
+
+              transactionsList.render({
+                userInfo,
+                contacts: appState.contacts,
+                transactions: Object.values(txs.byTx),
+              })
+            })
+          },
           1000
         )
       }
+
       let txs = appState?.sentTransactions
+      let txsStartLen = Object.keys(txs).length
 
       Object.keys(txUpdates).forEach(
         txid => {
@@ -1151,7 +1144,9 @@ async function main() {
         }
       )
 
-      appState.sentTransactions = txs
+      if (txsStartLen > Object.keys(txs).length) {
+        appState.sentTransactions = txs
+      }
     },
   })
 }

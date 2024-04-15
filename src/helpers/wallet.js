@@ -12,11 +12,15 @@ import {
 import {
   deriveWalletData,
   getAddressIndexFromUsage,
+  loadStoreObject,
 } from './utils.js'
 import {
   STOREAGE_SALT, OIDC_CLAIMS,
   KS_CIPHER, KS_PRF, USAGE,
 } from './constants.js'
+import {
+  walletFunds,
+} from '../state/index.js'
 
 // @ts-ignore
 import blake from 'blakejs'
@@ -24,7 +28,7 @@ import blake from 'blakejs'
 import { keccak_256 } from '@noble/hashes/sha3'
 
 // @ts-ignore
-let dashsight = DashSight.create({
+export const dashsight = DashSight.create({
   baseUrl: 'https://insight.dash.org',
   // baseUrl: 'https://dashsight.dashincubator.dev',
 });
@@ -87,11 +91,11 @@ export async function getFilteredStoreLength(targStore, query = {}) {
   let storeLen = await targStore.length()
   let qs = Object.entries(query)
 
-  console.log('getFilteredStoreLength qs', {
-    storeName: targStore?._config?.storeName,
-    storeLen,
-    qs,
-  })
+  // console.log('getFilteredStoreLength qs', {
+  //   storeName: targStore?._config?.storeName,
+  //   storeLen,
+  //   qs,
+  // })
 
   if (storeLen === 0) {
     return 0
@@ -558,14 +562,32 @@ export async function encryptKeystore(
 export async function generateAddressIterator(
   xkey,
   xkeyId,
+  addressIndex,
+) {
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  return {
+    address,
+    addressIndex,
+    usageIndex: xkey.index,
+    xkeyId,
+  }
+}
+
+export async function generateAndStoreAddressIterator(
+  xkey,
+  xkeyId,
   walletId,
   accountIndex,
   addressIndex,
   usageIndex = DashHd.RECEIVE,
 ) {
-  // let xkeyId = await DashHd.toId(xkey);
-  let key = await xkey.deriveAddress(addressIndex);
-  let address = await DashHd.toAddr(key.publicKey);
+  let { address } = await generateAddressIterator(
+    xkey,
+    xkeyId,
+    addressIndex,
+  )
 
   // console.log(
   //   'generateAddressIterator',
@@ -603,6 +625,30 @@ export async function generateAddressIterator(
   }
 }
 
+export async function batchXkeyAddressGenerate(
+  wallet,
+  addressIndex = 0,
+  batchSize = 20,
+) {
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAddressIterator(
+        wallet.xkey,
+        wallet.xkeyId,
+        addrIdx,
+      )
+    )
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+
 export async function batchAddressGenerate(
   wallet,
   accountIndex = 0,
@@ -625,7 +671,7 @@ export async function batchAddressGenerate(
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkey,
         xkeyId,
         wallet.id,
@@ -664,7 +710,7 @@ export async function batchAddressUsageGenerate(
 
   for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkeyReceive,
         xkeyId,
         wallet.id,
@@ -674,7 +720,7 @@ export async function batchAddressUsageGenerate(
       )
     )
     addresses.push(
-      await generateAddressIterator(
+      await generateAndStoreAddressIterator(
         xkeyChange,
         xkeyId,
         wallet.id,
@@ -831,7 +877,7 @@ export async function initWallet(
 // }
 
 export async function updateAddrFunds(
-  wallet, walletFunds, insightRes,
+  wallet, insightRes,
 ) {
   let updatedAt = Date.now()
   let { addrStr, ...res } = insightRes
@@ -889,12 +935,12 @@ export async function updateAddrFunds(
       if ($addr.accountIndex >= storeAcctLen) {
         batchGenAccts(wallet.recoveryPhrase, $addr.accountIndex)
           .then(() => {
-            // updateAllFunds(wallet, walletFunds)
+            // updateAllFunds(wallet)
             batchGenAcctsAddrs(wallet)
               .then(accts => {
                 console.log('batchGenAcctsAddrs', { accts })
 
-                updateAllFunds(wallet, walletFunds)
+                updateAllFunds(wallet)
                   .then(funds => {
                     console.log('updateAllFunds then funds', funds)
                   })
@@ -910,7 +956,7 @@ export async function updateAddrFunds(
   return { balance: 0 }
 }
 
-export async function updateAllFunds(wallet, walletFunds) {
+export async function updateAllFunds(wallet) {
   let funds = 0
   let addrKeys = await store.addresses.keys()
 
@@ -926,6 +972,11 @@ export async function updateAllFunds(wallet, walletFunds) {
   )
 
   let balances = await dashsight.getInstantBalances(addrKeys)
+  // let txs = await dashsight.getAllTxs(
+  //   addrKeys
+  // )
+
+  // console.log('getAllTxs', txs)
 
   if (balances.length >= 0) {
     walletFunds.balance = funds
@@ -938,7 +989,7 @@ export async function updateAllFunds(wallet, walletFunds) {
     if (addrIdx > -1) {
       addrKeys.splice(addrIdx, 1)
     }
-    funds += (await updateAddrFunds(wallet, walletFunds, insightRes))?.balance || 0
+    funds += (await updateAddrFunds(wallet, insightRes))?.balance || 0
     walletFunds.balance = funds
   }
 
@@ -1062,7 +1113,7 @@ export async function batchGenAcctAddrs(
   usageIndex = -1,
   batchSize = 20,
 ) {
-  console.log('batchGenAcctAddrs account', account, usageIndex)
+  // console.log('batchGenAcctAddrs account', account, usageIndex)
 
   let filterQuery = {
     accountIndex: account.accountIndex,
@@ -1077,7 +1128,7 @@ export async function batchGenAcctAddrs(
     filterQuery,
   )
 
-  console.log('getFilteredStoreLength res', acctAddrsLen)
+  // console.log('getFilteredStoreLength res', acctAddrsLen)
 
   let addrUsageIdx = account.usage?.[usageIndex] || 0
   let addrIdx = addrUsageIdx
@@ -1270,6 +1321,7 @@ export async function deriveTxWallet(
   let cachedAddrs = {}
   let privateKeys = {}
   let coreUtxos
+  // let transactions
   let tmpWallet
 
   if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
@@ -1296,6 +1348,9 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getMultiCoreUtxos(
       Object.keys(privateKeys)
     )
+    // transactions = await dashsight.getAllTxs(
+    //   Object.keys(privateKeys)
+    // )
   } else {
     tmpWallet = await deriveWalletData(
       fromWallet.recoveryPhrase,
@@ -1315,12 +1370,18 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getCoreUtxos(
       tmpWallet.address
     )
+    // transactions = await dashsight.getAllTxs(
+    //   [tmpWallet.address]
+    // )
   }
+
+  // console.log('getAllTxs', transactions)
 
   return {
     privateKeys,
     cachedAddrs,
     coreUtxos,
+    // transactions,
   }
 }
 
@@ -1685,4 +1746,285 @@ export async function sendTx(
   console.log('instantSend result', result);
 
   return result
+}
+
+
+export function processInOut({
+  conAddr, tx, addr, dir, sentAmount = null, receivedAmount = null,
+  byAlias = {}, byAddress = {}, byTx = {},
+}) {
+  let alias = byTx?.[tx.txid]?.alias || conAddr.alias
+  byAlias[conAddr.alias] = {
+    ...(byAlias[conAddr.alias] || []),
+    [tx.txid]: {
+      addr,
+      dir,
+      sentAmount,
+      receivedAmount,
+      ...tx,
+      ...conAddr,
+      alias,
+    }
+  }
+  byAddress[addr] = [
+    ...(byAddress[addr] || []),
+    {
+      receivedAmount,
+      sentAmount,
+      dir,
+      ...tx,
+      ...conAddr,
+      alias,
+    }
+  ]
+  byTx[tx.txid] = {
+    receivedAmount,
+    sentAmount,
+    dir,
+    ...tx,
+    ...conAddr,
+    alias,
+  }
+
+  // console.log(
+  //   'processInOut',
+  //   conAddr.alias, conAddr.xkeyId, tx,
+  // )
+
+  return {
+    byAlias,
+    byAddress,
+    byTx,
+  }
+}
+
+export async function getAddrsTransactions({
+  appState, addrs, contactAddrs = {},
+  txs = [],
+}) {
+  let storeAddrs = await loadStoreObject(store.addresses)
+  if (txs.length === 0) {
+    txs = await dashsight.getAllTxs(addrs)
+  }
+  let byAddress = {}
+  let byAlias = {}
+  let byTx = {}
+
+  // console.log('getAddrsTransactions', {
+  //   txs, addrs, contactAddrs, appT: appState.transactions
+  // })
+
+  for await (let tx of txs) {
+    let dir = 'received'
+    let conAddr
+    let sentAmount = 0
+    let receivedAmount = 0
+
+    for await (let vin of tx.vin) {
+      let addr = vin.addr
+      conAddr = contactAddrs[addr]
+
+      if(storeAddrs[addr]) {
+        dir = 'sent'
+        sentAmount += Number(vin.value)
+      }
+
+      if (conAddr) {
+        processInOut({
+          tx, addr, conAddr, dir, sentAmount,
+          byAlias, byAddress, byTx,
+        })
+      }
+    }
+
+    for await (let vout of tx.vout) {
+      for await (let addr of vout.scriptPubKey.addresses) {
+        // let addr = vout.scriptPubKey.addresses[0]
+        conAddr = contactAddrs[addr]
+
+        if(storeAddrs[addr]) {
+          receivedAmount += Number(vout.value)
+        } else {
+          // sentAmount -= Number(vout.value)
+        }
+
+        if (conAddr) {
+          processInOut({
+            tx, addr, conAddr, dir, receivedAmount,
+            byAlias, byAddress, byTx,
+          })
+        }
+      }
+    }
+
+    byTx[tx.txid] = {
+      ...byTx[tx.txid],
+      receivedAmount,
+      sentAmount,
+    }
+
+    if (!appState.transactions[tx.txid]?.vin) {
+      store.transactions.setItem(
+        tx.txid,
+        {
+          ...(appState.transactions[tx.txid] || {}),
+          ...tx,
+          dir,
+          sentAmount,
+          receivedAmount,
+        },
+      )
+    }
+  }
+
+  // console.log('getAddrsTransactions by Tx', byTx)
+  // console.log('getAddrsTransactions by Alias', byAlias)
+  // console.log('getAddrsTransactions by Address', byAddress)
+
+  return {
+    byAddress,
+    byAlias,
+    byTx,
+  }
+}
+
+export async function getContactsByXkeyId(
+  appState,
+) {
+  let contactsXkeys = {}
+
+  for await (let c of appState.contacts) {
+    let og = Object.values(c.outgoing || {})?.[0]
+    let ic = Object.values(c.incoming || {})?.[0]
+
+    if (og) {
+      contactsXkeys[og.xkeyId] = {
+        ...c,
+        dir: 'outgoing',
+      }
+    }
+    if (ic) {
+      contactsXkeys[ic.xkeyId] = {
+        ...c,
+        dir: 'incoming',
+      }
+    }
+  }
+
+  return contactsXkeys
+}
+
+export async function getContactsFromAddrs(
+  appState,
+) {
+  let accts = await loadStoreObject(store.accounts)
+  let addrs = await loadStoreObject(store.addresses)
+  let contactAddrs = await getContactsByXkeyId(appState)
+  let contacts = {}
+
+  for await (let [ck,cv] of Object.entries(addrs)) {
+    let contact = contactAddrs[cv.xkeyId]
+    let acct = accts[cv.xkeyId]
+    if (contact) {
+      contacts[ck] = contact
+    } else if (acct) {
+      contacts[ck] = {
+        ...acct,
+        alias: null,
+      }
+    }
+  }
+
+  return contacts
+}
+
+export async function deriveContactAddrs(
+  appState, dir = 'outgoing',
+) {
+  let addrs = {}
+
+  for await (let c of appState.contacts) {
+    let og = Object.values(c[dir] || {})?.[0]
+    let xkey = og?.xpub || og?.xprv
+
+    if (xkey) {
+      let contactWallet = await deriveWalletData(
+        xkey,
+      )
+      let contactAddrs = await batchXkeyAddressGenerate(
+        contactWallet,
+        contactWallet.addressIndex,
+      )
+
+      contactAddrs.addresses.forEach(g => {
+        addrs[g.address] = {
+          alias: c.alias,
+          xkeyId: contactWallet.xkeyId,
+          dir,
+        }
+      })
+    }
+  }
+
+  // console.log('deriveContactAddrs', {
+  //   asc: appState.contacts,
+  //   addrs,
+  // })
+
+  return addrs
+}
+
+export async function getTxs(appState, transactions = []) {
+  let contactAddrs = await getContactsFromAddrs(appState)
+  let contactOutAddrs = await deriveContactAddrs(appState)
+
+  contactAddrs = {
+    ...contactAddrs,
+    ...contactOutAddrs,
+  }
+
+  let addrs = Object.keys(contactAddrs)
+
+  if (addrs.length === 0) {
+    return
+  }
+
+  // let TxStore = await store.transactions.keys()
+  // let txs = await dashsight.getAllTxs(addrs)
+
+  let txs = await getAddrsTransactions({
+    appState, addrs, contactAddrs,
+    txs: transactions,
+  })
+
+  // console.log('getTxs', {
+  //   txs, contactAddrs, contactOutAddrs, addrs
+  // })
+
+  return txs
+}
+
+export function getTransactionsByContactAlias(appState) {
+  return async res => {
+    if (!res) {
+      return []
+    }
+
+    appState.contacts = res
+
+    // let contactAddrs = await deriveContactAddrs(appState) || {}
+    // let addrs = Object.keys(contactAddrs)
+
+    // console.log('contactAddrs', addrs)
+
+    // if (addrs?.length) {
+    //   getAddrsTransactions({
+    //     appState, addrs, contactAddrs
+    //   })
+    // }
+
+    // console.log('contacts', res, contactAddrs)
+
+    return res
+  }
 }

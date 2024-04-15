@@ -477,16 +477,6 @@ th {
   background-color: var(--dark-500);
 }
 
-.cols > .transactions {
-  opacity: 0.4;
-  cursor: not-allowed;
-  cursor: wait;
-  user-select: none;
-}
-/* .cols > .transactions > div {
-  background-color: var(--dark-500);
-} */
-
 .avatar {
   background-color: var(--dark-500);
   color: var(--dark-100);
