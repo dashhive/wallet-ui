@@ -1838,21 +1838,23 @@ export async function getAddrsTransactions({
     }
 
     for await (let vout of tx.vout) {
-      for await (let addr of vout.scriptPubKey.addresses) {
-        // let addr = vout.scriptPubKey.addresses[0]
-        conAddr = contactAddrs[addr]
+      if (vout?.scriptPubKey?.addresses) {
+        for await (let addr of vout.scriptPubKey.addresses) {
+          // let addr = vout.scriptPubKey.addresses[0]
+          conAddr = contactAddrs[addr]
 
-        if(storeAddrs[addr]) {
-          receivedAmount += Number(vout.value)
-        } else {
-          // sentAmount -= Number(vout.value)
-        }
+          if(storeAddrs[addr]) {
+            receivedAmount += Number(vout.value)
+          } else {
+            // sentAmount -= Number(vout.value)
+          }
 
-        if (conAddr) {
-          processInOut({
-            tx, addr, conAddr, dir, receivedAmount,
-            byAlias, byAddress, byTx,
-          })
+          if (conAddr) {
+            processInOut({
+              tx, addr, conAddr, dir, receivedAmount,
+              byAlias, byAddress, byTx,
+            })
+          }
         }
       }
     }
