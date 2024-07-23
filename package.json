@@ -37,20 +37,21 @@
     "@dashincubator/base58check": "^1.4.1",
     "@dashincubator/ripemd160": "^3.0.0",
     "@dashincubator/secp256k1": "^1.7.1-5",
-    "@zxing/library": "^0.20.0",
+    "@zxing/library": "^0.21.2",
+    "crowdnode": "^1.8.0",
     "crypticstorage": "^0.0.2",
-    "dashhd": "^3.3.0",
-    "dashkeys": "^1.1.0",
+    "dashhd": "^3.3.3",
+    "dashkeys": "^1.1.4",
     "dashphrase": "^1.4.0",
     "dashsight": "dashhive/DashSight.js#feat/bulk-txs",
-    "dashtx": "^0.13.2",
-    "dashwallet": "^0.7.0-1",
+    "dashtx": "^0.16.0",
+    "dashwallet": "^0.7.1",
     "html5-qrcode": "^2.3.8",
     "idb": "^8.0.0",
     "localforage": "^1.10.0",
     "qrcode-svg": "^1.1.0"
   },
   "devDependencies": {
-    "@types/node": "^20.11.5"
+    "@types/node": "^20.14.11"
   }
 }
