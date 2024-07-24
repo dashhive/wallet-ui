@@ -494,7 +494,7 @@ dialog .txid {
   }
   dialog.fullscreen form section {
     grid-auto-rows: 1fr;
-    grid-auto-columns: 30rem 2fr;
+    grid-auto-columns: 1fr 1fr;
     grid-auto-flow: column;
   }
   dialog.fullscreen form section > aside {
@@ -598,5 +598,11 @@ dialog .txid {
     max-width: 33.75rem; */
     width: 33.75rem;
     overflow: hidden;
+  }
+}
+
+@media (min-width: 850px) {
+  dialog.fullscreen form section {
+    grid-auto-columns: 30rem 2fr;
   }
 }
