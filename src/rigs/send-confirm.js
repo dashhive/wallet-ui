@@ -210,6 +210,10 @@ export let sendConfirmRig = (async function (globals) {
               ...appState.sentTransactions,
               [txRes.txid]: state.tx,
             }
+            store.transactions.setItem(
+              txRes.txid,
+              state.tx
+            )
             console.log(
               '===sentTransactions===',
               appState?.sentTransactions

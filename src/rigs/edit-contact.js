@@ -147,13 +147,21 @@ export let editContactRig = (async function (globals) {
           </button>
         </footer>
       `,
+      getAlias: state => {
+        let alias = state.contact?.alias || state.contact?.info?.preferred_username
+        if (!alias) {
+          return ''
+        }
+
+        return html`@${alias}`
+      },
       content: async state => html`
         <fieldset class="contact">
           <section>
             ${state.header(state)}
             <article>
               ${await getAvatar(state.contact)}
-              <h3>@${state.contact?.alias || state.contact?.info?.preferred_username}</h3>
+              <h3>${state.getAlias(state)}</h3>
             </article>
             <article>
               <label for="contactName">
@@ -185,7 +193,7 @@ export let editContactRig = (async function (globals) {
                   pattern="${ALIAS_REGEX.source}"
                   spellcheck="false"
                   autocomplete="off"
-                  value="${state.contact?.alias}"
+                  value="${state.contact?.alias || ''}"
                 />
               </div>
               <p>Alias for the contact (similar to a @username)</p>

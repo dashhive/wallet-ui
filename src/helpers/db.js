@@ -48,6 +48,10 @@ export async function DatabaseSetup() {
     ...localForageBaseCfg,
     storeName: 'addresses',
   });
+  var transactions = localforage.createInstance({
+    ...localForageBaseCfg,
+    storeName: 'transactions',
+  });
 
   return {
     wallets,
@@ -55,6 +59,7 @@ export async function DatabaseSetup() {
     contacts,
     accounts,
     aliases,
+    transactions,
   }
 }
 

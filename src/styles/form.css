@@ -467,7 +467,8 @@ input, select, textarea {
   padding: 1rem;
   flex: 0 0 auto;
 }
-input::placeholder {
+input::placeholder,
+input:placeholder-shown {
   color: var(--dark-500);
 }
 input:not(:focus):not(:placeholder-shown):invalid {
@@ -678,7 +679,7 @@ form[name="network"] {
 .updrop.drag-over {
   border-style: solid;
 }
-.updrop.focus{
+.updrop.focus {
   border-style: dotted;
 }
 .dropped .updrop,

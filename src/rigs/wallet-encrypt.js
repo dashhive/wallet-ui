@@ -10,8 +10,8 @@ export let walletEncryptRig = (async function (globals) {
   'use strict';
 
   let {
-    setupDialog, appDialogs, appState, mainApp,
-    wallet, wallets, bodyNav, dashBalance,
+    setupDialog, appDialogs, appState, appTools, mainApp,
+    wallet, wallets, bodyNav,
   } = globals;
 
   let walletEncrypt = await setupDialog(
@@ -149,7 +149,7 @@ export let walletEncryptRig = (async function (globals) {
               alias: appState.selectedAlias
             },
           })
-          dashBalance?.render({
+          appTools.balance?.render?.({
             wallet,
           })
 

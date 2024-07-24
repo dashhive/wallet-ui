@@ -1,5 +1,6 @@
 :root,
 ::backdrop {
+  color-scheme: normal light dark;
   /* From Figma */
   --brand-blue: #008DE4;
   --brand-blue-highlight: #49b0f0;
@@ -31,7 +32,6 @@
   --d: var(--dark-800);
   --l: var(--light-300);
 
-  /* --l: #eee; */
   --lt: #eeea;
   --lf: #dfdfdf;
   --f: #fff;
@@ -66,6 +66,26 @@
   --tblbrd: var(--co);
   --tblcap: var(--n);
 
+  --linkbg: var(--oc);
+  --linkfg: var(--info);
+  --linkbgh: var(--c);
+  --linkfgh: var(--info);
+
+  --btnbg: var(--oc);
+  --btnfg: var(--fc);
+  --btnbgd: var(--d);
+  --btnfgd: var(--note);
+  --btnbgh: var(--c);
+  --btnfgh: var(--info);
+
+  --inpbg: var(--c);
+  --inpbd: var(--hc);
+  --inpfg: var(--fc);
+  --inpbdi: var(--dang);
+
+  --gridbg: var(--oc);
+  --gridshd: var(--mc);
+
   --fb: -apple-system, BlinkMacSystemFont, Avenir, "Avenir Next",
   "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans",
   "Droid Sans", "Helvetica Neue", sans-serif;
@@ -88,174 +108,6 @@
 
 * { box-sizing: border-box; }
 
-/* @media (prefers-color-scheme: light) {
-  :root:not(.it),
-  ::backdrop {
-    color-scheme: light;
-    --c: var(--brand-blue);
-    --ct: var(--dark-700);
-    --cn: var(--dark-500);
-
-    --bgc: var(--l);
-    --fc: var(--d);
-
-    --emphasize: var(--dark-600);
-    --de-emphasize: var(--dark-200);
-
-    --linkbg: var(--lf);
-    --linkfg: var(--lite);
-    --linkbgh: var(--f);
-    --linkfgh: var(--lite);
-
-    --nav-bg: var(--light-600);
-    --nav-abg: var(--dark-100);
-    --nav-a: var(--dark-100);
-
-    --btnbg: var(--l);
-    --btnfg: var(--di);
-    --btnbgd: var(--lf);
-    --btnfgd: var(--note);
-    --btnbgh: var(--f);
-    --btnfgh: var(--lite);
-
-    --inpbg: var(--f);
-    --inpbd: var(--note);
-    --inpfg: var(--fc);
-    --inpbdi: var(--dang);
-
-    --mdlbg: var(--f4);
-    --mdlfg: var(--di);
-    --mdlbd: var(--lt);
-
-    --gridbg: var(--lf);
-    --gridshd: var(--lf);
-  }
-
-  .it {
-    color-scheme: dark;
-    --bgc: var(--d);
-    --fc: var(--l);
-
-    --linkbg: var(--oc);
-    --linkfg: var(--info);
-    --linkbgh: var(--c);
-    --linkfgh: var(--info);
-
-    --btnbg: var(--oc);
-    --btnfg: var(--fc);
-    --btnbgd: var(--d);
-    --btnfgd: var(--note);
-    --btnbgh: var(--c);
-    --btnfgh: var(--info);
-
-    --inpbg: var(--c);
-    --inpbd: var(--hc);
-    --inpfg: var(--fc);
-    --inpbdi: var(--dang);
-
-    --mdlbg: var(--d);
-    --mdlfg: var(--f);
-    --mdlbd: var(--dark-900);
-
-    --gridbg: var(--oc);
-    --gridshd: var(--mc);
-  }
-  progress:indeterminate {
-    background: linear-gradient(
-      90deg,
-      #0000 0%,
-      #0000 50%,
-      var(--lite) 100%
-    );
-  }
-  nav a.theme::before {
-    content: '☀';
-    transform: rotateZ(0deg);
-  }
-  html:not(.it) nav a.theme::before {
-    content: '☽';
-    transform: rotateZ(45deg);
-  }
-} */
-@media (prefers-color-scheme: dark) {
-  :root:not(.it),
-  ::backdrop {
-    color-scheme: dark;
-    --bgc: var(--d);
-    --fc: var(--l);
-
-    --linkbg: var(--oc);
-    --linkfg: var(--info);
-    --linkbgh: var(--c);
-    --linkfgh: var(--info);
-
-    --btnbg: var(--oc);
-    --btnfg: var(--fc);
-    --btnbgd: var(--d);
-    --btnfgd: var(--note);
-    --btnbgh: var(--c);
-    --btnfgh: var(--info);
-
-    --inpbg: var(--c);
-    --inpbd: var(--hc);
-    --inpfg: var(--fc);
-    --inpbdi: var(--dang);
-
-    --mdlbg: var(--d);
-    --mdlfg: var(--f);
-    --mdlbd: var(--dark-900);
-
-    --gridbg: var(--oc);
-    --gridshd: var(--mc);
-  }
-
-  .it {
-    color-scheme: light;
-    --bgc: var(--l);
-    --fc: var(--d);
-
-    --linkbg: var(--lf);
-    --linkfg: var(--lite);
-    --linkbgh: var(--f);
-    --linkfgh: var(--lite);
-
-    --btnbg: var(--l);
-    --btnfg: var(--di);
-    --btnbgd: var(--lf);
-    --btnfgd: var(--note);
-    --btnbgh: var(--f);
-    --btnfgh: var(--lite);
-
-    --inpbg: var(--f);
-    --inpbd: var(--note);
-    --inpfg: var(--fc);
-    --inpbdi: var(--dang);
-
-    --mdlbg: var(--f);
-    --mdlfg: var(--di);
-    --mdlbd: var(--lt);
-
-    --gridbg: var(--lf);
-    --gridshd: var(--lf);
-  }
-  progress:indeterminate {
-    background: linear-gradient(
-      90deg,
-      #0000 0%,
-      #0000 50%,
-      var(--info) 100%
-    );
-  }
-  nav a.theme::before {
-    content: '☽';
-    transform: rotateZ(45deg);
-  }
-  html:not(.it) nav a.theme::before {
-    content: '☀';
-    transform: rotateZ(0deg);
-  }
-}
-
 :focus-visible {
   outline: -webkit-focus-ring-color auto 0;
 }
@@ -263,6 +115,15 @@
 body {
   background: var(--bgc);
   color: var(--fc);
+}
+
+progress:indeterminate {
+  background: linear-gradient(
+    90deg,
+    #0000 0%,
+    #0000 50%,
+    var(--info) 100%
+  );
 }
 
 a {
@@ -466,6 +327,10 @@ th {
   border-bottom: 3px solid var(--bgc);
   transition: background-color var(--ease);
 }
+.cols > section > div > a:nth-of-type(n+4):last-of-type,
+.cols > section > div > article:nth-of-type(n+4):last-of-type {
+  border-bottom: 3px solid transparent;
+}
 .cols > section > div > a:focus,
 .cols > section > div > a:hover,
 .cols > section > div > article:focus,
@@ -476,16 +341,6 @@ th {
 .cols > section > div .pill:not(:disabled):hover {
   background-color: var(--dark-500);
 }
-
-.cols > .transactions {
-  opacity: 0.4;
-  cursor: not-allowed;
-  cursor: wait;
-  user-select: none;
-}
-/* .cols > .transactions > div {
-  background-color: var(--dark-500);
-} */
 
 .avatar {
   background-color: var(--dark-500);
