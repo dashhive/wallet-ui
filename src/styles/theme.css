@@ -19,6 +19,10 @@
   --light-500: #004470;
   --light-600: #003e66;
 
+  --card-100: hsl(200deg 80% 60% / 15%);
+  --card-100: #00447066;
+
+
   --grayscale-gray-400: #9DA6A6;
 
   --c: var(--dark-900);
@@ -140,11 +144,11 @@ a:hover {
 }
 
 svg {
-  fill: currentColor;
   vertical-align: bottom;
 }
 
-svg path {
+svg g:not(.lock),
+svg path:not(.lock) {
   fill: currentColor;
 }
 
@@ -314,6 +318,11 @@ th {
   color: var(--dark-200);
   padding: 0.25rem 0.75rem;
   border-radius: 6.25rem;
+}
+
+.card {
+  background-color: var(--card-100);
+  /* background-color: var(--dark-600); */
 }
 
 .cols > section > div {

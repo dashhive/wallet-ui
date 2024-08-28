@@ -13,6 +13,10 @@ import {
   SECONDS, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR,
 } from './constants.js'
 
+let currentSignal;
+let globalDerivedValue;
+let eventHandlers = []
+
 /**
  *
  * @param {String} [phraseOrXkey]
@@ -446,14 +450,14 @@ export function envoy(obj, ...initListeners) {
  *      document.querySelector("body").innerHTML = value;
  *    });
  *
- *    off(); // unsubscribe
+ *    off();
  *
  * @param {Object} initialValue inital value
 */
 export function createSignal(initialValue) {
   let _value = initialValue;
   let _last = _value;
-  const subs = [];
+  let subs = [];
 
   function pub() {
     for (let s of subs) {
@@ -461,18 +465,186 @@ export function createSignal(initialValue) {
     }
   }
 
+  function unsub(fn) {
+    for (let i in subs) {
+      if (subs[i] === fn) {
+        subs[i] = 0;
+        // break;
+      }
+    }
+  }
+
+  function on(s) {
+    const i = subs.push(s)-1;
+    return () => { subs[i] = 0; };
+  }
+
+  function once(s) {
+    const i = subs.length
+
+    subs.push((_value, _last) => {
+      s && s(_value, _last);
+      subs[i] = 0;
+    });
+  }
+
   return {
-    get value() { return _value; },
+    get value() {
+      if (
+        currentSignal //&&
+        // currentSignal !== globalDerivedValue
+      ) {
+        console.log(
+          'currentSignal === derived',
+          {currentSignal, derived, globalDerivedValue},
+          currentSignal === globalDerivedValue,
+        )
+        on(currentSignal)
+      }
+      return _value;
+    },
     set value(v) {
       _last = _value
       _value = v;
       pub();
     },
-    on: s => {
-      const i = subs.push(s)-1;
-      return () => { subs[i] = 0; };
+    on,
+    once,
+    unsub,
+  }
+}
+
+/**
+ * Use a reactive signal in hook fashion
+ *
+ * @example
+ *    let [count, setCount, on] = useSignal(0)
+ *    console.log(count()) // 0
+ *    setCount(2)
+ *    console.log(count()) // 2
+ *
+ *    let off = on(value => {
+ *      document.querySelector("body").innerHTML = value;
+ *    });
+ *
+ *    off()
+ *
+ * @param {Object} initialValue inital value
+*/
+export function useSignal(initialValue) {
+  let _value = initialValue;
+  let _last = _value;
+  let subs = [];
+
+  function pub() {
+    for (let s of subs) {
+      s && s(_value, _last);
     }
   }
+
+  function unsub(fn) {
+    for (let i in subs) {
+      if (subs[i] === fn) {
+        subs[i] = 0;
+        // break;
+      }
+    }
+  }
+
+  function getValue(v) {
+    if (
+      currentSignal //&&
+      // currentSignal !== globalDerivedValue
+    ) {
+      on(currentSignal)
+    }
+    return _value;
+  }
+
+  function setValue(v) {
+    _last = _value
+    _value = v;
+    pub();
+  }
+
+  function on(s) {
+    const i = subs.push(s)-1;
+    return () => { subs[i] = 0; };
+  }
+
+  function once(s) {
+    const i = subs.length
+
+    subs.push((_value, _last) => {
+      s && s(_value, _last);
+      subs[i] = 0;
+    });
+  }
+
+  return [
+    // _value,
+    getValue,
+    setValue,
+    on,
+    once,
+    unsub,
+  ]
+}
+
+/**
+ * {@link https://youtu.be/t18Kzj9S8-M?t=351 Understanding Signals}
+ *
+ * {@link https://youtu.be/1TSLEzNzGQM Learn Why JavaScript Frameworks Love Signals By Implementing Them}
+ *
+ * @example
+ *   const [count, setCount] = useSignal(10)
+ *   effect(() => console.log(count()))
+ *   setCount(25)
+ *
+ *   let letter = createSignal('a')
+ *   effect(() => console.log(letter.value))
+ *   letter.value = 'b'
+ *
+ * @param {Function} fn
+ */
+export function effect(fn) {
+  currentSignal = fn;
+
+  fn();
+
+  currentSignal = null;
+
+  return fn
+}
+
+/**
+ * {@link https://youtu.be/1TSLEzNzGQM Learn Why JavaScript Frameworks Love Signals By Implementing Them}
+ *
+ * @example
+ *   let count = createSignal(10)
+ *   let double = derived(() => count.value * 2)
+ *
+ *   effect(
+ *     () => console.log(
+ *       count.value,
+ *       double.value,
+ *     )
+ *   )
+ *
+ *   count.value = 25
+ *
+ * @param {Function} fn
+ */
+export function derived(fn) {
+  const derived = createSignal()
+
+  globalDerivedValue = function derivedValue() {
+    derived.value = fn()
+  }
+
+  effect(globalDerivedValue)
+
+  return derived
 }
 
 export async function restate(
@@ -934,6 +1106,20 @@ export function nobounce(callback, delay = 300) {
   }
 }
 
+
+/**
+ * @example
+ *    await forIt(500);
+ *    nowDoThis()
+ *
+ * @param {number} [delay]
+*
+* @returns {Promise<any>}
+*/
+export function forIt(delay) {
+  return new Promise(resolve => setTimeout(resolve, delay));
+}
+
 export function timeago(ms, locale = TIMEAGO_LOCALE_EN) {
   var ago = Math.floor(ms / 1000);
   var part = 0;
@@ -1212,4 +1398,119 @@ export function getAddressIndexFromUsage(wallet, account, usageIdx) {
     usageIndex,
     addressIndex,
   }
+}
+
+export function toSlug(...slugs) {
+  return slugs.join('_').toLowerCase()
+    .replaceAll(/[^a-zA-Z _]/g, '')
+    .replaceAll(' ', '_')
+}
+
+export function addListener(
+  node,
+  event,
+  handler,
+  capture = false,
+  handlers = this?.eventHandlers || eventHandlers,
+) {
+  console.log('addListener', this, { node, event, handler, capture })
+  handlers.push({ node, event, handler, capture })
+  node.addEventListener(event, handler, capture)
+}
+
+export function addListeners(
+  resolve,
+  reject,
+) {
+  if (resolve && reject) {
+    addListener(
+      this.elements.dialog,
+      'close',
+      this.events.close(resolve, reject),
+    )
+
+    addListener(
+      this.elements.dialog,
+      'click',
+      this.events.click,
+    )
+  }
+
+  addListener(
+    this.elements.form,
+    'blur',
+    this.events.blur,
+  )
+  addListener(
+    this.elements.form,
+    'focusout',
+    this.events.focusout,
+  )
+  addListener(
+    this.elements.form,
+    'focusin',
+    this.events.focusin,
+  )
+  addListener(
+    this.elements.form,
+    'change',
+    this.events.change,
+  )
+  // if (updrop) {
+    addListener(
+      this.elements.form,
+      'drop',
+      this.events.drop,
+    )
+    addListener(
+      this.elements.form,
+      'dragover',
+      this.events.dragover,
+    )
+    addListener(
+      this.elements.form,
+      'dragend',
+      this.events.dragend,
+    )
+    addListener(
+      this.elements.form,
+      'dragleave',
+      this.events.dragleave,
+    )
+  // }
+  addListener(
+    this.elements.form,
+    'input',
+    this.events.input,
+  )
+  addListener(
+    this.elements.form,
+    'reset',
+    this.events.reset,
+  )
+  addListener(
+    this.elements.form,
+    'submit',
+    this.events.submit,
+  )
+}
+
+export function removeAllListeners(
+  targets = [
+    this?.elements.dialog,
+    this?.elements.form,
+  ],
+  handlers = this?.eventHandlers || eventHandlers,
+) {
+  if (this.elements.updrop) {
+    targets.push(this.elements.updrop)
+  }
+  handlers = handlers
+    .filter(({ node, event, handler, capture }) => {
+      if (targets.includes(node)) {
+        node.removeEventListener(event, handler, capture)
+        return false
+      }
+      return true
+    })
 }

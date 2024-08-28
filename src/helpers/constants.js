@@ -142,3 +142,15 @@ export const USAGE = {
   RECEIVE,
   CHANGE,
 }
+
+const NOT_LOADING = 0
+const LOADING = 1
+const SUCCESS = 2
+const ERROR = 3
+
+export const DIALOG_STATUS = {
+  NOT_LOADING,
+  LOADING,
+  SUCCESS,
+  ERROR
+}

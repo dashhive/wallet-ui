@@ -494,7 +494,7 @@ label {
 }
 label > input[type=checkbox],
 label + input[type=checkbox] {
-  width: 2rem;
+  width: 1.25rem;
 }
 
 div.switch {
@@ -739,6 +739,25 @@ form[name="network"] {
   cursor: default;
 }
 
+main form header {
+  margin: 0 auto;
+  min-height: auto;
+  /* width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-direction: column-reverse; */
+}
+
+.card footer {
+  gap: .25rem;
+}
+
+.card footer button {
+  padding: 0.63rem .25rem;
+  flex: 1 1 50%;
+}
+
 
 @media (min-width: 650px) {
   main form {
@@ -776,4 +795,8 @@ form[name="network"] {
   form > article > figure figcaption + div.big {
     font-size: 3.75rem;
   } */
+
+  .card footer button {
+    padding: 0.63rem 1rem;
+  }
 }

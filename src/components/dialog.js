@@ -4,6 +4,10 @@ import {
   envoy,
 } from '../helpers/utils.js'
 
+import {
+  DIALOG_STATUS,
+} from '../helpers/constants.js'
+
 let modal = envoy(
   {
     rendered: {},
@@ -26,7 +30,8 @@ const initialState = {
   rendered: null,
   responsive: true,
   delay: 500,
-  async render () {},
+  status: DIALOG_STATUS.NOT_LOADING,
+  async render () { return this },
   addListener () {},
   addListeners () {},
   removeAllListeners (targets) {},
@@ -210,6 +215,9 @@ const initialState = {
       //   event.target === state.elements.dialog,
       //   state.elements.dialog.returnValue
       // )
+      state.status = DIALOG_STATUS.NOT_LOADING
+      state.elements.progress?.remove()
+      state.elements.progress = null
 
       if (state.elements.dialog.returnValue !== 'cancel') {
         resolve(state.elements.dialog.returnValue)
@@ -298,30 +306,30 @@ export async function setupDialog(
     .replaceAll(/[^a-zA-Z _]/g, '')
     .replaceAll(' ', '_')
 
-  const dialog = document.createElement('dialog')
-  const form = document.createElement('form')
-  const progress = document.createElement('progress')
+  const dialogElement = document.createElement('dialog')
+  const formElement = document.createElement('form')
+  const progressElement = document.createElement('progress')
 
-  state.elements.dialog = dialog
-  state.elements.form = form
-  state.elements.progress = progress
+  state.elements.dialog = dialogElement
+  state.elements.form = formElement
+  state.elements.progress = progressElement
 
-  progress.classList.add('pending')
+  progressElement.classList.add('pending')
 
-  dialog.innerHTML = ``
-  dialog.id = state.slugs.dialog
+  dialogElement.innerHTML = ``
+  dialogElement.id = state.slugs.dialog
   if (state.responsive) {
-    dialog.classList.add('responsive')
+    dialogElement.classList.add('responsive')
   }
-  dialog.classList.add(state.placement)
+  dialogElement.classList.add(...(state.placement.split(' ')))
 
-  form.name = `${state.slugs.form}`
-  form.method = 'dialog'
-  form.innerHTML = await state.content(state)
+  formElement.name = `${state.slugs.form}`
+  formElement.method = 'dialog'
+  formElement.innerHTML = await state.content(state)
 
-  dialog.insertAdjacentElement(
+  dialogElement.insertAdjacentElement(
     'afterbegin',
-    form
+    formElement
   )
 
   function addListener(
@@ -340,74 +348,74 @@ export async function setupDialog(
   ) {
     if (resolve && reject) {
       addListener(
-        dialog,
+        dialogElement,
         'close',
         state.events.handleClose(state, resolve, reject),
       )
 
       addListener(
-        dialog,
+        dialogElement,
         'click',
         state.events.handleClick(state),
       )
     }
 
     addListener(
-      form,
+      formElement,
       'blur',
       state.events.handleBlur(state),
     )
     addListener(
-      form,
+      formElement,
       'focusout',
       state.events.handleFocusOut(state),
     )
     addListener(
-      form,
+      formElement,
       'focusin',
       state.events.handleFocusIn(state),
     )
     addListener(
-      form,
+      formElement,
       'change',
       state.events.handleChange(state),
     )
-    // let updrop = form.querySelector('.updrop')
+    // let updrop = formElement.querySelector('.updrop')
     // state.elements.updrop = updrop
     // if (updrop) {
       addListener(
-        form,
+        formElement,
         'drop',
         state.events.handleDrop(state),
       )
       addListener(
-        form,
+        formElement,
         'dragover',
         state.events.handleDragOver(state),
       )
       addListener(
-        form,
+        formElement,
         'dragend',
         state.events.handleDragEnd(state),
       )
       addListener(
-        form,
+        formElement,
         'dragleave',
         state.events.handleDragLeave(state),
       )
     // }
     addListener(
-      form,
+      formElement,
       'input',
       state.events.handleInput(state),
     )
     addListener(
-      form,
+      formElement,
       'reset',
       state.events.handleReset(state),
     )
     addListener(
-      form,
+      formElement,
       'submit',
       state.events.handleSubmit(state),
     )
@@ -416,7 +424,7 @@ export async function setupDialog(
   state.addListeners = addListeners
 
   function removeAllListeners(
-    targets = [dialog,form],
+    targets = [dialogElement,formElement],
   ) {
     if (state.elements.updrop) {
       targets.push(state.elements.updrop)
@@ -456,29 +464,56 @@ export async function setupDialog(
       }
     }
 
-    dialog.id = state.slugs.dialog
-    form.name = `${state.slugs.form}`
-    form.innerHTML = await state.content(state)
+    dialogElement.id = state.slugs.dialog
+    formElement.name = `${state.slugs.form}`
+    formElement.innerHTML = await state.content(state)
 
     // console.log('DIALOG RENDER', state, position, state.slugs.dialog, modal.rendered)
 
+    if (
+      state.status === DIALOG_STATUS.LOADING &&
+      state.elements.progress
+    ) {
+      state.elements.form.insertAdjacentElement(
+        'beforebegin',
+        state.elements.progress,
+      )
+
+      // document.body.insertAdjacentHTML(
+      //   'afterbegin',
+      //   `<progress id="pageLoader" class="pending"></progress>`,
+      // )
+    }
+
+    if (
+      state.status === DIALOG_STATUS.SUCCESS ||
+      state.status === DIALOG_STATUS.ERROR
+    ) {
+      // document.getElementById('pageLoader')?.remove()
+      state.elements.progress?.remove()
+    }
+
     if (!modal.rendered[state.slugs.dialog]) {
-      el.insertAdjacentElement(position, dialog)
-      modal.rendered[state.slugs.dialog] = dialog
+      el.insertAdjacentElement(position, dialogElement)
+      modal.rendered[state.slugs.dialog] = dialogElement
     }
 
     state.events.handleRender(state)
+
+    return state
   }
 
   state.render = render
 
   return {
-    element: dialog,
+    element: dialogElement,
+    state,
+    elements: state.elements,
     show: (callback) => new Promise((resolve, reject) => {
       removeAllListeners()
       addListeners(resolve, reject)
-      // console.log('dialog show', dialog)
-      dialog.show()
+      // console.log('dialog show', dialogElement)
+      dialogElement.show()
       state.events.handleShow?.(state)
       callback?.()
     }),
@@ -486,11 +521,11 @@ export async function setupDialog(
       removeAllListeners()
       addListeners(resolve, reject)
       // console.log('dialog showModal', dialog)
-      dialog.showModal()
+      dialogElement.showModal()
       state.events.handleShow?.(state)
       callback?.()
     }),
-    close: returnVal => dialog.close(returnVal),
+    close: returnVal => dialogElement.close(returnVal),
     render,
   }
 }

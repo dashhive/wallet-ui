@@ -197,7 +197,7 @@ dialog > form > fieldset input + p {
   font-weight: 400;
   margin: .5rem 0;
 }
-dialog > form > fieldset p {
+dialog > form fieldset p {
   display: flex;
   padding: 0;
   margin: .8rem;
@@ -217,7 +217,7 @@ dialog > form > fieldset div + p {
   margin: 0 0 0 1rem;
   text-align: left;
 }
-dialog > form > fieldset p > span {
+dialog > form fieldset p > span {
   padding: .25rem;
   border: 1px solid var(--dark-500);
 }

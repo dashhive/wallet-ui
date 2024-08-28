@@ -60,7 +60,7 @@ export async function showErrorDialog(options) {
     content: state => html`
       ${state.header(state)}
 
-      <article class="px-3 col flex-fill ta-left mh-75">
+      <article class="px-3 col flex-fill ta-left max-h-75">
         <!-- <strong>
           Looks like we encountered an error.
         </strong> -->
