@@ -4,14 +4,34 @@ import {
 } from './utils/constants.js'
 
 import {
-  formDataEntries,
   lit as html,
+  formDataEntries,
 } from './utils/generic.js'
 
 import {
-  generateWalletData,
+  batchGenAccts,
+  batchGenAcctAddrs,
+  batchGenAcctsAddrs,
+  batchXkeyAddressGenerate,
   deriveWalletData,
+  generateWalletData,
+  getAccountWallet,
+  getAddrsWithFunds,
+  getUnusedChangeAddress,
+  loadWalletsForAlias,
+  getTransactionsByContactAlias,
 } from './utils/local.js'
+
+import {
+  createTx,
+  dashsight,
+  getAddrsTransactions,
+  getTxs,
+  initDashSocket,
+  store,
+  sendTx,
+  updateAllFunds,
+} from './utils/wallet.js'
 
 import {
   decryptKeystore,
@@ -19,40 +39,20 @@ import {
 } from './utils/cryptic.js'
 
 import {
-  initDashSocket,
-  batchGenAccts,
-  batchGenAcctAddrs,
-  batchGenAcctsAddrs,
-  batchXkeyAddressGenerate,
-  updateAllFunds,
-  getStoredItems,
-  loadWalletsForAlias,
-  store,
-  createTx,
-  sendTx,
-  getAddrsWithFunds,
-  getUnusedChangeAddress,
-  getAccountWallet,
-  dashsight,
-  getAddrsTransactions,
-  getTransactionsByContactAlias,
-  getTxs,
-} from './utils/wallet.js'
-
-import {
-  localForageBaseCfg,
-  importFromJson,
   exportWalletData,
-  saveJsonToFile,
-  getStoreData,
-  loadStoreObject,
   findInStore,
+  getStoreData,
+  getStoredItems,
+  importFromJson,
+  loadStoreObject,
+  localForageBaseCfg,
+  saveJsonToFile,
 } from './utils/db.js'
 
 import {
+  appDialogs,
   appState,
   appTools,
-  appDialogs,
   userInfo,
   walletFunds,
 } from './state/index.js'

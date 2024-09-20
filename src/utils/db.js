@@ -20,47 +20,35 @@ export const localForageBaseCfg = {
   version: 1.0,
 }
 
+const loadedStores = {}
+
 export async function DatabaseSetup() {
-  var wallets = localforage.createInstance({
+  loadedStores.wallets = loadedStores.wallets || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'wallets',
   });
-  var aliases = localforage.createInstance({
+  loadedStores.aliases = loadedStores.aliases || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'aliases',
   });
-  var contacts = localforage.createInstance({
+  loadedStores.contacts = loadedStores.contacts || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'contacts',
   });
-  var accounts = localforage.createInstance({
+  loadedStores.accounts = loadedStores.accounts || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'accounts',
   });
-  // accounts.ready(r => {
-  //   console.log('accounts', r, accounts, accounts._dbInfo.db)
-  //   let tx = accounts._dbInfo.db.transaction("accounts", "readwrite");
-  //   let accts = tx.objectStore("accounts");
-  //   let acctWalletIndex = accts.createIndex('wallet_id', 'walletId');
-  //   console.log('acctWalletIndex', tx, accts, acctWalletIndex)
-  // })
-  var addresses = localforage.createInstance({
+  loadedStores.addresses = loadedStores.addresses || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'addresses',
   });
-  var transactions = localforage.createInstance({
+  loadedStores.transactions = loadedStores.transactions || localforage.createInstance({
     ...localForageBaseCfg,
     storeName: 'transactions',
   });
 
-  return {
-    wallets,
-    addresses,
-    contacts,
-    accounts,
-    aliases,
-    transactions,
-  }
+  return loadedStores
 }
 
 // https://gist.github.com/loilo/ed43739361ec718129a15ae5d531095b#file-idb-backup-and-restore-mjs
@@ -343,6 +331,21 @@ export async function findOneInStore(targStore, query = {}) {
 
     if (iterationNumber === storeLen) {
       return undefined
+    }
+  })
+}
+
+export async function getStoredItems(targStore) {
+  let result = {}
+  let storeLen = await targStore.length()
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    result[key] = value
+
+    if (iterationNumber === storeLen) {
+      return result
     }
   })
 }

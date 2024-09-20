@@ -4,7 +4,7 @@ import {
 } from '../utils/generic.js'
 import {
   initWallet,
-} from '../utils/wallet.js'
+} from '../utils/local.js'
 
 export let walletDecryptRig = (async function (globals) {
   'use strict';

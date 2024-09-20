@@ -1,13 +1,31 @@
 import {
+  USAGE,
+  DUFFS,
+  DASH_URI_REGEX,
+  OIDC_CLAIMS,
+  SUPPORTED_CLAIMS,
+} from './constants.js'
+
+import {
   DashHd,
+  DashTx,
   DashPhrase,
 } from '../imports.js'
 
 import {
-  DUFFS,
-  DASH_URI_REGEX,
-  SUPPORTED_CLAIMS,
-} from './constants.js'
+  DatabaseSetup,
+  findInStore,
+  getFilteredStoreLength,
+  getStoredItems,
+  loadStoreObject,
+} from './db.js'
+
+import {
+  encryptData,
+  encryptKeystore,
+} from './cryptic.js'
+
+export const store = await DatabaseSetup()
 
 /**
  *
@@ -308,6 +326,157 @@ export function formatDash(
   }
 
   return balance
+}
+
+
+
+
+export async function getUnusedChangeAddress(account) {
+  let filterQuery = {
+    xkeyId: account.xkeyId,
+    usageIndex: DashHd.CHANGE,
+  }
+
+  let foundAddrs = await findInStore(store.addresses, filterQuery)
+
+  for (let [fkey,fval] of Object.entries(foundAddrs)) {
+    if (!fval.insight?.balance) {
+      return fkey
+    }
+  }
+
+  // return foundAddr.address
+  return null
+}
+
+export async function loadWalletsForAlias($alias) {
+  $alias.$wallets = {}
+
+  if ($alias?.wallets) {
+    for (let w of $alias.wallets) {
+      let wallet = await store.wallets.getItem(w)
+      $alias.$wallets[w] = wallet
+    }
+  }
+
+  return $alias
+}
+
+export async function initWalletsInfo(
+  info = {},
+) {
+  let wallets = await getStoredItems(store.wallets)
+
+  info = {
+    ...OIDC_CLAIMS,
+    ...info,
+  }
+
+  let alias = info.preferred_username
+
+  wallets = Object.values(wallets || {})
+  wallets = wallets
+    .filter(w => w.alias === alias)
+    .map(w => w.id)
+
+  return {
+    alias,
+    wallets,
+    info,
+  }
+}
+
+
+
+
+
+
+export async function initWallet(
+  encryptionPassword,
+  wallet,
+  keystore,
+  accountIndex = 0,
+  addressIndex = 0,
+  infoOverride = {},
+) {
+  let {
+    alias,
+    wallets,
+    info,
+  } = await initWalletsInfo(infoOverride)
+
+  let { id, recoveryPhrase } = wallet
+
+  // console.log(
+  //   'initWallet wallets',
+  //   wallets,
+  //   info,
+  // )
+
+  if (!wallets.includes(id)) {
+    wallets.push(id)
+  }
+
+  let addrs = await batchAddressUsageGenerate(
+    wallet,
+    accountIndex,
+    addressIndex,
+  )
+
+  console.log('init wallet batchAddressUsageGenerate', addrs)
+
+  for (let a of addrs.addresses) {
+    store.addresses.setItem(
+      a.address,
+      {
+        updatedAt: Date.now(),
+        walletId: wallet.id,
+        accountIndex: a.accountIndex,
+        addressIndex: a.addressIndex,
+        usageIndex: a.usageIndex,
+        xkeyId: a.xkeyId,
+      }
+    )
+  }
+
+  let storeWallet = await store.wallets.setItem(
+    `${id}`,
+    {
+      id,
+      updatedAt: Date.now(),
+      accountIndex,
+      addressIndex: addrs?.finalAddressIndex || addressIndex,
+      keystore: keystore || await encryptKeystore(
+        encryptionPassword,
+        recoveryPhrase
+      ),
+    }
+  )
+
+  let storedAlias = await store.aliases.setItem(
+    `${alias}`,
+    await encryptData(
+      encryptionPassword,
+      storeWallet.keystore,
+      JSON.stringify({
+        wallets,
+        info,
+      })
+    )
+  )
+
+  // console.log(
+  //   'initWallet stored values',
+  //   storeWallet,
+  //   storedAlias,
+  // )
+
+  let contacts = '{}'
+
+  return {
+    wallets,
+    contacts,
+  }
 }
 
 
@@ -681,5 +850,664 @@ export function getAddressIndexFromUsage(wallet, account, usageIdx) {
     usage,
     usageIndex,
     addressIndex,
+  }
+}
+
+
+
+
+export async function generateAddressIterator(
+  xkey,
+  xkeyId,
+  addressIndex,
+) {
+  let key = await xkey.deriveAddress(addressIndex);
+  let address = await DashHd.toAddr(key.publicKey);
+
+  return {
+    address,
+    addressIndex,
+    usageIndex: xkey.index,
+    xkeyId,
+  }
+}
+
+export async function generateAndStoreAddressIterator(
+  xkey,
+  xkeyId,
+  walletId,
+  accountIndex,
+  addressIndex,
+  usageIndex = DashHd.RECEIVE,
+) {
+  let { address } = await generateAddressIterator(
+    xkey,
+    xkeyId,
+    addressIndex,
+  )
+
+  // console.log(
+  //   'generateAddressIterator',
+  //   {xkey, xkeyId, key, address, accountIndex, addressIndex},
+  // )
+
+  store.addresses.getItem(address)
+    .then(a => {
+      let $addr = a || {}
+      // console.log(
+      //   'generateAddressIterator store.addresses.getItem',
+      //   {address, $addr},
+      // )
+
+      store.addresses.setItem(
+        address,
+        {
+          ...$addr,
+          updatedAt: Date.now(),
+          walletId,
+          xkeyId,
+          accountIndex,
+          addressIndex,
+          usageIndex,
+        },
+      )
+    })
+
+  return {
+    address,
+    addressIndex,
+    accountIndex,
+    usageIndex: xkey.index,
+    xkeyId,
+  }
+}
+
+export async function batchXkeyAddressGenerate(
+  wallet,
+  addressIndex = 0,
+  batchSize = 20,
+) {
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAddressIterator(
+        wallet.xkey,
+        wallet.xkeyId,
+        addrIdx,
+      )
+    )
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+
+export async function batchAddressGenerate(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  usageIndex = DashHd.RECEIVE,
+  batchSize = 20,
+) {
+  // let hdpath = `m/44'/5'/${accountIndex}'/${usageIndex}/${addressIndex}`,
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  let account = await wallet.derivedWallet.deriveAccount(accountIndex);
+  let xkey = await account.deriveXKey(usageIndex);
+  let xkeyId = await DashHd.toId(xkey);
+
+  if (usageIndex !== DashHd.RECEIVE) {
+    let xkeyReceive = await account.deriveXKey(DashHd.RECEIVE);
+    xkeyId = await DashHd.toId(xkeyReceive);
+  }
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAndStoreAddressIterator(
+        xkey,
+        xkeyId,
+        wallet.id,
+        accountIndex,
+        addrIdx,
+        usageIndex,
+      )
+    )
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+
+export async function batchAddressUsageGenerate(
+  wallet,
+  accountIndex = 0,
+  addressIndex = 0,
+  batchSize = 20,
+) {
+  // let hdpath = `m/44'/5'/${accountIndex}'/${usageIndex}/${addressIndex}`,
+  let batchLimit = addressIndex + batchSize
+  let addresses = []
+
+  let account = await wallet.derivedWallet.deriveAccount(accountIndex);
+  let xkeyReceive = await account.deriveXKey(DashHd.RECEIVE);
+  let xkeyChange = await account.deriveXKey(DashHd.CHANGE);
+  let xkeyId = await DashHd.toId(xkeyReceive);
+
+  console.log(
+    'batchAddressUsageGenerate',
+    {batchLimit, account, xkeyReceive, xkeyChange},
+  )
+
+  for (let addrIdx = addressIndex; addrIdx < batchLimit; addrIdx++) {
+    addresses.push(
+      await generateAndStoreAddressIterator(
+        xkeyReceive,
+        xkeyId,
+        wallet.id,
+        accountIndex,
+        addrIdx,
+        DashHd.RECEIVE,
+      )
+    )
+    addresses.push(
+      await generateAndStoreAddressIterator(
+        xkeyChange,
+        xkeyId,
+        wallet.id,
+        accountIndex,
+        addrIdx,
+        DashHd.CHANGE,
+      )
+    )
+  }
+
+  return {
+    addresses,
+    finalAddressIndex: batchLimit,
+  }
+}
+
+
+
+
+
+export async function getTotalFunds(wallet) {
+  let funds = 0
+  let result = {}
+  let addrsLen = await store.addresses.length()
+
+  return await store.addresses.iterate((
+    value, key, iterationNumber
+  ) => {
+    if (value?.walletId === wallet?.id) {
+      result[key] = value
+      funds += value?.insight?.balance || 0
+    }
+
+    if (iterationNumber === addrsLen) {
+      return funds
+    }
+  })
+}
+
+export async function getAddrsWithFunds(wallet) {
+  let result = {}
+  let addrsLen = await store.addresses.length()
+
+  return await store.addresses.iterate((
+    value, key, iterationNumber
+  ) => {
+    if (
+      value?.walletId === wallet?.id &&
+      value?.insight?.balance > 0
+    ) {
+      result[key] = {
+        ...value,
+        address: key,
+      }
+    }
+
+    if (iterationNumber === addrsLen) {
+      return result
+    }
+  })
+}
+
+export async function batchGenAccts(
+  phrase,
+  accountIndex = 0,
+  batchSize = 5,
+) {
+  let $accts = await getStoredItems(store.accounts)
+  // let $acctsArr = Object.values($accts)
+  let accts = {}
+  let batch = batchSize + accountIndex
+
+  console.log(
+    'BATCH GENERATED ACCOUNTS START',
+    {
+      $accts,
+      // $acctsArr,
+      accountIndex,
+      batch,
+    }
+  )
+
+  for (let i = accountIndex; i < batch; i++) {
+    let acctWallet = await deriveWalletData(
+      phrase,
+      i,
+    )
+
+    if (!$accts[acctWallet.xkeyId]) {
+      let newAccount = await store.accounts.setItem(
+        acctWallet.xkeyId,
+        {
+          createdAt: (new Date()).toISOString(),
+          updatedAt: (new Date()).toISOString(),
+          accountIndex: i,
+          usage: [0,0],
+          walletId: acctWallet.id,
+          xkeyId: acctWallet.xkeyId,
+          addressKeyId: acctWallet.addressKeyId,
+          address: acctWallet.address,
+        }
+      )
+
+      accts[`acct__${i}`] = [ acctWallet, newAccount ]
+    }
+
+    // accts[`acct__${i}`] = batchGenAcctAddrs(
+    //   acctWallet,
+    //   newAccount,
+    // )
+  }
+
+  // let allBatches = Promise.allSettled(Object.values(accts))
+
+  return accts
+}
+
+export async function batchGenAcctAddrs(
+  wallet,
+  account,
+  usageIndex = -1,
+  batchSize = 20,
+) {
+  // console.log('batchGenAcctAddrs account', account, usageIndex)
+
+  let filterQuery = {
+    accountIndex: account.accountIndex,
+  }
+
+  if (usageIndex >= 0) {
+    filterQuery.usageIndex = usageIndex
+  }
+
+  let acctAddrsLen = await getFilteredStoreLength(
+    store.addresses,
+    filterQuery,
+  )
+
+  // console.log('getFilteredStoreLength res', acctAddrsLen)
+
+  let addrUsageIdx = account.usage?.[usageIndex] || 0
+  let addrIdx = addrUsageIdx
+  let batSize = batchSize
+
+  if (acctAddrsLen === 0) {
+    addrIdx = 0
+    batSize = addrUsageIdx + batchSize
+  }
+
+  if (acctAddrsLen <= addrUsageIdx + (batchSize / 2)) {
+    if (usageIndex >= 0) {
+      return await batchAddressGenerate(
+        wallet,
+        account.accountIndex,
+        account.usage[usageIndex],
+        usageIndex,
+        batSize,
+      )
+    } else {
+      return await batchAddressUsageGenerate(
+        wallet,
+        account.accountIndex,
+        addrIdx,
+        batSize,
+      )
+    }
+  }
+
+  return null
+}
+
+export async function batchGenAcctsAddrs(
+  wallet,
+  usageIndex = -1,
+  batchSize = 20,
+) {
+  let $accts = await getStoredItems(store.accounts)
+  let $acctsArr = Object.values($accts)
+  let accts = {}
+
+  if ($acctsArr.length > 0) {
+    for (let $a of $acctsArr) {
+      accts[`bat__${$a.accountIndex}`] = await batchGenAcctAddrs(
+        wallet,
+        $a,
+        usageIndex,
+        batchSize,
+      )
+    }
+
+    // console.warn(
+    //   'BATCH GENERATED ACCOUNTS',
+    //   accts,
+    // )
+  }
+
+  return accts
+}
+
+export async function getAccountWallet(wallet, phrase) {
+  let acctFromStore = await store.accounts.getItem(
+    wallet.xkeyId,
+  ) || {}
+  let acctFromStoreWallet = getAddressIndexFromUsage(
+    wallet,
+    acctFromStore,
+  )
+
+  if (acctFromStoreWallet?.addressIndex > 0) {
+    return {
+      wallet: await deriveWalletData(
+        phrase,
+        acctFromStoreWallet.accountIndex,
+        acctFromStoreWallet.addressIndex,
+        acctFromStoreWallet?.usageIndex ?? USAGE.RECEIVE,
+      ),
+      account: acctFromStore,
+    }
+  }
+
+  return {
+    wallet,
+    account: acctFromStore,
+  }
+}
+
+export async function forceInsightUpdateForAddress(addr) {
+  let currentAddr = await store.addresses.getItem(
+    addr
+  )
+  await store.addresses.setItem(
+    addr,
+    {
+      ...currentAddr,
+      insight: {
+        ...currentAddr.insight,
+        updatedAt: 0
+      }
+    }
+  )
+}
+
+export function sortAddrs(a, b) {
+  // Ascending Lexicographical on TxId (prev-hash) in-memory (not wire) byte order
+  if (a.accountIndex > b.accountIndex) {
+    return 1;
+  }
+  if (a.accountIndex < b.accountIndex) {
+    return -1;
+  }
+  // addressIndex
+  // Ascending Vout (Numerical)
+  let indexDiff = a.addressIndex - b.addressIndex;
+  return indexDiff;
+}
+
+
+
+export function getBalance(utxos) {
+  return utxos.reduce(function (total, utxo) {
+    return total + utxo.satoshis;
+  }, 0);
+}
+
+export function selectOptimalUtxos(utxos, output) {
+  let balance = getBalance(utxos);
+  let fees = DashTx.appraise({
+    //@ts-ignore
+    inputs: [{}],
+    //@ts-ignore
+    outputs: [{}],
+  });
+
+  let fullSats = output + fees.min;
+
+  if (balance < fullSats) {
+    return [];
+  }
+
+  // from largest to smallest
+  utxos.sort(function (a, b) {
+    return b.satoshis - a.satoshis;
+  });
+
+  // /** @type Array<T> */
+  let included = [];
+  let total = 0;
+
+  // try to get just one
+  utxos.every(function (utxo) {
+    if (utxo.satoshis > fullSats) {
+      included[0] = utxo;
+      total = utxo.satoshis;
+      return true;
+    }
+    return false;
+  });
+  if (total) {
+    return included;
+  }
+
+  // try to use as few coins as possible
+  utxos.some(function (utxo, i) {
+    included.push(utxo);
+    total += utxo.satoshis;
+    if (total >= fullSats) {
+      return true;
+    }
+
+    // it quickly becomes astronomically unlikely to hit the one
+    // exact possibility that least to paying the absolute minimum,
+    // but remains about 75% likely to hit any of the mid value
+    // possibilities
+    if (i < 2) {
+      // 1 input 25% chance of minimum (needs ~2 tries)
+      // 2 inputs 6.25% chance of minimum (needs ~8 tries)
+      fullSats = fullSats + DashTx.MIN_INPUT_SIZE;
+      return false;
+    }
+    // but by 3 inputs... 1.56% chance of minimum (needs ~32 tries)
+    // by 10 inputs... 0.00953674316% chance (needs ~524288 tries)
+    fullSats = fullSats + DashTx.MIN_INPUT_SIZE + 1;
+  });
+  return included;
+}
+
+
+
+
+
+
+
+export function sortIncomingAndOutgoingTxs({
+  conAddr, tx, addr, dir, sentAmount = null, receivedAmount = null,
+  byAlias = {}, byAddress = {}, byTx = {},
+}) {
+  let alias = byTx?.[tx.txid]?.alias || conAddr.alias
+  byAlias[conAddr.alias] = {
+    ...(byAlias[conAddr.alias] || []),
+    [tx.txid]: {
+      addr,
+      dir,
+      sentAmount,
+      receivedAmount,
+      ...tx,
+      ...conAddr,
+      alias,
+    }
+  }
+  byAddress[addr] = [
+    ...(byAddress[addr] || []),
+    {
+      receivedAmount,
+      sentAmount,
+      dir,
+      ...tx,
+      ...conAddr,
+      alias,
+    }
+  ]
+  byTx[tx.txid] = {
+    receivedAmount,
+    sentAmount,
+    dir,
+    ...tx,
+    ...conAddr,
+    alias,
+  }
+
+  // console.log(
+  //   'sortIncomingAndOutgoingTxs',
+  //   conAddr.alias, conAddr.xkeyId, tx,
+  // )
+
+  return {
+    byAlias,
+    byAddress,
+    byTx,
+  }
+}
+
+
+
+export async function getContactsByXkeyId(
+  appState,
+) {
+  let contactsXkeys = {}
+
+  for await (let c of appState.contacts) {
+    let og = Object.values(c.outgoing || {})?.[0]
+    let ic = Object.values(c.incoming || {})?.[0]
+
+    if (og) {
+      contactsXkeys[og.xkeyId] = {
+        ...c,
+        dir: 'outgoing',
+      }
+    }
+    if (ic) {
+      contactsXkeys[ic.xkeyId] = {
+        ...c,
+        dir: 'incoming',
+      }
+    }
+  }
+
+  return contactsXkeys
+}
+
+export async function getContactsFromAddrs(
+  appState,
+) {
+  let accts = await loadStoreObject(store.accounts)
+  let addrs = await loadStoreObject(store.addresses)
+  let contactAddrs = await getContactsByXkeyId(appState)
+  let contacts = {}
+
+  for await (let [ck,cv] of Object.entries(addrs)) {
+    let contact = contactAddrs[cv.xkeyId]
+    let acct = accts[cv.xkeyId]
+    if (contact) {
+      contacts[ck] = contact
+    } else if (acct) {
+      contacts[ck] = {
+        ...acct,
+        alias: null,
+      }
+    }
+  }
+
+  return contacts
+}
+
+export async function deriveContactAddrs(
+  appState, dir = 'outgoing',
+) {
+  let addrs = {}
+
+  for await (let c of appState.contacts) {
+    let og = Object.values(c[dir] || {})?.[0]
+    let xkey = og?.xpub || og?.xprv
+
+    if (xkey) {
+      let contactWallet = await deriveWalletData(
+        xkey,
+      )
+      let contactAddrs = await batchXkeyAddressGenerate(
+        contactWallet,
+        contactWallet.addressIndex,
+      )
+
+      contactAddrs.addresses.forEach(g => {
+        addrs[g.address] = {
+          alias: c.alias,
+          xkeyId: contactWallet.xkeyId,
+          dir,
+        }
+      })
+    }
+  }
+
+  // console.log('deriveContactAddrs', {
+  //   asc: appState.contacts,
+  //   addrs,
+  // })
+
+  return addrs
+}
+
+export function getTransactionsByContactAlias(appState) {
+  return async res => {
+    if (!res) {
+      return []
+    }
+
+    appState.contacts = res
+
+    // let contactAddrs = await deriveContactAddrs(appState) || {}
+    // let addrs = Object.keys(contactAddrs)
+
+    // console.log('contactAddrs', addrs)
+
+    // if (addrs?.length) {
+    //   getAddrsTransactions({
+    //     appState, addrs, contactAddrs
+    //   })
+    // }
+
+    // console.log('contacts', res, contactAddrs)
+
+    return res
   }
 }
