@@ -181,6 +181,9 @@ dialog > form > fieldset div:has(input + div) {
   border-radius: 6.25rem;
   border: 1px solid var(--dark-600);
 }
+dialog > form > fieldset input[type="range"] {
+  padding: 0;
+}
 dialog > form > fieldset input + p,
 dialog > form > fieldset label {
   text-align: left;
