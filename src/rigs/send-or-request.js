@@ -12,7 +12,7 @@ import {
   roundUsing,
   getPartialHDPath,
   getAddressIndexFromUsage,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let sendOrReceiveRig = (async function (globals) {
   'use strict';

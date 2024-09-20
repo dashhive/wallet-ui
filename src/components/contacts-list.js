@@ -8,7 +8,7 @@ import {
   sortContactsByAlias,
   filterPairedContacts,
   filterUnpairedContacts,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 let _handlers = []
 

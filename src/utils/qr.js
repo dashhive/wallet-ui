@@ -1,6 +1,6 @@
 "use strict";
 
-import { toDash } from './local.js'
+import { toDash } from './dash/local.js'
 
 /**
  * @typedef QrOpts

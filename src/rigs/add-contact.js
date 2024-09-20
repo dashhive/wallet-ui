@@ -23,7 +23,7 @@ import {
   generateContactPairingURI,
   getUniqueAlias,
   isUniqueAlias,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let addContactRig = (async function (globals) {
   'use strict';

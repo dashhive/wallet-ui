@@ -8,7 +8,7 @@ import { qrSvg } from '../utils/qr.js'
 
 import {
   generateContactPairingURI,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let pairQrRig = (async function (globals) {
   'use strict';

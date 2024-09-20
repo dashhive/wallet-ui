@@ -20,7 +20,7 @@ import {
   getUnusedChangeAddress,
   loadWalletsForAlias,
   getTransactionsByContactAlias,
-} from './utils/local.js'
+} from './utils/dash/local.js'
 
 import {
   createTx,
@@ -31,7 +31,7 @@ import {
   store,
   sendTx,
   updateAllFunds,
-} from './utils/wallet.js'
+} from './utils/dash/network.js'
 
 import {
   decryptKeystore,

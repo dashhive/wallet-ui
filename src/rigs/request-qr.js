@@ -9,7 +9,7 @@ import {
   generatePaymentRequestURI,
   getPartialHDPath,
   getAddressIndexFromUsage,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 import { qrSvg } from '../utils/qr.js'
 

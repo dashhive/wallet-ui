@@ -3,16 +3,16 @@ import {
   DashTx,
   DashSight,
   DashSocket,
-} from '../imports.js'
+} from '../../imports.js'
 
 import {
   walletFunds,
-} from '../state/index.js'
+} from '../../state/index.js'
 
 import {
   DatabaseSetup,
   loadStoreObject,
-} from './db.js'
+} from '../db.js'
 
 import {
   batchGenAccts,

@@ -9,7 +9,7 @@ import {
 
 import {
   formatDash,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let sendConfirmRig = (async function (globals) {
   'use strict';

@@ -5,7 +5,7 @@ import {
 
 import {
   phraseToEl,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let phraseBackupRig = (async function (globals) {
   'use strict';

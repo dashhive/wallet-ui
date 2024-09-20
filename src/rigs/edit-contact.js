@@ -19,7 +19,7 @@ import {
   parseAddressField,
   getUniqueAlias,
   isUniqueAlias,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let editContactRig = (async function (globals) {
   'use strict';

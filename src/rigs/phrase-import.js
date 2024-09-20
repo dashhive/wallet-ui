@@ -12,7 +12,7 @@ import {
 
 import {
   verifyPhrase,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 export let phraseImportRig = (async function (globals) {
   'use strict';

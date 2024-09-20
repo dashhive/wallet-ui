@@ -4,13 +4,13 @@ import {
   DASH_URI_REGEX,
   OIDC_CLAIMS,
   SUPPORTED_CLAIMS,
-} from './constants.js'
+} from '../constants.js'
 
 import {
   DashHd,
   DashTx,
   DashPhrase,
-} from '../imports.js'
+} from '../../imports.js'
 
 import {
   DatabaseSetup,
@@ -18,12 +18,12 @@ import {
   getFilteredStoreLength,
   getStoredItems,
   loadStoreObject,
-} from './db.js'
+} from '../db.js'
 
 import {
   encryptData,
   encryptKeystore,
-} from './cryptic.js'
+} from '../cryptic.js'
 
 export const store = await DatabaseSetup()
 

@@ -9,7 +9,7 @@ import {
 } from '../utils/retort.js'
 import {
   sortTransactionsByTime,
-} from '../utils/local.js'
+} from '../utils/dash/local.js'
 
 let _handlers = []
 

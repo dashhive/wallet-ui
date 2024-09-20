@@ -2,8 +2,8 @@ import {
   lit as html,
 } from '../utils/generic.js'
 import { envoy, } from '../utils/retort.js'
-import { formatDash, } from '../utils/local.js'
-import { updateAllFunds, } from '../utils/wallet.js'
+import { formatDash, } from '../utils/dash/local.js'
+import { updateAllFunds, } from '../utils/dash/network.js'
 
 const initialState = {
   id: 'Balance',

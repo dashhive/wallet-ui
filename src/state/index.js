@@ -6,7 +6,7 @@ import {
 } from '../utils/retort.js'
 import {
   store,
-} from '../utils/wallet.js'
+} from '../utils/dash/network.js'
 
 export const appDialogs = envoy(
   {
