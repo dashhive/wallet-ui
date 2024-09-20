@@ -143,75 +143,30 @@ export const DialogContructor = (() => {
 
     this.events = {
       input: event => {
-        // let {
-        //   // @ts-ignore
-        //   name: fieldName, form,
-        // } = event?.target
-
-        // console.log('handle input', {
-        //   fieldName,
-        //   form,
-        // })
-
-        if (
-          event?.target?.validity?.patternMismatch &&
-          event?.target?.type !== 'checkbox'
-        ) {
-          event.preventDefault()
-          let label = event.target?.previousElementSibling?.textContent?.trim()
-          if (label) {
-            event.target.setCustomValidity(`Invalid ${label}`)
-          }
-        } else {
-          event.target.setCustomValidity('')
-        }
-        event.target.reportValidity()
       },
       change: event => {
-        // let {
-        //   // @ts-ignore
-        //   name: fieldName, form,
-        // } = event?.target
-
-        // console.log('handle change', {
-        //   fieldName,
-        //   form,
-        // })
-
-        if (
-          event?.target?.validity?.patternMismatch &&
-          event?.target?.type !== 'checkbox'
-        ) {
-          event.preventDefault()
-          let label = event.target?.previousElementSibling?.textContent?.trim()
-          if (label) {
-            event.target.setCustomValidity(`Invalid ${label}`)
-          }
-        } else {
-          event.target.setCustomValidity('')
-        }
-        event.target.reportValidity()
       },
       blur: event => {
         // event.preventDefault()
-        // console.log(
-        //   'handle blur',
-        //   event,
-        // )
+        if (
+          event?.target?.validity?.patternMismatch &&
+          event?.target?.type !== 'checkbox'
+        ) {
+          event.preventDefault()
+          let label = event.target?.previousElementSibling?.textContent?.trim()
+          if (label) {
+            event.target.setCustomValidity(`Invalid ${label}`)
+          }
+        } else {
+          event.target.setCustomValidity('')
+        }
+        event.target.reportValidity()
       },
       focusout: event => {
         // event.preventDefault()
-        // console.log(
-        //   'handle focus out',
-        //   event,
-        // )
       },
       focusin: event => {
         // event.preventDefault()
-        // console.log(
-        //   'handle focus in',
-        //   event,
-        // )
       },
       drop: event => {
         event.preventDefault()
@@ -228,19 +183,10 @@ export const DialogContructor = (() => {
       render: (
         state,
       ) => {
-        // console.log(
-        //   'handle dialog render',
-        //   state,
-        // )
       },
       show: (
         state,
       ) => {
-        // console.log(
-        //   'handle dialog show',
-        //   state,
-        // )
-
         // focus first input
         this.elements.form.querySelector(
           'input'
@@ -253,12 +199,6 @@ export const DialogContructor = (() => {
         event.preventDefault()
         removeAllListeners.bind(this)
 
-        // console.log(
-        //   'handle dialog close',
-        //   event,
-        //   event.target === this.elements.dialog,
-        //   this.elements.dialog.returnValue
-        // )
         this.state.value.status = DIALOG_STATUS.NOT_LOADING
         this.elements.dialog?.querySelector('progress')?.remove()
 
@@ -267,21 +207,10 @@ export const DialogContructor = (() => {
         } else {
           resolve('cancel')
         }
-        // console.log(
-        //   'DIALOG handleClose',
-        //   modal.rendered[this.slugs.dialog],
-        // )
 
         setTimeout(t => {
-          // modal.rendered[this.slugs.dialog] = null
           this.state.value.rendered = null
           event?.target?.remove()
-          // console.log(
-          //   'DIALOG handleClose setTimeout',
-          //   this.state.value.delay,
-          //   // modal.rendered[this.slugs.dialog],
-          //   modal.rendered,
-          // )
         }, this.state.value.delay)
       },
       submit: event => {
@@ -291,11 +220,6 @@ export const DialogContructor = (() => {
 
         this.elements.dialog.returnValue = String(fde.intent)
 
-        // console.log(
-        //   'handleSubmit',
-        //   [event],
-        // )
-
         this.elements.dialog.close(String(fde.intent))
       },
       reset: event => {
@@ -304,19 +228,10 @@ export const DialogContructor = (() => {
           'close',
           this.events.reset
         )
-        // console.log(
-        //   'handleReset',
-        //   [event.target],
-        // )
         this.elements.dialog.close('cancel')
       },
       click: event => {
         if (event.target === this.elements.dialog) {
-          // console.log(
-          //   'handle dialog backdrop click',
-          //   event,
-          //   event.target === this.elements.dialog
-          // )
           this.elements.dialog.close('cancel')
         }
       },
@@ -329,7 +244,6 @@ export const DialogContructor = (() => {
     this.elements.dialog = dialogElement
     this.elements.form = formElement
     this.elements.progress = progressElement
-
 
     this.element = this.elements.dialog
 
@@ -344,7 +258,6 @@ export const DialogContructor = (() => {
 
     formElement.name = `${this.slugs.form}`
     formElement.method = 'dialog'
-    // formElement.innerHTML = this.markup.content
     formElement.innerHTML = this.markup.content()
 
     dialogElement.insertAdjacentElement(
@@ -360,16 +273,12 @@ export const DialogContructor = (() => {
       removeAllListeners.call(this)
       addListeners.call(this, resolve, reject)
       console.log('modal.js dialog show', this.elements.dialog)
-      // if (
-      //   !this.state.value.rendered &&
-      //   !el.contains(this.elements.dialog)
-      // ) {
-        this.render({
-          el,
-          // cfg: config,
-          position: 'afterend'
-        })
-      // }
+
+      this.render({
+        el,
+        position: 'afterend'
+      })
+
       this.elements.dialog.show()
       this.events.show?.(this)
       callback?.()
@@ -383,16 +292,13 @@ export const DialogContructor = (() => {
       removeAllListeners.call(this)
       addListeners.call(this, resolve, reject)
       console.log('modal.js dialog showModal', this, this.elements.dialog)
-      // if (
-      //   !this.state.value.rendered &&
-      //   !el.contains(this.elements.dialog)
-      // ) {
-        this.render({
-          el,
-          // cfg: config,
-          position: 'afterend'
-        })
-      // }
+
+      this.render({
+        el,
+        // cfg: config,
+        position: 'afterend'
+      })
+
       this.elements.dialog.showModal()
       this.events.show?.(this)
       callback?.()
@@ -412,12 +318,6 @@ export const DialogContructor = (() => {
       console.log('Dialog updateConfig TOP', config)
 
       for (let param in config) {
-        // if (param === 'markup') {
-        //   this[param].value = {
-        //     ...this[param].value,
-        //     ...(config[param] || {}),
-        //   }
-        // } else {
         if ('value' in this[param]) {
           this[param].value = {
             ...this[param].value,
@@ -429,7 +329,6 @@ export const DialogContructor = (() => {
             ...(config[param] || {}),
           }
         }
-        // }
       }
 
       console.log('Dialog updateConfig BOT', this)
@@ -446,11 +345,6 @@ export const DialogContructor = (() => {
     }) => {
       console.log('dialog render', this, dl)
 
-      // this.elements.form?.removeEventListener?.(
-      //   'submit',
-      //   this.events.submit,
-      // )
-
       if (el !== this.appElement) {
         this.appElement = el
       }
@@ -461,13 +355,7 @@ export const DialogContructor = (() => {
 
       this.elements.dialog.id = this.slugs.dialog
       this.elements.form.name = this.slugs.form
-      // this.elements.form.innerHTML = this.markup.content
       this.elements.form.innerHTML = this.markup.content()
-
-      // this.elements.form.addEventListener(
-      //   'submit',
-      //   this.events.submit,
-      // )
 
       console.log('DIALOG RENDER STATE', this.state.value, cfg)
 
@@ -480,18 +368,12 @@ export const DialogContructor = (() => {
           'beforebegin',
           this.elements.progress,
         )
-
-        // document.body.insertAdjacentHTML(
-        //   'afterbegin',
-        //   `<progress id="pageLoader" class="pending"></progress>`,
-        // )
       }
 
       if (
         this.state.value.status === DIALOG_STATUS.SUCCESS ||
         this.state.value.status === DIALOG_STATUS.ERROR
       ) {
-        // document.getElementById('pageLoader')?.remove()
         this.elements.dialog.querySelector('progress')?.remove()
       }
 
@@ -507,37 +389,13 @@ export const DialogContructor = (() => {
         )
       }
 
-      // console.log('DIALOG RENDER', state, position, state.slugs.dialog, modal.rendered)
-
       this.events.render(this.state)
 
       return this
     }
-
-    // const updateSelf = (cfg, methods = []) => {
-    //   for (let mthd of methods) {
-    //     this[mthd] = {
-    //       ...this[mthd],
-    //       ...(cfg[mthd] || {}),
-    //     }
-    //   }
-    // }
-    // updateSelf(cfg, [
-    //   'state', 'slugs', 'events', 'elements', 'templates'
-    // ])
-
-    // state.render = render
   }
 
   return dl
 })();
-
-// export function Modal(config) {
-//   let dialog = new DialogContructor(config)
-
-//   console.log('Modal.js Dialog', dialog)
-
-//   return dialog
-// }
 
 export default DialogContructor
