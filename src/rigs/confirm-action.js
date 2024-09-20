@@ -1,7 +1,11 @@
-import { lit as html } from '../helpers/lit.js'
 import {
+  DIALOG_STATUS,
+} from '../utils/constants.js'
+
+import {
+  lit as html,
   formDataEntries,
-} from '../helpers/utils.js'
+} from '../utils/generic.js'
 
 export let confirmActionRig = (async function (globals) {
   'use strict';
@@ -26,6 +30,7 @@ export let confirmActionRig = (async function (globals) {
       actionType: 'warn',
       actionClasses: {
         info: 'bg-info dark bg-info-hover',
+        infoo: 'outline brd-info info dark light-hover bg-info-hover',
         warn: 'outline brd-warn warn dark-hover bg-warn-hover',
         dang: 'outline brd-dang dang light-hover bg-dang-hover',
       },
@@ -79,16 +84,7 @@ export let confirmActionRig = (async function (globals) {
         </footer>
       `,
       alert: state => html``,
-      // alert: state => html`
-      //   <article class="px-3 col">
-      //     <strong>
-      //       This is an irreversable action, make sure to backup first.
-      //     </strong>
-      //   </article>
-      // `,
-      content: state => html`
-        ${state.header(state)}
-
+      fields: state => html`
         <article class="px-3 col">
           <strong>
             Are you sure you want to ${state.action} ${
@@ -96,6 +92,11 @@ export let confirmActionRig = (async function (globals) {
             }?
           </strong>
         </article>
+      `,
+      content: state => html`
+        ${state.header(state)}
+
+        ${state.fields(state)}
 
         ${state.footer(state)}
       `,
@@ -108,8 +109,17 @@ export let confirmActionRig = (async function (globals) {
 
           if (fde?.intent === 'act') {
             // state.elements.dialog.returnValue = String(fde.intent)
-            state.callback?.(state, fde)
-            confirmAction.close(fde.intent)
+            let res = await state.callback?.(state, fde)
+
+            if (
+              res.state.status === DIALOG_STATUS.SUCCESS ||
+              res.state.status === DIALOG_STATUS.ERROR
+            ) {
+              // state.elements.dialog?.querySelector('progress')?.remove()
+              state.elements.progress?.remove?.()
+
+              confirmAction.close(fde.intent)
+            }
           }
         },
       },

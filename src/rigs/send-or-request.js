@@ -1,15 +1,18 @@
-import { lit as html } from '../helpers/lit.js'
-import { AMOUNT_REGEX, USAGE } from '../helpers/constants.js'
+import { AMOUNT_REGEX, USAGE } from '../utils/constants.js'
+
 import {
+  lit as html,
   formDataEntries,
+} from '../utils/generic.js'
+
+import {
   parseAddressField,
   fixedDash,
-  toDASH,
   toDash,
   roundUsing,
   getPartialHDPath,
   getAddressIndexFromUsage,
-} from '../helpers/utils.js'
+} from '../utils/dash/local.js'
 
 export let sendOrReceiveRig = (async function (globals) {
   'use strict';
@@ -38,6 +41,7 @@ export let sendOrReceiveRig = (async function (globals) {
       closeTxt: html`<svg class="x" width="26" height="26" viewBox="0 0 26 26"><use xlink:href="#icon-x"></use></svg>`,
       closeAlt: `Close`,
       action: 'send',
+      hideAddressee: false,
       submitIcon: state => {
         const icon = {
           send: html`
@@ -180,26 +184,56 @@ export let sendOrReceiveRig = (async function (globals) {
           </button>
         `
       },
+      cashSend: state => html`
+        <div class="switch py-3 pr-3">
+          <label for="cashSendMode" class="jc-end">
+            Use CashSend
+          </label>
+          <input
+            id="cashSendMode"
+            name="mode"
+            type="checkbox"
+            value="cash"
+          />
+          <label for="cashSendMode" class="switch" title="CashSend"></label>
+        </div>
+      `,
+      addressee: state => {
+        if (state.hideAddressee) {
+          return html`
+            <input
+              type="hidden"
+              id="${state.slugs.form}_to"
+              name="to"
+              value="${state.to || ''}"
+            />
+          `
+        }
+
+        return html`
+          <div class="input">
+            <input
+              type="text"
+              id="${state.slugs.form}_to"
+              name="to"
+              placeholder="enter @alias or dash address"
+              spellcheck="false"
+              autocomplete="off"
+              autocapitalize="off"
+              list="${state.action === 'receive' ? 'contactReceiveAliases' : 'contactSendAliases'}"
+              value="${state.to || ''}"
+            />
+
+            ${state.qrScanBtn(state)}
+          </div>
+        `
+      },
       content: state => html`
         ${state.header(state)}
 
         <fieldset>
           <article>
-            <div class="input">
-              <input
-                type="text"
-                id="${state.slugs.form}_to"
-                name="to"
-                placeholder="enter @alias or dash address"
-                spellcheck="false"
-                autocomplete="off"
-                autocapitalize="off"
-                list="${state.action === 'receive' ? 'contactReceiveAliases' : 'contactSendAliases'}"
-                value="${state.to || ''}"
-              />
-
-              ${state.qrScanBtn(state)}
-            </div>
+            ${state.addressee(state)}
 
             <div class="field amount">
               <label for="amount">
@@ -228,18 +262,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 ${state.fundAmountBtns(state)}
               </div>
             </div>
-            <div class="switch py-3 pr-3">
-              <label for="cashSendMode" class="jc-end">
-                Use CashSend
-              </label>
-              <input
-                id="cashSendMode"
-                name="mode"
-                type="checkbox"
-                value="cash"
-              />
-              <label for="cashSendMode" class="switch" title="CashSend"></label>
-            </div>
+            ${state.cashSend(state)}
 
             <div class="error"></div>
           </article>
@@ -444,6 +467,10 @@ export let sendOrReceiveRig = (async function (globals) {
             inWallet = Object.values(contact?.incoming)?.[0]
           }
 
+          console.log('send or request', {
+            to, contact, outWallet, inWallet
+          })
+
           if (!inWallet) {
             // state.wallet.addressIndex = (
             //   state.wallet?.addressIndex ?? -1
@@ -518,7 +545,7 @@ export let sendOrReceiveRig = (async function (globals) {
             }
 
             let leftoverBalance = walletFunds.balance - amount
-            let fullTransfer = leftoverBalance <= 0.0010_0200
+            let fullTransfer = leftoverBalance > 0 && leftoverBalance <= 0.0010_0200
             // let fullTransfer = leftoverBalance <= 0.0001_0200
 
             if (
@@ -542,6 +569,7 @@ export let sendOrReceiveRig = (async function (globals) {
                 state.wallet.accountIndex,
                 state.wallet.addressIndex,
               )
+
               let amountNeeded = fixedDash(roundUsing(Math.floor, Math.abs(
                 walletFunds.balance - Number(fde.amount)
               )))

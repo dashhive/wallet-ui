@@ -1,17 +1,15 @@
-import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
 import {
+  ALIAS_REGEX,
+} from '../utils/constants.js'
+
+import {
+  lit as html,
   formDataEntries,
   setClipboard,
   openBlobSVG,
-  // sortContactsByAlias,
-  // sortContactsByName,
-  // parseAddressField,
-} from '../helpers/utils.js'
+} from '../utils/generic.js'
 
-import {
-  ALIAS_REGEX,
-} from '../helpers/constants.js'
+import { qrSvg } from '../utils/qr.js'
 
 export let editProfileRig = (async function (globals) {
   'use strict';

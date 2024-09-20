@@ -11,6 +11,7 @@
  *
  * See https://github.com/jojobyte/browser-import-rabbit-hole
  */
+import './secp.js';
 
 import '../node_modules/dashtx/dashtx.js';
 import '../node_modules/dashkeys/dashkeys.js';
@@ -20,10 +21,13 @@ import '../node_modules/dashsight/dashsight.js';
 import '../node_modules/dashsight/dashsocket.js';
 import '../node_modules/@dashincubator/base58check/base58check.js';
 import '../node_modules/@dashincubator/ripemd160/ripemd160.js';
-import '../node_modules/@dashincubator/secp256k1/secp256k1.js';
+// import '../node_modules/@dashincubator/secp256k1/secp256k1.js';
 import '../node_modules/crypticstorage/cryptic.js';
 import '../node_modules/dashwallet/dashwallet.js';
 import '../node_modules/localforage/dist/localforage.js';
+import '../node_modules/crowdnode/dashcore-lit.js';
+import '../node_modules/crowdnode/dashapi.js';
+import '../node_modules/crowdnode/crowdnode.js';
 
 import * as DashTxTypes from '../node_modules/dashtx/dashtx.js';
 import * as DashKeysTypes from '../node_modules/dashkeys/dashkeys.js';
@@ -37,6 +41,9 @@ import * as Secp256k1Types from '../node_modules/@dashincubator/secp256k1/secp25
 import * as CrypticTypes from '../node_modules/crypticstorage/cryptic.js';
 import * as CrypticStorageTypes from '../node_modules/crypticstorage/storage.js';
 import * as DashWalletTypes from '../node_modules/dashwallet/dashwallet.js';
+import * as DashCoreTypes from '../node_modules/crowdnode/dashcore-lit.js';
+import * as DashApiTypes from '../node_modules/crowdnode/dashapi.js';
+import * as CrowdNodeTypes from '../node_modules/crowdnode/crowdnode.js';
 // import * as LocalForageTypes from '../node_modules/localforage/dist/localforage.js';
 
 /** @type {DashTxTypes} */
@@ -56,7 +63,10 @@ export let Base58Check = window?.Base58Check || globalThis?.Base58Check;
 /** @type {RIPEMD160Types} */
 export let RIPEMD160 = window?.RIPEMD160 || globalThis?.RIPEMD160;
 /** @type {Secp256k1Types} */
-export let Secp256k1 = window?.nobleSecp256k1 || globalThis?.nobleSecp256k1;
+export let Secp256k1 = (
+  window?.nobleSecp256k1 || globalThis?.nobleSecp256k1 ||
+  window?.Secp256k1 || globalThis?.Secp256k1
+);
 /** @type {CrypticTypes} */
 export let Cryptic =
   window?.Cryptic || globalThis?.Cryptic;
@@ -65,11 +75,17 @@ export let CrypticStorage =
   window?.CrypticStorage || globalThis?.CrypticStorage;
 /** @type {DashWalletTypes} */
 export let DashWallet = window?.Wallet || globalThis?.Wallet;
+/** @type {CrowdNodeTypes} */
+export let CrowdNode = window?.CrowdNode || globalThis?.CrowdNode
 
 export let localforage =
   window?.localforage || globalThis?.localforage;
 
 export default {
+  Base58Check,
+  CrowdNode,
+  Cryptic,
+  CrypticStorage,
   DashWallet,
   DashTx,
   DashKeys,
@@ -77,10 +93,7 @@ export default {
   DashPhrase,
   DashSight,
   DashSocket,
-  Base58Check,
+  localforage,
   RIPEMD160,
   Secp256k1,
-  Cryptic,
-  CrypticStorage,
-  localforage,
 };

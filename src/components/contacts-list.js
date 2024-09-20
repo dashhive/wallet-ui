@@ -1,13 +1,14 @@
-import { lit as html } from '../helpers/lit.js'
 import {
-  envoy,
-  restate,
+  lit as html,
+  timeago,
+  getAvatar,
+} from '../utils/generic.js'
+import { envoy, restate, } from '../utils/retort.js'
+import {
   sortContactsByAlias,
   filterPairedContacts,
   filterUnpairedContacts,
-  timeago,
-  getAvatar,
-} from '../helpers/utils.js'
+} from '../utils/dash/local.js'
 
 let _handlers = []
 

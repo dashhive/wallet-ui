@@ -1,7 +1,7 @@
-import { lit as html } from '../helpers/lit.js'
 import {
+  lit as html,
   formDataEntries,
-} from '../helpers/utils.js'
+} from '../utils/generic.js'
 
 export let onboardRig = (async function (globals) {
   'use strict';

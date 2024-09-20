@@ -1,6 +1,9 @@
-import { lit as html } from '../helpers/lit.js'
-import { envoy, formatDash, } from '../helpers/utils.js'
-import { updateAllFunds, } from '../helpers/wallet.js'
+import {
+  lit as html,
+} from '../utils/generic.js'
+import { envoy, } from '../utils/retort.js'
+import { formatDash, } from '../utils/dash/local.js'
+import { updateAllFunds, } from '../utils/dash/network.js'
 
 const initialState = {
   id: 'Balance',
@@ -68,7 +71,7 @@ const initialState = {
       // )
 
       if (state?.wallet && state.walletFunds) {
-        updateAllFunds(state.wallet, state.walletFunds)
+        updateAllFunds(state.wallet)
           .then(balance => {
             console.log(
               'Update Balance',

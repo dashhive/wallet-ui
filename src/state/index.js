@@ -1,12 +1,12 @@
 import {
   OIDC_CLAIMS,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
 import {
   envoy,
-} from '../helpers/utils.js'
+} from '../utils/retort.js'
 import {
   store,
-} from '../helpers/wallet.js'
+} from '../utils/dash/network.js'
 
 export const appDialogs = envoy(
   {

@@ -1,5 +1,3 @@
-export const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
-
 export const KS_PRF = {
   'hmac-sha256': 'SHA-256',
 }
@@ -142,3 +140,59 @@ export const USAGE = {
   RECEIVE,
   CHANGE,
 }
+
+const NOT_LOADING = 0
+const LOADING = 1
+const SUCCESS = 2
+const ERROR = 3
+
+export const DIALOG_STATUS = {
+  NOT_LOADING,
+  LOADING,
+  SUCCESS,
+  ERROR
+}
+
+export const CROWDNODE = {
+  offset: 20000,
+  duffs: 100000000,
+  satoshis: 100000000,
+  depositMinimum: 100000,
+  stakeMinimum: 50000000,
+
+  /**
+   * @type {Record<String, Number>}
+   */
+  requests: {
+    acceptTerms: 65536,
+    offset: 20000,
+    signupForApi: 131072,
+    toggleInstantPayout: 4096,
+    withdrawMin: 1,
+    withdrawMax: 1000,
+  },
+
+  /**
+   * @type {Record<String, Number>}
+   */
+  messages: {
+    PleaseAcceptTerms: 2,
+    WelcomeToCrowdNodeBlockChainAPI: 4,
+    DepositReceived: 8,
+    WithdrawalQueued: 16,
+    WithdrawalFailed: 32,
+    AutoWithdrawalEnabled: 64,
+    AutoWithdrawalDisabled: 128,
+  },
+
+  /**
+   * @type {Record<Number, String>}
+   */
+  responses: {},
+}
+
+CROWDNODE.responses = Object.fromEntries(
+  Object.entries(CROWDNODE.messages).map(
+    ([k,v]) => [v,k]
+  )
+)

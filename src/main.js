@@ -1,52 +1,58 @@
-import { lit as html } from './helpers/lit.js'
-
-import {
-  generateWalletData,
-  deriveWalletData,
-  getStoreData,
-  loadStoreObject,
-  formDataEntries,
-} from './helpers/utils.js'
-
 import {
   DUFFS,
-} from './helpers/constants.js'
+  DIALOG_STATUS,
+} from './utils/constants.js'
 
 import {
-  findInStore,
-  initDashSocket,
+  lit as html,
+  formDataEntries,
+} from './utils/generic.js'
+
+import {
   batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
   batchXkeyAddressGenerate,
-  updateAllFunds,
-  decryptKeystore,
-  getStoredItems,
-  loadWalletsForAlias,
-  store,
-  createTx,
-  sendTx,
-  getAddrsWithFunds,
-  storedData,
-  getUnusedChangeAddress,
+  deriveWalletData,
+  generateWalletData,
   getAccountWallet,
+  getAddrsWithFunds,
+  getUnusedChangeAddress,
+  loadWalletsForAlias,
+  getTransactionsByContactAlias,
+} from './utils/dash/local.js'
+
+import {
+  createTx,
   dashsight,
   getAddrsTransactions,
-  getTransactionsByContactAlias,
   getTxs,
-} from './helpers/wallet.js'
+  initDashSocket,
+  store,
+  sendTx,
+  updateAllFunds,
+} from './utils/dash/network.js'
 
 import {
-  localForageBaseCfg,
-  importFromJson,
+  decryptKeystore,
+  storedData,
+} from './utils/cryptic.js'
+
+import {
   exportWalletData,
+  findInStore,
+  getStoreData,
+  getStoredItems,
+  importFromJson,
+  loadStoreObject,
+  localForageBaseCfg,
   saveJsonToFile,
-} from './helpers/db.js'
+} from './utils/db.js'
 
 import {
+  appDialogs,
   appState,
   appTools,
-  appDialogs,
   userInfo,
   walletFunds,
 } from './state/index.js'
@@ -78,6 +84,8 @@ import requestQrRig from './rigs/request-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
 import txInfoRig from './rigs/tx-info.js'
 import showErrorDialog from './rigs/show-error.js'
+
+import crowdnodeTransactionRig from './rigs/crowdnode-tx.js'
 
 // app/data state
 let accounts
@@ -131,6 +139,7 @@ let contactsList = await setupContactsList(
           }
 
           let contactAccountID = Object.values(contactData.incoming || {})?.[0]?.accountIndex
+
           console.log('contact click data', contactData)
 
           let shareAccount = await deriveWalletData(
@@ -431,6 +440,40 @@ async function showNotification({
   console.log('notification', {type, title, msg, sticky})
 }
 
+async function showQrCode(state = {}) {
+  let initState = {
+    name: 'Share to receive funds',
+    submitTxt: `Edit Amount or Contact`,
+    submitAlt: `Change the currently selected contact`,
+    footer: state => html`
+      <footer class="inline col">
+        <button
+          class="rounded"
+          type="submit"
+          name="intent"
+          value="select_address"
+          title="${state.submitAlt}"
+        >
+          <span>${state.submitTxt}</span>
+        </button>
+      </footer>
+    `,
+    amount: 0,
+    wallet,
+    contacts: appState.contacts,
+    ...state,
+  }
+
+  let showRequestQRRender = await appDialogs.requestQr.render(
+    initState,
+    'afterend',
+  )
+
+  let showRequestQR = await appDialogs.requestQr.showModal()
+
+  return showRequestQRRender
+}
+
 async function main() {
   appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
@@ -673,32 +716,9 @@ async function main() {
           //   }
           // )
 
-          await appDialogs.requestQr.render(
-            {
-              name: 'Share to receive funds',
-              submitTxt: `Edit Amount or Contact`,
-              submitAlt: `Change the currently selected contact`,
-              footer: state => html`
-                <footer class="inline col">
-                  <button
-                    class="rounded"
-                    type="submit"
-                    name="intent"
-                    value="select_address"
-                    title="${state.submitAlt}"
-                  >
-                    <span>${state.submitTxt}</span>
-                  </button>
-                </footer>
-              `,
-              amount: 0,
-              wallet,
-              contacts: appState.contacts,
-            },
-            'afterend',
-          )
+          showQrCode()
 
-          let showRequestQR = await appDialogs.requestQr.showModal()
+          // let showRequestQR = await appDialogs.requestQr.showModal()
         }
       } else {
         await appDialogs.sendOrReceive.render({
@@ -766,6 +786,7 @@ async function main() {
       res.push(await appTools.storedData?.decryptData?.(v) || v)
     },
   )
+  console.log('appState.contacts', appState.contacts)
 
   await contactsList.render({
     userInfo,
@@ -790,23 +811,272 @@ async function main() {
         walletFunds,
       })
     })
+  import('./components/crowdnode-card.js')
+    .then(async ({ CrowdNodeCard }) => {
+      let cfg = {
+        state: {
+          // name: '',
+        },
+        events: {
+          submit: async event => {
+            event.preventDefault()
+            event.stopPropagation()
 
-  integrationsSection.insertAdjacentHTML('beforeend', html`
-    <section>
-      <header>
-        <h5 class="lh-2">Coming soon</h5>
-        <h4 class="lh-2">Earn interest with</h4>
-      </header>
-      <div>
-        <a href="https://app.crowdnode.io/" target="_blank" rel="noreferrer">
-          <img src="/public/icons/crowdnode-logo-1000.png" height="50" />
-        </a>
-        <a href="https://www.mayascan.org/earn" target="_blank" rel="noreferrer">
-          <img src="/public/icons/maya-protocol.png" height="50" />
-        </a>
-      </div>
-    </section>
-  `)
+            // this.elements.form?.removeEventListener('submit', this.events.submit)
+
+            let fde = formDataEntries(event)
+
+            console.log(
+              `Crowdnode Card submit`,
+              {event, fde},
+            )
+
+            if (fde.intent === 'signup') {
+              let confAct = await appDialogs.confirmAction.render({
+                name: 'Signup for Crowdnode',
+                actionTxt: 'Signup',
+                actionAlt: 'Signup for Crowdnode',
+                action: '',
+                actionType: 'infoo',
+                placement: 'center auto-height',
+                // status: DIALOG_STATUS.LOADING,
+                acceptedToS: false,
+                submitIcon: () => ``,
+                alert: state => html`
+                  <fieldset class="inline">
+                    <label class="jc-center gap-2 fs-4">
+                      <input name="acceptToS" type="checkbox" required ${
+                        state.acceptedToS ? 'checked' : ''
+                      } />
+                      I accept the CrowdNode <a href="https://crowdnode.io/terms/" target="_blank">Terms and Conditions</a>
+                    </label>
+                    <p class="jc-center ta-center"><em>This process may take a while, please be patient.</em></p>
+                  </fieldset>
+                `,
+                fields: () => html`
+                  <fieldset class="inline">
+                    <article class="px-3 col">
+                      <span class="ta-left">To stake your Dash and begin earning interest, read and accept the CrowdNode Terms and Conditions.</span>
+                      <span class="ta-left">Funds are required to complete the signup process.</span>
+                    </article>
+                  </fieldset>
+                `,
+                callback: async (state, fde) => {
+                  state.status = DIALOG_STATUS.LOADING
+
+                  if (fde?.acceptToS === 'on') {
+                    state.acceptedToS = true
+                  }
+
+                  let cbConfAct = await appDialogs.confirmAction.render(state)
+
+                  console.log(
+                    `confirm action`,
+                    {state, fde, cbConfAct},
+                  )
+
+                  let cnFunding = await showQrCode({
+                    name: 'CrowdNode Funding',
+                    amount: 1.1,
+                    status: DIALOG_STATUS.LOADING,
+                    generateNextAddress: state => html`
+                      Send 1.1 Dash or more<br/>
+                      to signup & fund your CrowdNode account.
+                    `,
+                    footer: state => html`
+                      <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
+                        See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
+                        <!-- <div class="ta-left" style="max-width:450px;">
+                          CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
+                        </div> -->
+                      </footer>
+                    `,
+                  })
+
+                  state.status = DIALOG_STATUS.SUCCESS
+
+                  cbConfAct = await appDialogs.confirmAction.render(state)
+
+                  console.log('CN Card Funding Callback', cnCard)
+
+                  cnCard.api.value = {
+                    acceptedToS: true,
+                    balance: 1.234,
+                    earned: 0.987,
+                  }
+
+                  cnCard.render({
+                    cfg,
+                    el: integrationsSection,
+                    position: 'beforeend'
+                  })
+
+                  console.log(
+                    `confirm action SUCCESS`,
+                    {state, fde, cnFunding},
+                  )
+
+                  return { state, fde }
+                },
+              })
+
+              console.log('CN Card confAct Submit Event', cnCard)
+              console.log('confAct', confAct, appDialogs.confirmAction)
+
+              confAct?.elements?.form?.classList.add?.('min-h-auto')
+
+              appDialogs.confirmAction.showModal()
+            }
+
+            console.log(
+              `Crowdnode Card submit TX`,
+              fde.intent,
+              {event, fde},
+            )
+
+            if (fde.intent === 'deposit') {
+              appDialogs.sendOrReceive?.elements?.form?.classList.add?.('min-h-auto')
+              await appDialogs.sendOrReceive.render({
+                name: 'Deposit to CrowdNode',
+                cashSend: () => html``,
+                hideAddressee: true,
+                action: fde.intent,
+                wallet,
+                account: appState.account,
+                userInfo,
+                contacts: appState.contacts,
+                to: '@crowdnode',
+              })
+              appDialogs.sendOrReceive.showModal()
+            }
+            if (fde.intent === 'withdraw') {
+              crowdnodeTransactionRig.markup.fields = html`
+                <article class="flex row">
+                  <input
+                    id="unstakeRange"
+                    name="percentRange"
+                    type="range"
+                    min="0.1"
+                    max="100.0"
+                    step="0.1"
+                    value="1"
+                    style="flex:1 1 auto;"
+                  />
+                  <label
+                    class="percent"
+                    style="flex:1 1 10rem;"
+                  ><input
+                    id="unstakePercent"
+                    type="number"
+                    name="percent"
+                    step="0.1"
+                    value="1"
+                    placeholder="Unstake Percentage (0.1)"
+                  /></label>
+                </article>
+                <em>Enter the percentage you wish to unstake.</em>
+              `
+
+              let cnWithdraw = crowdnodeTransactionRig.render({
+                el: mainApp,
+                cfg: {
+                  state: {
+                    name: 'Withdraw from CrowdNode',
+                    submitTxt: 'Withdraw',
+                    submitAlt: 'Withdraw funds from CrowdNode',
+                    cancelTxt: 'Cancel',
+                    cancelAlt: `Cancel Withdraw`,
+                    callback: async (state, res) => {
+                      console.log('cnWithdraw callback', { state, res })
+                      state.value = {
+                        ...state.value,
+                        status: DIALOG_STATUS.SUCCESS
+                      }
+                      return { state, res }
+                    },
+                  },
+                  events: {
+                    input: event => {
+                      if (
+                        event?.target?.type === 'range' &&
+                        event.target.value > -1
+                      ) {
+                        event.target.form.percent.value = event?.target?.value || 0
+                      }
+
+                      if (
+                        event?.target?.type === 'number' &&
+                        event.target.value > -1
+                      ) {
+                        event.target.form.percentRange.value = event?.target?.value || 0
+                      }
+                    },
+                  },
+                },
+              })
+              cnWithdraw?.elements?.form?.classList.add?.('min-h-auto')
+              crowdnodeTransactionRig.markup.footer = html`
+                <footer class="inline">
+                  <button
+                    class="rounded"
+                    type="submit"
+                    name="intent"
+                    value="cancel"
+                    title="${crowdnodeTransactionRig.state.value.cancelAlt}"
+                  >
+                    <span>${crowdnodeTransactionRig.state.value.cancelTxt}</span>
+                  </button>
+                  <button
+                    class="rounded"
+                    type="submit"
+                    name="intent"
+                    value="act"
+                    title="${crowdnodeTransactionRig.state.value.submitAlt}"
+                  >
+                    <span>${crowdnodeTransactionRig.state.value.submitTxt}</span>
+                  </button>
+                </footer>
+              `
+
+              console.log(
+                `Crowdnode Card TX`,
+                fde.intent,
+                {cnWithdraw},
+              )
+
+              cnWithdraw.showModal()
+            }
+          }
+        },
+      }
+
+      let cnCard = new CrowdNodeCard(cfg)
+      console.log('CN Card Outer', cnCard)
+
+      cnCard.render({
+        cfg,
+        el: integrationsSection,
+        position: 'beforeend'
+      })
+  })
+
+
+  // integrationsSection.insertAdjacentHTML('beforeend', html`
+  //   <section>
+  //     <header>
+  //       <h5 class="lh-2">Coming soon</h5>
+  //       <h4 class="lh-2">Earn interest with</h4>
+  //     </header>
+  //     <div>
+  //       <a href="https://app.crowdnode.io/" target="_blank" rel="noreferrer">
+  //         <img src="/public/icons/crowdnode-logo-1000.png" height="50" />
+  //       </a>
+  //       <a href="https://www.mayascan.org/earn" target="_blank" rel="noreferrer">
+  //         <img src="/public/icons/maya-protocol.png" height="50" />
+  //       </a>
+  //     </div>
+  //   </section>
+  // `)
 
   let txs = await getTxs(
     appState,
@@ -895,7 +1165,7 @@ async function main() {
         action: 'lock',
         actionType: 'warn',
         alert: state => html``,
-        callback: () => {
+        callback: async () => {
           sessionStorage.clear()
           window.location.reload()
         },
@@ -925,7 +1195,7 @@ async function main() {
             <sup class="ta-left">This is an irreversable action which removes all wallet data from your browser, make sure to backup your data first.<br/> <h3>WE RETAIN NO BACKUPS OF YOUR WALLET DATA.</h3></sup>
           </div>
         `,
-        callback: () => {
+        callback: async () => {
           localStorage.clear()
           sessionStorage.clear()
           // @ts-ignore

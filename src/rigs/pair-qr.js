@@ -1,11 +1,14 @@
-import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
 import {
+  lit as html,
   setClipboard,
   openBlobSVG,
-  // generatePaymentRequestURI,
+} from '../utils/generic.js'
+
+import { qrSvg } from '../utils/qr.js'
+
+import {
   generateContactPairingURI,
-} from '../helpers/utils.js'
+} from '../utils/dash/local.js'
 
 export let pairQrRig = (async function (globals) {
   'use strict';

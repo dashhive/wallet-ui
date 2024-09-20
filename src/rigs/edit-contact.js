@@ -1,19 +1,25 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  deriveWalletData,
-  formDataEntries,
-  parseAddressField,
-  getStoreData,
-  debounce,
-  getAvatar,
-  getUniqueAlias,
-  isUniqueAlias,
-} from '../helpers/utils.js'
-
 import {
   OIDC_CLAIMS,
   ALIAS_REGEX,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+  debounce,
+  getAvatar,
+} from '../utils/generic.js'
+
+import {
+  getStoreData,
+} from '../utils/db.js'
+
+import {
+  deriveWalletData,
+  parseAddressField,
+  getUniqueAlias,
+  isUniqueAlias,
+} from '../utils/dash/local.js'
 
 export let editContactRig = (async function (globals) {
   'use strict';

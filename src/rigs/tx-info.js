@@ -1,7 +1,7 @@
-import { lit as html } from '../helpers/lit.js'
+import { lit as html } from '../utils/generic.js'
 import {
   formatDash,
-} from '../helpers/utils.js'
+} from '../utils/dash/local.js'
 
 export let txInfoRig = (async function (globals) {
   'use strict';

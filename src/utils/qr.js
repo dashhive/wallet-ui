@@ -1,7 +1,5 @@
 "use strict";
 
-import { toDash } from './utils.js'
-
 /**
  * @typedef QrOpts
  * @property {String} [background]
@@ -31,7 +29,7 @@ export function create(data, opts) {
     background: opts?.background || "#fff",
     ecl: opts?.ecl || "M",
   });
-};
+}
 
 /**
  * @param {String} data
@@ -41,18 +39,4 @@ export function qrSvg (data, opts) {
   // console.log('qrSvg', data)
   let qrcode = create(data, opts);
   return qrcode.svg();
-};
-
-/**
- * @param {String} addr - Base58Check pubKeyHash address
- * @param {Number} duffs - 1/100000000 of a DASH
- */
-export function showQr(addr, duffs = 0) {
-  let dashAmount = toDash(duffs);
-  let dashUri = `dash://${addr}`;
-  if (duffs) {
-    dashUri += `?amount=${dashAmount}`;
-  }
-
-  return qrSvg(dashUri, { indent: 4, size: "mini" });
 }

@@ -1,7 +1,6 @@
-import { lit as html } from '../helpers/lit.js'
-// import {
-//   formDataEntries,
-// } from '../helpers/utils.js'
+import {
+  lit as html,
+} from '../utils/generic.js'
 
 export let scanContactRig = (async function (globals) {
   'use strict';
