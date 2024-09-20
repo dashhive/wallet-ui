@@ -1,15 +1,17 @@
-import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
 import {
+  lit as html,
   formDataEntries,
   setClipboard,
   openBlobSVG,
+} from '../utils/generic.js'
+
+import {
   generatePaymentRequestURI,
-  fixedDash,
-  roundUsing,
   getPartialHDPath,
   getAddressIndexFromUsage,
-} from '../helpers/utils.js'
+} from '../utils/local.js'
+
+import { qrSvg } from '../utils/qr.js'
 
 export let requestQrRig = (async function (globals) {
   'use strict';

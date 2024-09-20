@@ -1,14 +1,18 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  formDataEntries,
-  readFile,
-  verifyPhrase,
-  fileIsSubType,
-} from '../helpers/utils.js'
 import {
   ALIAS_REGEX,
   PHRASE_REGEX,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+  readFile,
+  fileIsSubType,
+} from '../utils/generic.js'
+
+import {
+  verifyPhrase,
+} from '../utils/local.js'
 
 export let phraseImportRig = (async function (globals) {
   'use strict';

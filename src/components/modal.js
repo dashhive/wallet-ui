@@ -1,17 +1,20 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  formDataEntries,
-  createSignal,
-  effect,
-  toSlug,
-  addListener,
-  addListeners,
-  removeAllListeners,
-} from '../helpers/utils.js'
-
 import {
   DIALOG_STATUS,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+  toSlug,
+  // addListener,
+  addListeners,
+  removeAllListeners,
+} from '../utils/generic.js'
+
+import {
+  createSignal,
+  effect,
+} from '../utils/retort.js'
 
 /**
  * Create a new HTML Dialog

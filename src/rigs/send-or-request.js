@@ -1,15 +1,18 @@
-import { lit as html } from '../helpers/lit.js'
-import { AMOUNT_REGEX, USAGE } from '../helpers/constants.js'
+import { AMOUNT_REGEX, USAGE } from '../utils/constants.js'
+
 import {
+  lit as html,
   formDataEntries,
+} from '../utils/generic.js'
+
+import {
   parseAddressField,
   fixedDash,
-  toDASH,
   toDash,
   roundUsing,
   getPartialHDPath,
   getAddressIndexFromUsage,
-} from '../helpers/utils.js'
+} from '../utils/local.js'
 
 export let sendOrReceiveRig = (async function (globals) {
   'use strict';

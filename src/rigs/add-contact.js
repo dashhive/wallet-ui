@@ -1,26 +1,29 @@
-import { lit as html } from '../helpers/lit.js'
-import { qrSvg } from '../helpers/qr.js'
-import {
-  deriveWalletData,
-  formDataEntries,
-  setClipboard,
-  openBlobSVG,
-  // sortContactsByAlias,
-  // sortContactsByName,
-  parseAddressField,
-  generateContactPairingURI,
-  getStoreData,
-  debounce,
-  // nobounce,
-  // getRandomWords,
-  getUniqueAlias,
-  isUniqueAlias,
-} from '../helpers/utils.js'
-
 import {
   OIDC_CLAIMS,
   ALIAS_REGEX,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+  setClipboard,
+  openBlobSVG,
+  debounce,
+} from '../utils/generic.js'
+
+import {
+  getStoreData,
+} from '../utils/db.js'
+
+import { qrSvg } from '../utils/qr.js'
+
+import {
+  deriveWalletData,
+  parseAddressField,
+  generateContactPairingURI,
+  getUniqueAlias,
+  isUniqueAlias,
+} from '../utils/local.js'
 
 export let addContactRig = (async function (globals) {
   'use strict';

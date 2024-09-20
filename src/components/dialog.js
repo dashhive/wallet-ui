@@ -1,12 +1,15 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  formDataEntries,
-  envoy,
-} from '../helpers/utils.js'
-
 import {
   DIALOG_STATUS,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+} from '../utils/generic.js'
+
+import {
+  envoy,
+} from '../utils/retort.js'
 
 let modal = envoy(
   {

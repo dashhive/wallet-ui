@@ -1,4 +1,4 @@
-import { lit as html } from '../helpers/lit.js'
+import { lit as html } from '../utils/generic.js'
 
 export async function showErrorDialog(options) {
   let opts = {

@@ -1,9 +1,10 @@
-import { lit as html } from '../helpers/lit.js'
 import {
+  lit as html,
   formDataEntries,
+} from '../utils/generic.js'
+import {
   getStoreData,
-  sortContactsByAlias,
-} from '../helpers/utils.js'
+} from '../utils/db.js'
 
 export let confirmDeleteRig = (async function (globals) {
   'use strict';

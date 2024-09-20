@@ -1,4 +1,6 @@
-import { lit as html } from '../helpers/lit.js'
+import {
+  lit as html,
+} from '../utils/generic.js'
 
 const initialState = {
   data: {

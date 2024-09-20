@@ -1,9 +1,11 @@
-import { lit as html } from '../helpers/lit.js'
 import {
-  formDataEntries,
-  phraseToEl,
+  lit as html,
   setClipboard,
-} from '../helpers/utils.js'
+} from '../utils/generic.js'
+
+import {
+  phraseToEl,
+} from '../utils/local.js'
 
 export let phraseBackupRig = (async function (globals) {
   'use strict';

@@ -1,10 +1,11 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  formDataEntries,
-} from '../helpers/utils.js'
 import {
   ALIAS_REGEX,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+} from '../utils/generic.js'
 
 export let phraseGenerateRig = (async function (globals) {
   'use strict';

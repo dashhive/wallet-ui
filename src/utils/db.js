@@ -197,3 +197,152 @@ export function exportWalletData(name, version) {
       .catch(console.error)
   }
 }
+
+export async function getStoreData(
+  store,
+  callback,
+  iterableCallback = res => async (v, k, i) => res.push(v)
+) {
+  let result = []
+
+  return await store.keys().then(async function(keys) {
+    for (let k of keys) {
+      let v = await store.getItem(k)
+      await iterableCallback(result)(v, k)
+    }
+
+    callback?.(result)
+
+    return result
+  }).catch(function(err) {
+    console.error('getStoreData', err)
+    return null
+  });
+}
+
+export async function loadStore(
+  store,
+  callback,
+  iterableCallback = res => v => res.push(v)
+) {
+  let result = []
+
+  return await store.iterate(iterableCallback(result))
+  .then(() => callback?.(result))
+  .catch(err => {
+    console.error('loadStore', err)
+    return null
+  });
+}
+
+export async function loadStoreObject(store, callback) {
+  let result = {}
+
+  return await store.iterate((v, k, i) => {
+    result[k] = v
+  })
+  .then(() => callback?.(result))
+  .then(() => result)
+  .catch(err => {
+    console.error('loadStoreObject', err)
+    return null
+  });
+}
+
+export async function getFilteredStoreLength(targStore, query = {}) {
+  let resLength = 0
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+
+  // console.log('getFilteredStoreLength qs', {
+  //   storeName: targStore?._config?.storeName,
+  //   storeLen,
+  //   qs,
+  // })
+
+  if (storeLen === 0) {
+    return 0
+  }
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = true
+
+    // console.log('getFilteredStoreLength qs before each', key, res)
+
+    qs.forEach(([k,v]) => {
+      // console.log('getFilteredStoreLength qs each', k, v, value[k])
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    // console.log('getFilteredStoreLength qs after each', key, res)
+
+    if (res) {
+      resLength += 1
+    }
+
+    if (iterationNumber === storeLen) {
+      return resLength
+    }
+  })
+}
+
+export async function findInStore(targStore, query = {}) {
+  let result = {}
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+  // console.log('findInStore qs', qs)
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = value
+
+    // console.log('findInStore qs before each', key, res)
+
+    qs.forEach(([k,v]) => {
+      // console.log('findInStore qs each', k, v, value[k])
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    // console.log('findInStore qs after each', key, res)
+
+    if (res) {
+      result[key] = res
+    }
+
+    if (iterationNumber === storeLen) {
+      return result
+    }
+  })
+}
+
+export async function findOneInStore(targStore, query = {}) {
+  let storeLen = await targStore.length()
+  let qs = Object.entries(query)
+
+  return await targStore.iterate((
+    value, key, iterationNumber
+  ) => {
+    let res = value
+
+    qs.forEach(([k,v]) => {
+      if (k === 'key' && key !== v || value[k] !== v) {
+        res = undefined
+      }
+    })
+
+    if (res) {
+      return res
+    }
+
+    if (iterationNumber === storeLen) {
+      return undefined
+    }
+  })
+}

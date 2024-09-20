@@ -1,10 +1,15 @@
-import { lit as html } from '../helpers/lit.js'
 import {
+  lit as html,
   formDataEntries,
+} from '../utils/generic.js'
+
+import {
   getStoreData,
-  sortContactsByAlias,
+} from '../utils/db.js'
+
+import {
   formatDash,
-} from '../helpers/utils.js'
+} from '../utils/local.js'
 
 export let sendConfirmRig = (async function (globals) {
   'use strict';

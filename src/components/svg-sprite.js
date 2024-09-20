@@ -1,4 +1,6 @@
-import { lit as svg } from '../helpers/lit.js'
+import {
+  lit as svg,
+} from '../utils/generic.js'
 
 const initialState = {
   rendered: null,

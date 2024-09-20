@@ -1,53 +1,53 @@
-import { lit as html } from './helpers/lit.js'
+import {
+  DUFFS,
+  DIALOG_STATUS,
+} from './utils/constants.js'
+
+import {
+  formDataEntries,
+  lit as html,
+} from './utils/generic.js'
 
 import {
   generateWalletData,
   deriveWalletData,
-  getStoreData,
-  loadStoreObject,
-  formDataEntries,
-  // forIt,
-  // useSignal,
-  // createSignal,
-  // effect,
-  // derived,
-} from './helpers/utils.js'
+} from './utils/local.js'
 
 import {
-  DUFFS,
-  DIALOG_STATUS,
-} from './helpers/constants.js'
+  decryptKeystore,
+  storedData,
+} from './utils/cryptic.js'
 
 import {
-  findInStore,
   initDashSocket,
   batchGenAccts,
   batchGenAcctAddrs,
   batchGenAcctsAddrs,
   batchXkeyAddressGenerate,
   updateAllFunds,
-  decryptKeystore,
   getStoredItems,
   loadWalletsForAlias,
   store,
   createTx,
   sendTx,
   getAddrsWithFunds,
-  storedData,
   getUnusedChangeAddress,
   getAccountWallet,
   dashsight,
   getAddrsTransactions,
   getTransactionsByContactAlias,
   getTxs,
-} from './helpers/wallet.js'
+} from './utils/wallet.js'
 
 import {
   localForageBaseCfg,
   importFromJson,
   exportWalletData,
   saveJsonToFile,
-} from './helpers/db.js'
+  getStoreData,
+  loadStoreObject,
+  findInStore,
+} from './utils/db.js'
 
 import {
   appState,

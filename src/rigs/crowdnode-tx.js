@@ -1,11 +1,11 @@
-import { lit as html } from '../helpers/lit.js'
-import {
-  formDataEntries,
-} from '../helpers/utils.js'
-
 import {
   DIALOG_STATUS,
-} from '../helpers/constants.js'
+} from '../utils/constants.js'
+
+import {
+  lit as html,
+  formDataEntries,
+} from '../utils/generic.js'
 
 import { DialogContructor } from '../components/modal.js'
 
