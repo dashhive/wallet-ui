@@ -139,6 +139,7 @@ let contactsList = await setupContactsList(
           }
 
           let contactAccountID = Object.values(contactData.incoming || {})?.[0]?.accountIndex
+
           console.log('contact click data', contactData)
 
           let shareAccount = await deriveWalletData(
@@ -812,13 +813,6 @@ async function main() {
     })
   import('./components/crowdnode-card.js')
     .then(async ({ CrowdNodeCard }) => {
-      // let crowdnodeTransaction = crowdnodeTransactionRig
-      console.log(
-        'crowdnodeTransactionRig',
-        crowdnodeTransactionRig,
-        crowdnodeTransactionRig.markup.fields,
-      )
-      // crowdnodeTransactionRig.markup.fields
       let cfg = {
         state: {
           // name: '',
@@ -885,17 +879,10 @@ async function main() {
                     name: 'CrowdNode Funding',
                     amount: 1.1,
                     status: DIALOG_STATUS.LOADING,
-                    // wallet,
-                    // contacts: appState.contacts,
-                    // submitTxt: `Fund your wallet`,
-                    // submitAlt: `Change the currently selected contact`,
-                    generateNextAddress: state => {
-                      // return html``
-                      return html`
-                        Send 1.1 Dash or more<br/>
-                        to signup & fund your CrowdNode account.
-                      `
-                    },
+                    generateNextAddress: state => html`
+                      Send 1.1 Dash or more<br/>
+                      to signup & fund your CrowdNode account.
+                    `,
                     footer: state => html`
                       <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
                         See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
@@ -905,8 +892,6 @@ async function main() {
                       </footer>
                     `,
                   })
-
-                  // await forIt(5000)
 
                   state.status = DIALOG_STATUS.SUCCESS
 
@@ -934,63 +919,6 @@ async function main() {
                   return { state, fde }
                 },
               })
-
-              // let confAct = appDialogs.confirmAction.render({
-              //   el: mainApp,
-              //   cfg: {
-              //     appElement: mainApp,
-              //     state: {
-              //       name: 'Signup for Crowdnode',
-              //       actionTxt: 'Signup',
-              //       actionAlt: 'Signup for Crowdnode',
-              //       action: '',
-              //       actionType: 'infoo',
-              //       placement: 'center auto-height',
-              //       // status: DIALOG_STATUS.LOADING,
-              //     },
-              //     markup: {
-              //       submitIcon: ``,
-              //       alert: html`
-              //         <fieldset class="inline">
-              //           <label class="jc-center gap-2 fs-4">
-              //             <input name="acceptToS" type="checkbox" required />
-              //             I accept the CrowdNode <a href="https://crowdnode.io/terms/" target="_blank">Terms and Conditions</a>
-              //           </label>
-              //           <p class="jc-center ta-center"><em>This process may take a while, please be patient.</em></p>
-              //         </fieldset>
-              //       `,
-              //       fields: html`
-              //         <fieldset class="inline">
-              //           <article class="px-3 col">
-              //             <span class="ta-left">To stake your Dash and begin earning interest, read and accept the CrowdNode Terms and Conditions.</span>
-              //             <span class="ta-left">Funds are required to complete the signup process.</span>
-              //           </article>
-              //         </fieldset>
-              //       `,
-              //     },
-              //     callback: async (state, fde) => {
-              //       state.status = DIALOG_STATUS.LOADING
-
-              //       let cbConfAct = await appDialogs.confirmAction.render(state)
-
-              //       console.log(
-              //         `confirm action`,
-              //         {state, fde, cbConfAct},
-              //       )
-
-              //       await forIt(5000)
-
-              //       state.status = DIALOG_STATUS.SUCCESS
-
-              //       console.log(
-              //         `confirm action SUCCESS`,
-              //         {state, fde},
-              //       )
-
-              //       return { state, fde }
-              //     },
-              //   },
-              // })
 
               console.log('CN Card confAct Submit Event', cnCard)
               console.log('confAct', confAct, appDialogs.confirmAction)
@@ -1025,6 +953,7 @@ async function main() {
               crowdnodeTransactionRig.markup.fields = html`
                 <article class="flex row">
                   <input
+                    id="unstakeRange"
                     name="percentRange"
                     type="range"
                     min="0.1"
@@ -1057,18 +986,65 @@ async function main() {
                     submitAlt: 'Withdraw funds from CrowdNode',
                     cancelTxt: 'Cancel',
                     cancelAlt: `Cancel Withdraw`,
+                    callback: async (state, res) => {
+                      console.log('cnWithdraw callback', { state, res })
+                      state.value = {
+                        ...state.value,
+                        status: DIALOG_STATUS.SUCCESS
+                      }
+                      return { state, res }
+                    },
+                  },
+                  events: {
+                    input: event => {
+                      if (
+                        event?.target?.type === 'range' &&
+                        event.target.value > -1
+                      ) {
+                        event.target.form.percent.value = event?.target?.value || 0
+                      }
+
+                      if (
+                        event?.target?.type === 'number' &&
+                        event.target.value > -1
+                      ) {
+                        event.target.form.percentRange.value = event?.target?.value || 0
+                      }
+                    },
                   },
                 },
               })
               cnWithdraw?.elements?.form?.classList.add?.('min-h-auto')
+              crowdnodeTransactionRig.markup.footer = html`
+                <footer class="inline">
+                  <button
+                    class="rounded"
+                    type="submit"
+                    name="intent"
+                    value="cancel"
+                    title="${crowdnodeTransactionRig.state.value.cancelAlt}"
+                  >
+                    <span>${crowdnodeTransactionRig.state.value.cancelTxt}</span>
+                  </button>
+                  <button
+                    class="rounded"
+                    type="submit"
+                    name="intent"
+                    value="act"
+                    title="${crowdnodeTransactionRig.state.value.submitAlt}"
+                  >
+                    <span>${crowdnodeTransactionRig.state.value.submitTxt}</span>
+                  </button>
+                </footer>
+              `
 
               console.log(
                 `Crowdnode Card TX`,
                 fde.intent,
                 {cnWithdraw},
               )
-              crowdnodeTransactionRig.showModal()
-              // cnWithdraw.showModal()
+
+              cnWithdraw.showModal()
             }
           }
         },
@@ -1076,10 +1052,6 @@ async function main() {
 
       let cnCard = new CrowdNodeCard(cfg)
       console.log('CN Card Outer', cnCard)
-
-      // cfg.events.submit =
-
-      // cnCard.updateConfig(cfg)
 
       cnCard.render({
         cfg,
