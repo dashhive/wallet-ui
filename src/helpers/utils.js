@@ -490,15 +490,7 @@ export function createSignal(initialValue) {
 
   return {
     get value() {
-      if (
-        currentSignal //&&
-        // currentSignal !== globalDerivedValue
-      ) {
-        console.log(
-          'currentSignal === derived',
-          {currentSignal, derived, globalDerivedValue},
-          currentSignal === globalDerivedValue,
-        )
+      if (currentSignal) {
         on(currentSignal)
       }
       return _value;
@@ -712,22 +704,24 @@ export function DashURLSearchParams(params) {
   let searchParams
   let qry = {}
 
-  Object.defineProperty(this, "entries", {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: () => Object.entries(qry),
-  });
-  Object.defineProperty(this, "toString", {
-    enumerable: false,
-    configurable: false,
-    writable: false,
-    value: () => this.entries().map(p => p.join('=')).join('&'),
-  });
-  Object.defineProperty(this, "size", {
-    get() { return this.entries().length },
-    enumerable: false,
-    configurable: false,
+  Object.defineProperties(this, {
+    entries: {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+      value: () => Object.entries(qry),
+    },
+    toString: {
+      enumerable: false,
+      configurable: false,
+      writable: false,
+      value: () => this.entries().map(p => p.join('=')).join('&'),
+    },
+    size: {
+      enumerable: false,
+      configurable: false,
+      get() { return this.entries().length },
+    },
   });
 
   if (typeof params === 'string' && params !== '') {
