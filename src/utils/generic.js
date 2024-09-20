@@ -1,6 +1,5 @@
 import {
-  TIMEAGO_LOCALE_EN,
-  MOMENT, MOMENTS, NEVER,
+  TIMEAGO_LOCALE_EN, MOMENTS, NEVER,
   SECONDS, MINUTE, HOUR, DAY, WEEK, MONTH, YEAR,
 } from './constants.js'
 
@@ -29,7 +28,6 @@ let eventHandlers = []
  * @returns {string}
  */
 export const lit = (s, ...v) => String.raw({ raw: s }, ...(v.map(x => x || '')))
-// export const lit = (s, ...v) => String.raw({ raw: s }, ...v)
 
 export function isEmpty(value) {
   if (value === null) {

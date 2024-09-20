@@ -22,31 +22,22 @@ export const localForageBaseCfg = {
 
 const loadedStores = {}
 
+export function loadInstance(name) {
+  loadedStores[name] = loadedStores[name] || localforage.createInstance({
+    ...localForageBaseCfg,
+    storeName: [name],
+  });
+
+  return loadedStores[name]
+}
+
 export async function DatabaseSetup() {
-  loadedStores.wallets = loadedStores.wallets || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'wallets',
-  });
-  loadedStores.aliases = loadedStores.aliases || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'aliases',
-  });
-  loadedStores.contacts = loadedStores.contacts || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'contacts',
-  });
-  loadedStores.accounts = loadedStores.accounts || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'accounts',
-  });
-  loadedStores.addresses = loadedStores.addresses || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'addresses',
-  });
-  loadedStores.transactions = loadedStores.transactions || localforage.createInstance({
-    ...localForageBaseCfg,
-    storeName: 'transactions',
-  });
+  loadInstance('wallets');
+  loadInstance('aliases');
+  loadInstance('contacts');
+  loadInstance('accounts');
+  loadInstance('addresses');
+  loadInstance('transactions');
 
   return loadedStores
 }

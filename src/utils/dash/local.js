@@ -190,35 +190,6 @@ export async function deriveAddressData(
   return address
 }
 
-// export async function batchAddressGenerate(
-//   wallet,
-//   accountIndex = 0,
-//   addressIndex = 0,
-//   use = DashHd.RECEIVE,
-//   batchSize = 20
-// ) {
-//   let batchLimit = addressIndex + batchSize
-//   let addresses = []
-
-//   let account = await wallet.deriveAccount(accountIndex);
-//   let xkey = await account.deriveXKey(use);
-
-//   for (;addressIndex < batchLimit; addressIndex++) {
-//     let key = await xkey.deriveAddress(addressIndex);
-//     let address = await DashHd.toAddr(key.publicKey);
-//     addresses.push({
-//       address,
-//       addressIndex,
-//       accountIndex,
-//     })
-//   }
-
-//   return {
-//     addresses,
-//     finalAddressIndex: addressIndex,
-//   }
-// }
-
 export function phraseToEl(phrase, el = 'span', cls = 'tag') {
   let words = phrase?.split(' ')
   return words?.map(
@@ -328,9 +299,6 @@ export function formatDash(
   return balance
 }
 
-
-
-
 export async function getUnusedChangeAddress(account) {
   let filterQuery = {
     xkeyId: account.xkeyId,
@@ -385,11 +353,6 @@ export async function initWalletsInfo(
     info,
   }
 }
-
-
-
-
-
 
 export async function initWallet(
   encryptionPassword,
@@ -478,10 +441,6 @@ export async function initWallet(
     contacts,
   }
 }
-
-
-
-
 
 export function filterPairedContacts(contact) {
   let outLen = Object.keys(contact.outgoing || {}).length
@@ -688,10 +647,6 @@ export function generateContactPairingURI(
   }
 
   let scope = claims.map(p => p[0]).join(',')
-  // let searchParams = new URLSearchParams([
-  //   ...claims,
-  //   ['scope', scope]
-  // ])
   let searchParams = new DashURLSearchParams([
     ...claims,
     ['scope', scope]
@@ -761,9 +716,6 @@ export function generatePaymentRequestURI(
     )
   }
 
-  // let searchParams = new URLSearchParams([
-  //   ...claims,
-  // ])
   let searchParams = new DashURLSearchParams([
     ...claims,
   ])
@@ -776,9 +728,6 @@ export function generatePaymentRequestURI(
 
   return res
 }
-
-
-
 
 export async function getRandomWords(len = 32) {
   return await DashPhrase.generate(len)
@@ -852,9 +801,6 @@ export function getAddressIndexFromUsage(wallet, account, usageIdx) {
     addressIndex,
   }
 }
-
-
-
 
 export async function generateAddressIterator(
   xkey,
@@ -1033,10 +979,6 @@ export async function batchAddressUsageGenerate(
     finalAddressIndex: batchLimit,
   }
 }
-
-
-
-
 
 export async function getTotalFunds(wallet) {
   let funds = 0
@@ -1274,8 +1216,6 @@ export function sortAddrs(a, b) {
   return indexDiff;
 }
 
-
-
 export function getBalance(utxos) {
   return utxos.reduce(function (total, utxo) {
     return total + utxo.satoshis;
@@ -1344,12 +1284,6 @@ export function selectOptimalUtxos(utxos, output) {
   return included;
 }
 
-
-
-
-
-
-
 export function sortIncomingAndOutgoingTxs({
   conAddr, tx, addr, dir, sentAmount = null, receivedAmount = null,
   byAlias = {}, byAddress = {}, byTx = {},
@@ -1398,8 +1332,6 @@ export function sortIncomingAndOutgoingTxs({
     byTx,
   }
 }
-
-
 
 export async function getContactsByXkeyId(
   appState,
@@ -1494,19 +1426,6 @@ export function getTransactionsByContactAlias(appState) {
     }
 
     appState.contacts = res
-
-    // let contactAddrs = await deriveContactAddrs(appState) || {}
-    // let addrs = Object.keys(contactAddrs)
-
-    // console.log('contactAddrs', addrs)
-
-    // if (addrs?.length) {
-    //   getAddrsTransactions({
-    //     appState, addrs, contactAddrs
-    //   })
-    // }
-
-    // console.log('contacts', res, contactAddrs)
 
     return res
   }

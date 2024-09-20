@@ -1,5 +1,3 @@
-export const STOREAGE_SALT = 'b9f4088bd3a93783147e3d78aa10cc911a2449a0d79a226ae33a5957b368cc18'
-
 export const KS_PRF = {
   'hmac-sha256': 'SHA-256',
 }

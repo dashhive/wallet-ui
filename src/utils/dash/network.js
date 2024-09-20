@@ -54,63 +54,8 @@ export async function initDashSocket(
   await dashsocket.init()
     .catch((e) => console.log('dashsocket catch err', e));
 
-  // setTimeout(() => {
-  //   dashsocket.close()
-  // }, 15*60*1000);
-
   return dashsocket
 }
-
-// export async function checkWalletFunds(addr, wallet = {}) {
-//   const HOUR = 1000 * 60 * 60;
-
-//   let {
-//     address,
-//     accountIndex,
-//     addressIndex,
-//     usageIndex,
-//   } = addr
-//   let updatedAt = Date.now()
-//   let $addr = await store.addresses.getItem(address) || {}
-
-//   $addr = {
-//     walletId: wallet.id,
-//     accountIndex,
-//     addressIndex,
-//     usageIndex,
-//     ...$addr,
-//   }
-//   // console.log('checkWalletFunds $addr', $addr)
-//   let walletFunds = $addr?.insight
-
-//   if (
-//     !walletFunds?.updatedAt ||
-//     updatedAt - walletFunds?.updatedAt > HOUR
-//   ) {
-//     // console.info('check insight api for addr', addr)
-
-//     let insightRes = await dashsight.getInstantBalance(address)
-
-//     if (insightRes) {
-//       let { addrStr, ...res } = insightRes
-//       walletFunds = res
-
-//       $addr.insight = {
-//         ...walletFunds,
-//         updatedAt,
-//       }
-
-//       store.addresses.setItem(
-//         address,
-//         $addr,
-//       )
-//     }
-//   }
-
-//   // console.info('check addr funds', addr, walletFunds)
-
-//   return $addr
-// }
 
 export async function updateAddrFunds(
   wallet, insightRes,
@@ -122,14 +67,6 @@ export async function updateAddrFunds(
     walletId,
     xkeyId,
   } = $addr
-
-  // console.log(
-  //   'checkWalletFunds $addr',
-  //   $addr,
-  //   walletId,
-  //   wallet?.id,
-  //   walletId === wallet?.id
-  // )
 
   if (walletId && walletId === wallet?.id) {
     let storedWallet = await store.wallets.getItem(walletId) || {}
@@ -171,7 +108,6 @@ export async function updateAddrFunds(
       if ($addr.accountIndex >= storeAcctLen) {
         batchGenAccts(wallet.recoveryPhrase, $addr.accountIndex)
           .then(() => {
-            // updateAllFunds(wallet)
             batchGenAcctsAddrs(wallet)
               .then(accts => {
                 console.log('batchGenAcctsAddrs', { accts })
@@ -208,11 +144,6 @@ export async function updateAllFunds(wallet) {
   )
 
   let balances = await dashsight.getInstantBalances(addrKeys)
-  // let txs = await dashsight.getAllTxs(
-  //   addrKeys
-  // )
-
-  // console.log('getAllTxs', txs)
 
   if (balances.length >= 0) {
     walletFunds.balance = funds
@@ -246,11 +177,6 @@ export async function updateAllFunds(wallet) {
   return funds
 }
 
-
-
-
-
-
 export async function deriveTxWallet(
   fromWallet,
   fundAddrs,
@@ -258,7 +184,6 @@ export async function deriveTxWallet(
   let cachedAddrs = {}
   let privateKeys = {}
   let coreUtxos
-  // let transactions
   let tmpWallet
 
   if (Array.isArray(fundAddrs) && fundAddrs.length > 0) {
@@ -285,9 +210,6 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getMultiCoreUtxos(
       Object.keys(privateKeys)
     )
-    // transactions = await dashsight.getAllTxs(
-    //   Object.keys(privateKeys)
-    // )
   } else {
     tmpWallet = await deriveWalletData(
       fromWallet.recoveryPhrase,
@@ -307,23 +229,14 @@ export async function deriveTxWallet(
     coreUtxos = await dashsight.getCoreUtxos(
       tmpWallet.address
     )
-    // transactions = await dashsight.getAllTxs(
-    //   [tmpWallet.address]
-    // )
   }
-
-  // console.log('getAllTxs', transactions)
 
   return {
     privateKeys,
     cachedAddrs,
     coreUtxos,
-    // transactions,
   }
 }
-
-
-
 
 export async function createStandardTx(
   fromWallet,
@@ -782,8 +695,6 @@ export async function getAddrsTransactions({
     byTx,
   }
 }
-
-
 
 export async function getTxs(appState, transactions = []) {
   let contactAddrs = await getContactsFromAddrs(appState)
