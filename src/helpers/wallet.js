@@ -1723,6 +1723,7 @@ export async function createTx(
     },
   });
 
+  // @ts-ignore
   let tx = await dashTx.hashAndSignAll(txInfo, keys);
 
   console.log('tx', tx);
