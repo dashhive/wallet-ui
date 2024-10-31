@@ -1,4 +1,8 @@
 import {
+  DEFAULT_ENTRYPOINT,
+} from '../utils/constants.js'
+
+import {
   lit as html,
   formDataEntries,
   setClipboard,
@@ -6,6 +10,9 @@ import {
 } from '../utils/generic.js'
 
 import {
+  store,
+  batchGenAcctAddrs,
+  deriveWalletData,
   generatePaymentRequestURI,
   getPartialHDPath,
   getAddressIndexFromUsage,
@@ -13,16 +20,25 @@ import {
 
 import { qrSvg } from '../utils/qr.js'
 
+import {
+  appState,
+  appTools,
+  appDialogs,
+} from '../store/index.js'
+
+import {
+  userInfo,
+} from '../state/index.js'
+
+import setupDialog from '../components/dialog.js'
+
 export let requestQrRig = (async function (globals) {
   'use strict';
 
-  let {
-    mainApp, appDialogs, appState, appTools, userInfo, store,
-    setupDialog, deriveWalletData, batchGenAcctAddrs,
-  } = globals;
+  console.log('requestQrRig', {globals})
 
   let requestQr = await setupDialog(
-    mainApp,
+    DEFAULT_ENTRYPOINT,
     {
       name: 'Share to receive funds',
       address: '',
@@ -39,25 +55,6 @@ export let requestQrRig = (async function (globals) {
       footer: state => html`<footer class="center">
         <sub>Share this QR code to receive funds</sub>
       </footer>`,
-      // showAmount: state => {
-      //   if (!state.amount) {
-      //     return ''
-      //   }
-
-      //   return html`
-      //     <article>
-      //       <figure>
-      //         <figcaption>Amount</figcaption>
-      //         <div class="big">
-      //           <svg width="32" height="33" viewBox="0 0 32 33">
-      //             <use xlink:href="#icon-dash-mark"></use>
-      //           </svg>
-      //           ${state.amount}
-      //         </div>
-      //       </figure>
-      //     </article>
-      //   `
-      // },
       getContact: state => {
         let to = state.contact?.info?.name
         if (!to && state.contact?.alias) {
@@ -124,7 +121,7 @@ export let requestQrRig = (async function (globals) {
           />
         `
       },
-      generateNextAddress: state => {
+      fieldsetHeader: state => {
         return html`
           <div class="">
             <button
@@ -136,12 +133,6 @@ export let requestQrRig = (async function (globals) {
             >
               <span>
                 <i class="icon-plus-circle"></i>
-                <!-- <svg class="rotate-x-to-plus" width="24" height="24" viewBox="0 0 24 24">
-                  <use xlink:href="#icon-x"></use>
-                </svg> -->
-                <!-- <svg class="plus-circle" width="26" height="26" viewBox="0 0 16 16">
-                  <use xlink:href="#icon-plus-circle"></use>
-                </svg> -->
                 ${state.generateAddrTxt}
               </span>
             </button>
@@ -153,7 +144,7 @@ export let requestQrRig = (async function (globals) {
 
         <fieldset class="share solo">
           <aside>
-            ${state.generateNextAddress(state)}
+            ${state.fieldsetHeader(state)}
             ${state.showContactAndAmount(state)}
             <span class="qr" title="Open QR Code in new Window">
               ${qrSvg(
@@ -266,15 +257,11 @@ export let requestQrRig = (async function (globals) {
             }
           }
         },
-        // handleRender: state => {},
         handleSubmit: state => async event => {
           event.preventDefault()
           event.stopPropagation()
 
           let fde = formDataEntries(event)
-
-          // getPartialHDPath,
-          // getAddressIndexFromUsage,
 
           let tmpAcct = await store.accounts.getItem(
             state.wallet.xkeyId,
@@ -302,7 +289,6 @@ export let requestQrRig = (async function (globals) {
           )
           state.selectedWallet = state.wallet
 
-          // tmpAcct.usage = tmpAcct?.usage// || [0,0]
           tmpAcct.usage[
             state.wallet.usageIndex
           ] = state.wallet.addressIndex
@@ -383,8 +369,6 @@ export let requestQrRig = (async function (globals) {
             return;
           }
           if (fde?.intent === 'select_address') {
-            // console.log('SELECT AN ADDRESS', {state, event, fde})
-
             console.log(
               'SELECT AN ADDRESS',
               {state, event, fde, tmpAcct},
@@ -398,33 +382,23 @@ export let requestQrRig = (async function (globals) {
             await appDialogs.sendOrReceive.render({
               action: 'receive',
               amount: state.amount || 0,
-              // wallet: state.wallet,
               wallet: state.selectedWallet || state.wallet,
-              // selectedWallet: state.wallet,
               account: appState.account,
               contacts: appState.contacts,
               userInfo,
               to: state.to || null,
               contact: state.contact,
-              // to: state.contact?.alias ? `@${state.contact?.alias}` : null,
             })
             appDialogs.sendOrReceive.showModal()
 
             return;
           }
-          // else {
-          //   console.log('Receive Payment', {state, event})
-          // }
-
 
           requestQr.close()
         },
       },
     }
   )
-
-  // @ts-ignore
-  globals.requestQr = requestQr;
 
   return requestQr
 })

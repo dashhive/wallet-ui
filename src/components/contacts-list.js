@@ -10,6 +10,10 @@ import {
   filterUnpairedContacts,
 } from '../utils/dash/local.js'
 
+import {
+  appState,
+} from '../state/index.js'
+
 let _handlers = []
 
 const initialState = {
@@ -21,7 +25,9 @@ const initialState = {
   showUnpaired: false,
   delay: 500,
   wallet: {},
-  contacts: [],
+  contacts: [
+    ...appState.contacts,
+  ],
   restate,
   render(
     renderState = {},

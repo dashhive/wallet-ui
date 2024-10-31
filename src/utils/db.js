@@ -38,6 +38,7 @@ export async function DatabaseSetup() {
   loadInstance('accounts');
   loadInstance('addresses');
   loadInstance('transactions');
+  loadInstance('integrations');
 
   return loadedStores
 }

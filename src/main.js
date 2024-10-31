@@ -1,24 +1,36 @@
 import {
+  CrowdNode,
+} from './imports.js'
+
+import {
   DUFFS,
   DIALOG_STATUS,
+  DEFAULT_ENTRYPOINT,
+  CROWDNODE,
 } from './utils/constants.js'
 
 import {
   lit as html,
   formDataEntries,
+  getTarget,
+  handlePasswordToggle,
+  showNotification,
 } from './utils/generic.js'
 
 import {
+  fixedDash,
+  roundUsing,
+  getUserInfo,
   batchGenAccts,
-  batchGenAcctAddrs,
-  batchGenAcctsAddrs,
-  batchXkeyAddressGenerate,
-  deriveWalletData,
-  generateWalletData,
   getAccountWallet,
+  deriveWalletData,
   getAddrsWithFunds,
-  getUnusedChangeAddress,
+  batchGenAcctAddrs,
+  generateWalletData,
+  batchGenAcctsAddrs,
   loadWalletsForAlias,
+  getUnusedChangeAddress,
+  batchXkeyAddressGenerate,
   getTransactionsByContactAlias,
 } from './utils/dash/local.js'
 
@@ -28,7 +40,6 @@ import {
   getAddrsTransactions,
   getTxs,
   initDashSocket,
-  store,
   sendTx,
   updateAllFunds,
 } from './utils/dash/network.js'
@@ -57,6 +68,17 @@ import {
   walletFunds,
 } from './state/index.js'
 
+import {
+  store,
+  getStoredWallet,
+} from './store/index.js'
+
+import {
+  putContact,
+  findContactByXkeyID,
+  findContactByAlias,
+} from './models/contacts.js'
+
 import setupNav from './components/nav.js'
 import setupMainFooter from './components/main-footer.js'
 import setupSendRequestBtns from './components/send-request-btns.js'
@@ -81,11 +103,19 @@ import scanContactRig from './rigs/scan.js'
 import sendOrReceiveRig from './rigs/send-or-request.js'
 import sendConfirmRig from './rigs/send-confirm.js'
 import requestQrRig from './rigs/request-qr.js'
+import showQrCode from './rigs/show-qr.js'
 import pairQrRig from './rigs/pair-qr.js'
 import txInfoRig from './rigs/tx-info.js'
 import showErrorDialog from './rigs/show-error.js'
 
 import crowdnodeTransactionRig from './rigs/crowdnode-tx.js'
+
+CrowdNode.init({
+  baseUrl: CROWDNODE.network.main.baseUrl,
+  insightBaseUrl: 'https://insight.dash.org',
+  dashsocketBaseUrl: 'https://insight.dash.org/socket.io',
+  dashsightBaseUrl: 'https://insight.dash.org/insight-api',
+})
 
 // app/data state
 let accounts
@@ -95,7 +125,7 @@ let wallet
 // element
 let bodyNav
 let dashBalance
-let mainApp = document.querySelector('main#app')
+let mainApp = DEFAULT_ENTRYPOINT
 
 mainApp.insertAdjacentHTML('afterbegin', html`
   <div class="cols integration-sect">
@@ -205,119 +235,13 @@ let contactsList = await setupContactsList(
         if (
           getTarget(event, 'add_contact')
         ) {
-          await getUserInfo()
-
-          let selectedWallet = wallets?.[appState.selectedWallet]
-          let accountIndex = selectedWallet
-            ?.accountIndex || 0
-
-          let shareAccount
-          let newContact
-          let newAccount
-
-          if (appState.phrase) {
-            console.log(
-              'share qr current wallet',
-              accountIndex,
-              selectedWallet?.xkeyId,
-              selectedWallet,
-            )
-
-            accountIndex += 1
-
-            if (selectedWallet) {
-              let upWallet = await store.wallets.setItem(
-                appState.selectedWallet,
-                {
-                  ...selectedWallet,
-                  accountIndex,
-                  updatedAt: (new Date()).toISOString(),
-                }
-              )
-              wallets[appState.selectedWallet] = upWallet
-            }
-
-            shareAccount = await deriveWalletData(
-              appState.phrase,
-              accountIndex,
-            )
-
-            console.log('main.js contact account', shareAccount)
-
-            let created = (new Date()).toISOString()
-            let usage = [0,0]
-
-            newAccount = await store.accounts.setItem(
-              shareAccount.xkeyId,
-              {
-                createdAt: created,
-                updatedAt: (new Date()).toISOString(),
-                accountIndex,
-                usage,
-                walletId: shareAccount.id,
-                xkeyId: shareAccount.xkeyId,
-                addressKeyId: shareAccount.addressKeyId,
-                address: shareAccount.address,
-              }
-            )
-            let { createdAt, updatedAt, ...contactAcct } = newAccount
-
-            let { addresses, finalAddressIndex } = await batchGenAcctAddrs(
-              wallet,
-              newAccount,
-            ) ?? {}
-
-            console.log(
-              'share qr derived wallet',
-              accountIndex,
-              finalAddressIndex,
-              addresses,
-              shareAccount,
-            )
-
-            newContact = await appTools.storedData.encryptItem(
-              store.contacts,
-              shareAccount.xkeyId,
-              {
-                createdAt,
-                updatedAt,
-                incoming: {
-                  [`${contactAcct.walletId}/${contactAcct.xkeyId}`]: {
-                    ...contactAcct,
-                  }
-                }
-              },
-              false,
-            )
-
-            appState.contacts.push(newContact)
-
-            await contactsList.render({
-              userInfo,
-              contacts: appState.contacts,
-            })
-
-            console.log(
-              'share qr new contact',
-              newContact,
-            )
-          }
-
-          await appDialogs.addContact.render(
-            {
-              name: 'Add a New Contact',
-              wallet: shareAccount,
-              contact: newContact,
-              userInfo,
-            },
-            'afterend',
-          )
-          appDialogs.addContact.showModal()
+          // model.putContact
         }
       },
     },
   }
 )
+
 let transactionsList = await setupTransactionsList(mainAppGrid, {
   events: {
     handleClick: state => async event => {
@@ -337,148 +261,10 @@ let transactionsList = await setupTransactionsList(mainAppGrid, {
   },
 })
 
-async function getUserInfo() {
-  let ks = wallets?.[appState.selectedWallet]?.keystore
-
-  if (
-    appState.encryptionPassword && appState.selectedAlias && ks
-  ) {
-    appTools.storedData = storedData(
-      appState.encryptionPassword,
-      ks,
-    )
-
-    await appTools.storedData?.decryptItem(
-      store.aliases,
-      appState.selectedAlias,
-    )
-    .then(async $alias => {
-      let { $wallets, ...$userInfo } = await loadWalletsForAlias(
-        $alias
-      )
-      wallets = $wallets
-      console.log(
-        'getUserInfo $alias',
-        {
-          $alias,
-          $wallets,
-          $userInfo,
-        }
-      )
-
-      Object.entries(($userInfo?.info || {}))
-        .forEach(
-          ([k,v]) => userInfo[k] = v
-        )
-    })
-    .catch(err => {
-      showErrorDialog({
-        title: 'Unable to decrypt seed phrase',
-        msg: err,
-        showActBtn: false,
-        confirmAction: appDialogs.confirmAction,
-      })
-    })
-  }
-}
-
-async function handlePasswordToggle(event) {
-  let {
-    // @ts-ignore
-    name: fieldName, form,
-  } = event?.target
-
-  if (
-    fieldName === 'show_pass'
-  ) {
-    event.stopPropagation()
-    event.preventDefault()
-
-    let { pass, show_pass, } = form
-
-    if (show_pass?.checked) {
-      pass.type = 'text'
-    } else {
-      pass.type = 'password'
-    }
-  }
-}
-
-function getTarget(event, selector) {
-  let {
-    // @ts-ignore
-    id,
-    // @ts-ignore
-    parentElement,
-    // @ts-ignore
-    parentNode,
-  } = event?.target
-
-  let target
-
-  if (id === selector) {
-    target = event?.target
-  }
-
-  if (parentElement?.id === selector) {
-    target = parentElement
-  }
-
-  if (parentNode?.id === selector) {
-    target = parentNode
-  }
-
-  return target
-}
-
-async function showNotification({
-  type = '',
-  title = '',
-  msg = '',
-  sticky = false,
-}) {
-  console.log('notification', {type, title, msg, sticky})
-}
-
-async function showQrCode(state = {}) {
-  let initState = {
-    name: 'Share to receive funds',
-    submitTxt: `Edit Amount or Contact`,
-    submitAlt: `Change the currently selected contact`,
-    footer: state => html`
-      <footer class="inline col">
-        <button
-          class="rounded"
-          type="submit"
-          name="intent"
-          value="select_address"
-          title="${state.submitAlt}"
-        >
-          <span>${state.submitTxt}</span>
-        </button>
-      </footer>
-    `,
-    amount: 0,
-    wallet,
-    contacts: appState.contacts,
-    ...state,
-  }
-
-  let showRequestQRRender = await appDialogs.requestQr.render(
-    initState,
-    'afterend',
-  )
-
-  let showRequestQR = await appDialogs.requestQr.showModal()
-
-  return showRequestQRRender
-}
-
 async function main() {
   appState.encryptionPassword = window.atob(
     sessionStorage.encryptionPassword || ''
   )
-  appState.selectedWallet = localStorage?.selectedWallet || ''
   appState.selectedAlias = localStorage?.selectedAlias || ''
   appState.selectedAccount = localStorage?.selectedAccount || ''
 
@@ -493,7 +279,7 @@ async function main() {
   accounts = await findInStore(
     store.accounts,
     {
-      walletId: appState.selectedWallet,
+      walletId: localStorage.selectedWallet,
       accountIndex: 0,
     }
   )
@@ -510,19 +296,21 @@ async function main() {
   )
 
   appDialogs.confirmAction = await confirmActionRig({
-    mainApp, setupDialog,
-    appDialogs, appState, appTools,
+    mainApp, appDialogs, appState, appTools,
+    setupDialog,
   })
 
   appDialogs.walletEncrypt = await walletEncryptRig({
-    setupDialog, appDialogs, appState, appTools, mainApp,
+    appDialogs, appState, appTools, mainApp,
     wallet, wallets, bodyNav, dashBalance,
+    setupDialog,
   })
 
   appDialogs.walletDecrypt = await walletDecryptRig({
-    setupDialog, appDialogs, appState, mainApp, importFromJson,
-    wallets, decryptKeystore, getUserInfo, store, deriveWalletData,
-    showErrorDialog,
+    appDialogs, appState, appTools, mainApp,
+    wallets, store,
+    importFromJson, decryptKeystore, getUserInfo,
+    deriveWalletData, showErrorDialog, setupDialog,
   })
 
   appDialogs.walletBackup = await walletBackupRig({
@@ -608,13 +396,14 @@ async function main() {
 
   svgSprite.render()
 
-  let ks = wallets?.[appState.selectedWallet]
-    ?.keystore
+  appState.keystore = getStoredWallet()?.keystore
+
+  let ks = appState.keystore
   let ks_phrase = ks?.crypto?.ciphertext || ''
   let ks_iv = ks?.crypto?.cipherparams?.iv || ''
   let ks_salt = ks?.crypto?.kdfparams?.salt || ''
 
-  if (appState.encryptionPassword && ks) {
+  if (appState.encryptionPassword && appState.keystore) {
     try {
       appState.phrase = await decryptKeystore(
         appState.encryptionPassword,
@@ -691,9 +480,6 @@ async function main() {
 
       if (fde.intent === 'receive') {
         let receiveWallet
-        let selectedWallet = wallets?.[appState.selectedWallet]
-
-        // console.log('selectedWallet', wallet, selectedWallet)
 
         if (wallet?.xkeyId) {
           let aw = await getAccountWallet(
@@ -716,7 +502,9 @@ async function main() {
           //   }
           // )
 
-          showQrCode()
+          showQrCode({
+            wallet,
+          })
 
           // let showRequestQR = await appDialogs.requestQr.showModal()
         }
@@ -776,6 +564,9 @@ async function main() {
   appState.transactions = await loadStoreObject(
     store.transactions,
   )
+  appState.integrations = await loadStoreObject(
+    store.integrations,
+  )
 
   // console.log('appState.transactions', appState.transactions)
 
@@ -811,18 +602,27 @@ async function main() {
         walletFunds,
       })
     })
+
   import('./components/crowdnode-card.js')
     .then(async ({ CrowdNodeCard }) => {
+      let cnAPI = await appTools.storedData?.decryptItem?.(
+        store.integrations,
+        'crowdnode',
+      )
+      let cnEncAPI = await store.integrations.getItem('crowdnode')
+
+      console.log(
+        `CrowdNodeCard`,
+        { cnAPI, cnEncAPI },
+      )
+
       let cfg = {
         state: {
-          // name: '',
         },
         events: {
           submit: async event => {
             event.preventDefault()
             event.stopPropagation()
-
-            // this.elements.form?.removeEventListener('submit', this.events.submit)
 
             let fde = formDataEntries(event)
 
@@ -862,6 +662,8 @@ async function main() {
                   </fieldset>
                 `,
                 callback: async (state, fde) => {
+                  let shareAccount
+
                   state.status = DIALOG_STATUS.LOADING
 
                   if (fde?.acceptToS === 'on') {
@@ -870,28 +672,116 @@ async function main() {
 
                   let cbConfAct = await appDialogs.confirmAction.render(state)
 
+                  cnCard.api.value = {
+                    ...(cnAPI || {}),
+                    acceptedToS: true,
+                    balance: 0,
+                  }
+
+                  let cnContactExists = await findContactByAlias('crowdnode')
+
+                  if (!cnContactExists) {
+                    let generatedContact = await putContact({
+                      uri: CROWDNODE.network.main.hotwallet,
+                      alias: 'crowdnode',
+                      info: {
+                        name: 'CrowdNode',
+                        preferred_username: 'crowdnode',
+                        picture: '/public/icons/CrowdNode.svg',
+                      },
+                    })
+
+                    appState.contacts = [
+                      ...appState.contacts,
+                      generatedContact.newContact
+                    ]
+                    shareAccount = generatedContact.shareAccount
+                  } else {
+                    let contactAccountIndex = Object.values(cnContactExists.incoming || {})?.[0]?.accountIndex
+
+                    shareAccount = await deriveWalletData(
+                      appState.phrase,
+                      contactAccountIndex,
+                    )
+
+                    console.log('use existing crowdnode contact', cnContactExists, shareAccount)
+                  }
+
+                  appTools.storedData?.encryptItem?.(
+                    store.integrations,
+                    'crowdnode',
+                    {
+                      ...cnCard.api.value,
+                    },
+                    false,
+                  )
+
+                  let cnActive = (
+                    await CrowdNode.http.IsAddressInUse(shareAccount.address)
+                  )?.inUse
+
+                  if (cnActive) {
+                    let cnBalance = await CrowdNode.http.GetBalance(shareAccount.address)
+
+                    cnCard.api.value = {
+                      ...(cnCard.api.value || {}),
+                      balance: cnBalance?.TotalBalance || 0,
+                      earned: cnBalance?.TotalDividend || 0,
+                    }
+                  }
+
+                  let cnAddr = await store.addresses.getItem(
+                    shareAccount.address
+                  )
+
                   console.log(
-                    `confirm action`,
+                    `CN confirm action`,
                     {state, fde, cbConfAct},
                   )
 
-                  let cnFunding = await showQrCode({
-                    name: 'CrowdNode Funding',
-                    amount: 1.1,
-                    status: DIALOG_STATUS.LOADING,
-                    generateNextAddress: state => html`
-                      Send 1.1 Dash or more<br/>
-                      to signup & fund your CrowdNode account.
-                    `,
-                    footer: state => html`
-                      <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
-                        See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
-                        <!-- <div class="ta-left" style="max-width:450px;">
-                          CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
-                        </div> -->
-                      </footer>
-                    `,
-                  })
+                  let cnFunding
+                  let minimumNeededFunds = 1.1
+                  let neededFunds = roundUsing(
+                    Math.ceil,
+                    minimumNeededFunds - walletFunds.balance,
+                    3
+                  )
+
+                  if (
+                    cnCard.api.value.balance === 0 &&
+                    (!cnAddr?.insight?.balance ||
+                    cnAddr.insight.balance < minimumNeededFunds)
+                  ) {
+                    if (
+                      walletFunds.balance < minimumNeededFunds
+                    ) {
+                      cnFunding = await showQrCode({
+                        wallet: shareAccount,
+                        name: 'CrowdNode Funding',
+                        amount: neededFunds,
+                        status: DIALOG_STATUS.LOADING,
+                        fieldsetHeader: state => html`
+                          Send ${neededFunds} Dash or more<br/>
+                          to signup & fund your CrowdNode account.
+                        `,
+                        footer: state => html`
+                          <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
+                            See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
+                            <!-- <div class="ta-left" style="max-width:450px;">
+                              CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
+                            </div> -->
+                          </footer>
+                        `,
+                      })
+                    } else {
+                      // Show Confirmation Dialog to redistribute
+                      // funds to the correct address
+                      console.warn(
+                        'wallet has sufficient funds but they need to be transferred to correct address to be deposited',
+                        { cnAddr, walletFunds }
+                      )
+                    }
+                  }
 
                   state.status = DIALOG_STATUS.SUCCESS
 
@@ -899,11 +789,14 @@ async function main() {
 
                   console.log('CN Card Funding Callback', cnCard)
 
-                  cnCard.api.value = {
-                    acceptedToS: true,
-                    balance: 1.234,
-                    earned: 0.987,
-                  }
+                  appTools.storedData?.encryptItem?.(
+                    store.integrations,
+                    'crowdnode',
+                    {
+                      ...cnCard.api.value,
+                    },
+                    false,
+                  )
 
                   cnCard.render({
                     cfg,
@@ -928,6 +821,38 @@ async function main() {
               appDialogs.confirmAction.showModal()
             }
 
+            if (fde.intent === 'fund') {
+              let minimumNeededFunds = 1.1
+              let neededFunds = roundUsing(
+                Math.ceil,
+                minimumNeededFunds - walletFunds.balance,
+                3
+              )
+              let cnFunding = await showQrCode({
+                wallet,
+                name: 'CrowdNode Funding',
+                amount: neededFunds,
+                status: DIALOG_STATUS.LOADING,
+                fieldsetHeader: state => html`
+                  Send ${neededFunds} Dash or more<br/>
+                  to signup & fund your CrowdNode account.
+                `,
+                footer: state => html`
+                  <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
+                    See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
+                    <!-- <div class="ta-left" style="max-width:450px;">
+                      CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
+                    </div> -->
+                  </footer>
+                `,
+              })
+
+              console.log(
+                `confirm action SUCCESS`,
+                {fde, cnFunding},
+              )
+            }
+
             console.log(
               `Crowdnode Card submit TX`,
               fde.intent,
@@ -949,6 +874,7 @@ async function main() {
               })
               appDialogs.sendOrReceive.showModal()
             }
+
             if (fde.intent === 'withdraw') {
               crowdnodeTransactionRig.markup.fields = html`
                 <article class="flex row">
@@ -1014,7 +940,9 @@ async function main() {
                   },
                 },
               })
+
               cnWithdraw?.elements?.form?.classList.add?.('min-h-auto')
+
               crowdnodeTransactionRig.markup.footer = html`
                 <footer class="inline">
                   <button
@@ -1048,10 +976,15 @@ async function main() {
             }
           }
         },
+        appElement: integrationsSection,
       }
 
       let cnCard = new CrowdNodeCard(cfg)
       console.log('CN Card Outer', cnCard)
+
+      cnCard.api.value = {
+        ...(cnAPI || {}),
+      }
 
       cnCard.render({
         cfg,
@@ -1059,7 +992,6 @@ async function main() {
         position: 'beforeend'
       })
   })
-
 
   // integrationsSection.insertAdjacentHTML('beforeend', html`
   //   <section>
@@ -1117,6 +1049,7 @@ async function main() {
 
       aliasTarg?.nextElementSibling.classList.toggle('hidden')
     }
+
     if (id === 'nav-edit-profile') {
       event.preventDefault()
       event.stopPropagation()
@@ -1135,6 +1068,7 @@ async function main() {
       )
       appDialogs.editProfile.showModal()
     }
+
     if (id === 'nav-backup') {
       event.preventDefault()
       event.stopPropagation()
@@ -1151,6 +1085,7 @@ async function main() {
       )
       appDialogs.walletBackup.showModal()
     }
+
     if (id === 'nav-lock') {
       event.preventDefault()
       event.stopPropagation()
@@ -1172,6 +1107,7 @@ async function main() {
       })
       appDialogs.confirmAction.showModal()
     }
+
     if (id === 'nav-disconnect') {
       event.preventDefault()
       event.stopPropagation()

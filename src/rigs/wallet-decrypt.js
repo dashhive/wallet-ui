@@ -5,12 +5,15 @@ import {
 import {
   initWallet,
 } from '../utils/dash/local.js'
+import {
+  storedData,
+} from '../utils/cryptic.js'
 
 export let walletDecryptRig = (async function (globals) {
   'use strict';
 
   let {
-    setupDialog, appDialogs, appState, mainApp,
+    setupDialog, appDialogs, appState, appTools, mainApp,
     wallets, decryptKeystore, getUserInfo,
     store, deriveWalletData, importFromJson,
     // showErrorDialog,
@@ -118,7 +121,7 @@ export let walletDecryptRig = (async function (globals) {
 
           let decryptedRecoveryPhrase
           ks = ks || wallets?.[
-            appState.selectedWallet
+            localStorage.selectedWallet
           ]?.keystore || state.keystore
           let fde = formDataEntries(event)
 
@@ -148,13 +151,17 @@ export let walletDecryptRig = (async function (globals) {
 
             appState.phrase = decryptedRecoveryPhrase
             appState.encryptionPassword = fde.pass
+            appState.keystore = ks
+
+            appTools.storedData = storedData(
+              appState.encryptionPassword,
+              ks,
+            )
 
             if (await store.accounts.length() === 0) {
               wallet = await deriveWalletData(appState.phrase)
 
-              appState.selectedWallet = wallet.id
-
-              localStorage.selectedWallet = appState.selectedWallet
+              localStorage.selectedWallet = wallet.id
 
               initialized = await initWallet(
                 fde.pass,

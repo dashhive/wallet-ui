@@ -23,7 +23,21 @@ import {
 import {
   encryptData,
   encryptKeystore,
+  storedData,
 } from '../cryptic.js'
+
+import {
+  appState,
+  appTools,
+  appDialogs,
+} from '../../store/index.js'
+
+import {
+  getStoredWallet,
+  userInfo,
+} from '../../state/index.js'
+
+import showErrorDialog from '../../rigs/show-error.js'
 
 export const store = await DatabaseSetup()
 
@@ -79,7 +93,7 @@ export async function deriveWalletData(
   addressKeyId = await DashHd.toId(addressKey);
   address = await DashHd.toAddr(addressKey.publicKey);
 
-  return {
+  let derivedData = {
     id,
     accountIndex,
     usageIndex,
@@ -95,8 +109,16 @@ export async function deriveWalletData(
     wpub,
     account,
     derivedWallet,
-    recoveryPhrase,
+    // recoveryPhrase,
   }
+
+  Object.defineProperties(derivedData, {
+    recoveryPhrase: {
+      get: () => recoveryPhrase,
+    },
+  });
+
+  return derivedData
 }
 
 /**
@@ -225,7 +247,16 @@ export function fixedDash(dash, fix = 8) {
   .toFixed(fix);
 }
 
-// https://stackoverflow.com/a/27946310
+/**
+ * Based on https://stackoverflow.com/a/27946310
+ * @example
+ *    let roof = roundUsing(Math.ceil, 0.1111111, 3)
+ *    let base = roundUsing(Math.floor, 0.1111111, 3)
+ *
+ * @param {Function} func - Math.ceil
+ * @param {Number} number - ex: 0.00000000
+ * @param {Number} [prec] - precision - ex: 8
+ */
 export function roundUsing(func, number, prec = 8) {
   var tempnumber = number * Math.pow(10, prec);
   tempnumber = func(tempnumber);
@@ -437,6 +468,7 @@ export async function initWallet(
   let contacts = '{}'
 
   return {
+    keystore: storeWallet.keystore,
     wallets,
     contacts,
   }
@@ -675,6 +707,11 @@ export function generatePaymentRequestURI(
 ) {
   let addr = state.wallet?.address || ''
   let claims = []
+  // console.log(
+  //   'generatePaymentRequestURI',
+  //   state,
+  //   protocol
+  // )
 
   if (state.userInfo) {
     let filteredInfo = Array.from(
@@ -737,15 +774,10 @@ export async function verifyPhrase(phrase) {
   return await DashPhrase.verify(phrase).catch(_ => false)
 }
 
-export function isUniqueAlias(aliases, preferredAlias) {
-  return !aliases[preferredAlias]
-}
-
 export async function getUniqueAlias(aliases, preferredAlias) {
   let uniqueAlias = preferredAlias
-  let notUnique = !isUniqueAlias(aliases, uniqueAlias)
 
-  if (notUnique) {
+  if (aliases.includes(preferredAlias)) {
     let aliasArr = uniqueAlias.split('_')
     let randomWords = (await getRandomWords()).split(' ')
 
@@ -1428,5 +1460,52 @@ export function getTransactionsByContactAlias(appState) {
     appState.contacts = res
 
     return res
+  }
+}
+
+export async function getUserInfo() {
+  let ks = getStoredWallet()?.keystore
+
+  if (
+    appState.encryptionPassword &&
+    appState.selectedAlias &&
+    ks
+  ) {
+    appTools.storedData = storedData(
+      appState.encryptionPassword,
+      ks,
+    )
+
+    await appTools.storedData?.decryptItem(
+      store.aliases,
+      appState.selectedAlias,
+    )
+    .then(async $alias => {
+      let { $wallets, ...$userInfo } = await loadWalletsForAlias(
+        $alias
+      )
+      // wallets = $wallets
+      console.log(
+        'getUserInfo $alias',
+        {
+          $alias,
+          $wallets,
+          $userInfo,
+        }
+      )
+
+      Object.entries(($userInfo?.info || {}))
+        .forEach(
+          ([k,v]) => userInfo[k] = v
+        )
+    })
+    .catch(err => {
+      showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+        confirmAction: appDialogs.confirmAction,
+      })
+    })
   }
 }

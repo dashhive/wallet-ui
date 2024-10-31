@@ -4,9 +4,47 @@ import {
 import {
   envoy,
 } from '../utils/retort.js'
+
 import {
-  store,
-} from '../utils/dash/network.js'
+  DatabaseSetup,
+  getStoredItems,
+} from '../utils/db.js'
+
+export const store = await DatabaseSetup()
+
+export const storedWallets = await getStoredItems(store.wallets)
+
+export const wallets = envoy(
+  {
+    ...storedWallets,
+  },
+  // async (state, oldState, prop) => {
+  //   if (state[prop] !== oldState[prop]) {
+  //     console.log({ prop, new: state[prop], old: oldState[prop] })
+
+  //     store.wallets.getItem(state[prop].id)
+  //       .then(async storedWallet => {
+  //         store.addresses.setItem(state[prop].id, storedWallet)
+  //       })
+  //   }
+  // },
+)
+
+export function getStoredWallet(
+  selectedWallet = localStorage.selectedWallet,
+) {
+  return wallets?.[selectedWallet]
+}
+
+export function getUnusedAccountIndex(
+  wallet = getStoredWallet()
+) {
+  let accountIndex = wallet?.accountIndex || 0
+
+  accountIndex += 1
+
+  return accountIndex
+}
 
 export const appDialogs = envoy(
   {
@@ -33,16 +71,14 @@ export const appState = envoy(
     selectedWallet: '',
     selectedAlias: '',
     aliasInfo: {},
+    aliases: [],
     contacts: [],
     sentTransactions: {},
     transactions: {},
+    integrations: {},
     account: {},
+    keystore: {},
   },
-  // async (state, oldState, prop) => {
-  //   if (prop === 'sentTransactions') {
-  //     console.log(prop, state[prop])
-  //   }
-  // },
 )
 
 export const appTools = envoy(

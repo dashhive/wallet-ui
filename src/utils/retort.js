@@ -42,16 +42,22 @@ export function createSignal(initialValue) {
     }
   }
 
-  function on(s) {
-    const i = subs.push(s)-1;
+  /**
+   * @param {(newVal, oldVal) => void} cb subscriber callback
+  */
+  function on(cb) {
+    const i = subs.push(cb)-1;
     return () => { subs[i] = 0; };
   }
 
-  function once(s) {
+  /**
+   * @param {(newVal, oldVal) => void} cb subscriber callback
+  */
+  function once(cb) {
     const i = subs.length
 
     subs.push((_value, _last) => {
-      s && s(_value, _last);
+      cb && cb(_value, _last);
       subs[i] = 0;
     });
   }
@@ -241,6 +247,7 @@ export function derived(fn) {
  */
 export function envoy(obj, ...initListeners) {
   let _listeners = [...initListeners]
+
   return new Proxy(obj, {
     get(obj, prop, receiver) {
       if (prop === '_listeners') {

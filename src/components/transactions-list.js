@@ -98,7 +98,7 @@ const initialState = {
 
     let itemAmount = tx.receivedAmount || tx.valueOut || 0
 
-    let itemCtrls = html`<aside class="inline row dang">
+    let itemCtrls = html`<aside class="inline row dang" title="-${itemAmount}">
       -${itemAmount}
     </aside>`
     let itemTitle = `Sent on`
@@ -107,7 +107,7 @@ const initialState = {
     if (!['sent', 'outgoing'].includes(tx?.dir)) {
       itemTitle = `Received on`
       itemDir = `From <strong>${name}</strong>`
-      itemCtrls = html`<aside class="inline row succ">
+      itemCtrls = html`<aside class="inline row succ" title="+${itemAmount}">
         +${itemAmount}
       </aside>`
     }

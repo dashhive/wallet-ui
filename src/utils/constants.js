@@ -1,3 +1,5 @@
+export const DEFAULT_ENTRYPOINT = document.querySelector('main#app')
+
 export const KS_PRF = {
   'hmac-sha256': 'SHA-256',
 }
@@ -113,7 +115,7 @@ export const TIMEAGO_LOCALE_EN = {
   weeks: "%w weeks ago",
   month: "a month ago",
   months: "%M months ago",
-  years: "more than a year ago",
+  years: "over a year ago",
   never: "never",
 }
 
@@ -159,6 +161,19 @@ export const CROWDNODE = {
   satoshis: 100000000,
   depositMinimum: 100000,
   stakeMinimum: 50000000,
+
+  network: {
+    main: {
+      // baseUrl: "https://app.crowdnode.io",
+      baseUrl: "https://wallet.dashincubator.dev/api/cors/app.crowdnode.io",
+      hotwallet: "XjbaGWaGnvEtuQAUoBgDxJWe8ZNv45upG2",
+    },
+    test: {
+      // baseUrl: "https://test.crowdnode.io",
+      baseUrl: "https://wallet.dashincubator.dev/api/cors/test.crowdnode.io",
+      hotwallet: "yMY5bqWcknGy5xYBHSsh2xvHZiJsRucjuy",
+    },
+  },
 
   /**
    * @type {Record<String, Number>}

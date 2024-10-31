@@ -98,7 +98,7 @@ export let walletBackupRig = (async function (globals) {
           event.preventDefault()
           event.stopPropagation()
 
-          let storedWallet = state.wallets?.[appState.selectedWallet]
+          let storedWallet = state.wallets?.[localStorage.selectedWallet]
           let ks = storedWallet?.keystore
           let fde = formDataEntries(event)
 

@@ -29,6 +29,8 @@ export const CrowdNodeCard = (() => {
     depositAlt: `Deposit to Crowdnode`,
     signupTxt: 'Signup',
     signupAlt: `Signup for Crowdnode`,
+    fundTxt: 'Fund Wallet',
+    fundAlt: `Fund Wallet for Crowdnode`,
     placement: 'center',
     rendered: null,
     responsive: true,
@@ -42,7 +44,7 @@ export const CrowdNodeCard = (() => {
       ...config,
     }
 
-    this.appElement = document.body
+    // this.appElement = document.body
 
     this.api = createSignal({})
 
@@ -60,57 +62,76 @@ export const CrowdNodeCard = (() => {
       ...config.elements,
     }
 
-    this.markup = {}
-    this.markup.content = () => html`
-      <header>
-        <a href="https://app.crowdnode.io/" target="_blank" rel="noreferrer">
-          <svg class="crowdnode-logo lock" width="26" height="26" viewBox="0 0 240 240">
-            <use xlink:href="#icon-crowdnode-logo"></use>
-          </svg>
-          <span>CrowdNode</span>
-        </a>
-      </header>
+    this.stage = []
 
+    Object.defineProperties(this, {
+      stage: {
+        get: () => [
+          !this.api.value?.acceptedToS, // Stage 0
+          this.api.value?.acceptedToS, // Stage 1
+          this.api.value?.balance <= 0, // Stage 2
+          this.api.value?.balance > 0, // Stage 3
+        ],
+      },
+    });
+
+    this.markup = {}
+    // Signup & Accept
+    this.markup.stageOne = () => this.stage[0] && !this.stage[1] && html`
       <section class="flex col jc-between">
-          ${!this.api.value?.acceptedToS && html`
-            Start earning interest by staking your Dash at CrowdNode
-          `}
-          ${this.api.value?.acceptedToS && html`
-            <p class="my-0"><em>
-              Balance: Ð ${this.api.value?.balance}
-            </em></p>
-          `}
-          ${this.api.value?.acceptedToS && html`
-            <p class="my-0"><em>
-              Earned: Ð ${this.api.value?.earned}
-            </em></p>
-          `}
+        Start earning interest by staking your Dash at CrowdNode
       </section>
 
       <footer class="flex">
-        ${!this.api.value?.acceptedToS && html`
-          <button
-            class="rounded outline flex-fill"
-            type="submit"
-            name="intent"
-            value="signup"
-            title="${this.state.signupAlt}"
-          >
-            ${this.state.signupTxt}
-          </button>
-        `}
-        ${this.api.value?.acceptedToS && html`
-          <button
-            class="rounded outline flex-fill"
-            type="submit"
-            name="intent"
-            value="deposit"
-            title="${this.state.depositAlt}"
-          >
-            ${this.state.depositTxt}
-          </button>
-        `}
-        ${this.api.value?.acceptedToS && this.api.value?.balance > 0 && html`
+        <button
+          class="rounded outline flex-fill"
+          type="submit"
+          name="intent"
+          value="signup"
+          title="${this.state.signupAlt}"
+        >
+          ${this.state.signupTxt}
+        </button>
+      </footer>
+    `
+    this.markup.stageTwo = () => this.stage[1] && this.stage[2] && html`
+      <section class="flex col jc-between">
+        Finish funding your account to start earning interest
+      </section>
+
+      <footer class="flex">
+        <button
+          class="rounded outline flex-fill"
+          type="submit"
+          name="intent"
+          value="fund"
+          title="${this.state.fundAlt}"
+        >
+          ${this.state.fundTxt}
+        </button>
+      </footer>
+    `
+    this.markup.stageThree = () => this.stage[1] && this.stage[3] && html`
+      <section class="flex col jc-between">
+        <p class="my-0"><em>
+          Balance: Ð ${this.api.value?.balance}
+        </em></p>
+        <p class="my-0"><em>
+          Earned: Ð ${this.api.value?.earned}
+        </em></p>
+      </section>
+
+      <footer class="flex">
+        <button
+          class="rounded outline flex-fill"
+          type="submit"
+          name="intent"
+          value="deposit"
+          title="${this.state.depositAlt}"
+        >
+          ${this.state.depositTxt}
+        </button>
+        ${this.stage[3] && html`
           <button
             class="rounded outline flex-fill"
             type="submit"
@@ -122,6 +143,20 @@ export const CrowdNodeCard = (() => {
           </button>
         `}
       </footer>
+    `
+    this.markup.content = () => html`
+      <header>
+        <a href="https://app.crowdnode.io/" target="_blank" rel="noreferrer">
+          <svg class="crowdnode-logo lock" width="26" height="26" viewBox="0 0 240 240">
+            <use xlink:href="#icon-crowdnode-logo"></use>
+          </svg>
+          <span>CrowdNode</span>
+        </a>
+      </header>
+
+      ${this.markup.stageOne()}
+      ${this.markup.stageTwo()}
+      ${this.markup.stageThree()}
     `
     this.markup = {
       ...this.markup,
@@ -202,6 +237,8 @@ export const CrowdNodeCard = (() => {
       this.elements.form.name = this.slugs.form
       this.elements.form.innerHTML = this.markup.content()
 
+      console.log('CN Card render', this.stage, this.elements.form.innerHTML)
+
       this.elements.form.addEventListener(
         'submit',
         this.events.submit,
@@ -209,7 +246,7 @@ export const CrowdNodeCard = (() => {
 
       console.log('CARD RENDER', this, cfg)
 
-      if (!this.state.rendered) {
+      if (!this.state.rendered && el) {
         el.insertAdjacentElement(position, this.elements.form)
         this.state.rendered = this.elements.form
       }

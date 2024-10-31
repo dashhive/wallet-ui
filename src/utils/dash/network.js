@@ -1,4 +1,8 @@
 import {
+  OIDC_CLAIMS,
+} from '../constants.js'
+
+import {
   DashWallet,
   DashTx,
   DashSight,
@@ -7,11 +11,20 @@ import {
 
 import {
   walletFunds,
+  userInfo,
 } from '../../state/index.js'
+
+import {
+  getStoredWallet,
+  appState,
+  appTools,
+  appDialogs,
+} from '../../store/index.js'
 
 import {
   DatabaseSetup,
   loadStoreObject,
+  getStoreData,
 } from '../db.js'
 
 import {
@@ -20,9 +33,12 @@ import {
   deriveWalletData,
   deriveContactAddrs,
   getContactsFromAddrs,
-  selectOptimalUtxos,
-  sortAddrs,
+  batchXkeyAddressGenerate,
   sortIncomingAndOutgoingTxs,
+  selectOptimalUtxos,
+  parseAddressField,
+  getUniqueAlias,
+  sortAddrs,
 } from './local.js'
 
 let defaultSocketEvents = {
@@ -724,4 +740,196 @@ export async function getTxs(appState, transactions = []) {
   // })
 
   return txs
+}
+
+export async function processURI(state, target, value) {
+  let {
+    address,
+    xpub,
+    xprv,
+    name,
+    preferred_username,
+    sub,
+  } = parseAddressField(value)
+
+  let xkey = xprv || xpub
+
+  let xkeyOrAddr = xkey || address
+
+  let info = {
+    name: name || '',
+    sub,
+    preferred_username,
+  }
+
+  let preferredAlias = await getUniqueAlias(
+    aliases,
+    preferred_username
+  )
+
+  let outgoing = {}
+
+  let existingContacts
+  let contactWallet
+
+  if (!xkey && address) {
+    existingContacts = appState.contacts.filter(
+      c => c.outgoing?.[address]
+    )
+
+    outgoing = {
+      ...(state.contact.outgoing || {}),
+      [address]: {
+        address,
+      },
+    }
+  }
+
+  if (xkey) {
+    contactWallet = await deriveWalletData(
+      xkey,
+    )
+    let {
+      xkeyId,
+      addressKeyId,
+      addressIndex,
+      address: addr,
+    } = contactWallet
+
+    existingContacts = appState.contacts.filter(
+      c => c.outgoing?.[xkeyId]
+    )
+
+    outgoing = {
+      ...(state.contact.outgoing || {}),
+      [xkeyId]: {
+        addressIndex,
+        addressKeyId,
+        address: address || addr,
+        xkeyId,
+        xprv,
+        xpub,
+      },
+    }
+
+    // console.log(
+    //   'add contact handleInput parsedAddr',
+    //   value,
+    //   xkey,
+    // )
+  }
+
+  let newContact
+
+  if (existingContacts?.length > 0) {
+    console.warn(
+      `You've already paired with this contact`,
+      {
+        existingContacts,
+        newContact: {
+          alias: preferredAlias,
+          outgoing,
+        }
+      }
+    )
+
+    // newContact = existingContacts[0]
+
+    let pairings = existingContacts.map(c => `@${c.alias}`)
+    if (pairings.length > 1) {
+      let lastPairing = pairings.pop()
+      pairings = `${pairings.join(', ')} & ${lastPairing}`
+    } else {
+      pairings = pairings[0]
+    }
+
+    // TODO: maybe prompt to show original pairing info
+    // in the scenario where your contact
+    // lost their contacts list
+    target.contactAddr.setCustomValidity(
+      `You've already paired with this contact (@${preferred_username}) as ${pairings}`,
+    )
+    target.reportValidity()
+    return;
+  } else {
+    if (Object.keys(outgoing).length > 0 && contactWallet) {
+      let xkeyAddrs = await batchXkeyAddressGenerate(
+        contactWallet,
+        contactWallet.addressIndex,
+      )
+      let contactAddrs = {}
+      let addresses = xkeyAddrs.addresses.map(g => {
+        contactAddrs[g.address] = {
+          alias: preferredAlias,
+          xkeyId: contactWallet.xkeyId,
+        }
+        return g.address
+      })
+
+      let txs = await getAddrsTransactions({
+        appState,
+        addrs: addresses,
+        contactAddrs,
+      })
+
+      // outgoing[contactWallet.xkeyId] = {
+      //   ...(outgoing[contactWallet.xkeyId] || {}),
+      //   addressIndex: xkeyAddrs.finalAddressIndex,
+      // }
+
+      // console.log('xkeyAddrs', {addresses, txs})
+    }
+
+    newContact = await appTools.storedData.encryptItem(
+      store.contacts,
+      state.wallet.xkeyId,
+      {
+        ...state.contact,
+        updatedAt: (new Date()).toISOString(),
+        info: {
+          ...OIDC_CLAIMS,
+          ...(state.contact.info || {}),
+          ...info,
+        },
+        outgoing,
+        alias: preferredAlias,
+        uri: value,
+      },
+      false,
+    )
+
+    getStoreData(
+      store.contacts,
+      res => {
+        if (res) {
+          appState.contacts = res
+
+          return contactsList.restate({
+            contacts: res,
+            userInfo,
+          })
+        }
+      },
+      res => async v => {
+        res.push(await appTools.storedData.decryptData(v))
+      }
+    )
+
+    state.contact = newContact
+
+    if (value) {
+      target.contactURI.value = value
+    }
+    if (xkeyOrAddr) {
+      target.contactAddr.value = xkeyOrAddr
+    }
+    if (name) {
+      target.contactName.value = name
+    }
+    if (preferred_username) {
+      target.contactAlias.value = preferredAlias
+    }
+  }
+
+  return
 }

@@ -93,10 +93,9 @@ export let phraseGenerateRig = (async function (globals) {
           wallet = await generateWalletData()
 
           appState.phrase = wallet.recoveryPhrase
-          appState.selectedWallet = wallet.id
           appState.selectedAlias = `${fde.alias}`
 
-          localStorage.selectedWallet = appState.selectedWallet
+          localStorage.selectedWallet = wallet.id
           localStorage.selectedAlias = appState.selectedAlias
 
           let usage = [0,0]

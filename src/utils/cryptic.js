@@ -150,9 +150,9 @@ export function storedData(
     return data
   }
 
-  SD.decryptItem = async function(targetStore, item,) {
+  SD.decryptItem = async function(targetStore, key,) {
     let data = await targetStore.getItem(
-      item,
+      key,
     )
 
     data = await SD.decryptData(data)
@@ -163,31 +163,41 @@ export function storedData(
   /**
    *
    * @param {*} targetStore
-   * @param {*} item
+   * @param {string} key
    * @param {*} data
-   * @param {*} extend
+   * @param {boolean} [extend=true]
    * @returns {Promise<[String,Object]>}
    */
   SD.encryptData = async function(
-    targetStore, item, data = {}, extend = true
+    targetStore, key, data = {}, extend = true
   ) {
     let encryptedData = ''
     let storedData = {}
     let jsonData = {}
     if (extend) {
       // storedData = await targetStore.getItem(
-      //   item,
+      //   key,
       // )
       storedData = await SD.decryptItem(
         targetStore,
-        item
+        key
       )
+      jsonData = {
+        ...storedData,
+      }
     }
 
     if (data) {
-      jsonData = {
-        ...storedData,
-        ...data,
+      if (typeof data === 'function') {
+        jsonData = {
+          ...jsonData,
+          ...(data?.(jsonData) || {}),
+        }
+      } else {
+        jsonData = {
+          ...jsonData,
+          ...data,
+        }
       }
       encryptedData = await encryptData(
         encryptionPassword,
@@ -202,19 +212,27 @@ export function storedData(
     ]
   }
 
+  /**
+   *
+   * @param {*} targetStore
+   * @param {string} key
+   * @param {*} data
+   * @param {boolean} [extend=true]
+   * @returns {Promise<Object>}
+   */
   SD.encryptItem = async function(
-    targetStore, item, data = {}, extend = true
+    targetStore, key, data = {}, extend = true
   ) {
     let encryptedData = ''
     let encryptedResult = ''
     let result = {}
 
     if (data || extend) {
-      let d = await SD.encryptData(targetStore, item, data, extend)
+      let d = await SD.encryptData(targetStore, key, data, extend)
       encryptedResult = d[0]
       result = d[1]
       encryptedData = await targetStore.setItem(
-        item,
+        key,
         encryptedResult
       )
     }

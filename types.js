@@ -39,7 +39,7 @@
  *  wpub: string;
  *  derivedWallet: HDWallet;
  *  account: HDAccount;
- *  recoveryPhrase: string;
+ *  recoveryPhrase?: string;
  * }} SeedWallet
  *
  * @typedef {{
