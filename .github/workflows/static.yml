@@ -2,7 +2,7 @@ name: Deploy static site
 
 on:
   push:
-    branches: ["master","feat/*","fix/*"]
+    branches: ["master","feat/*","refactor/*","fix/*"]
   workflow_dispatch:
 
 # Allow one concurrent deployment
