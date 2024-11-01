@@ -62,6 +62,7 @@ import {
 
 import {
   appDialogs,
+  appComponents,
   appState,
   appTools,
   userInfo,
@@ -241,6 +242,7 @@ let contactsList = await setupContactsList(
     },
   }
 )
+appComponents.contactsList = contactsList
 
 let transactionsList = await setupTransactionsList(mainAppGrid, {
   events: {

@@ -27,12 +27,12 @@ import {
 } from '../cryptic.js'
 
 import {
-  appState,
   appTools,
   appDialogs,
 } from '../../store/index.js'
 
 import {
+  appState,
   getStoredWallet,
   userInfo,
 } from '../../state/index.js'
@@ -1508,4 +1508,23 @@ export async function getUserInfo() {
       })
     })
   }
+}
+
+export function getContactAliases(
+  direction // 'outgoing' | 'incoming'
+) {
+  if (!direction) {
+    return appState.contacts
+      .filter(
+        c => c.alias
+      )
+      .map(contact => contact.alias)
+  }
+
+  return appState.contacts
+    .filter(
+      c => c.alias &&
+      !isEmpty(c[direction])
+    )
+    .map(contact => contact.alias)
 }

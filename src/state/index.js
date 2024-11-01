@@ -64,6 +64,12 @@ export const appDialogs = envoy(
   },
 )
 
+export const appComponents = envoy(
+  {
+    contactsList: {},
+  },
+)
+
 export const appState = envoy(
   {
     phrase: null,
@@ -97,11 +103,11 @@ export const userInfo = envoy(
       state[prop] !== oldState[prop] &&
       appState.selectedAlias
     ) {
-      let decryptedAlias = await appTools.storedData.decryptItem(
+      let decryptedAlias = await appTools.storedData?.decryptItem?.(
         store.aliases,
         appState.selectedAlias,
       )
-      appTools.storedData.encryptItem(
+      appTools.storedData?.encryptItem?.(
         store.aliases,
         appState.selectedAlias,
         {

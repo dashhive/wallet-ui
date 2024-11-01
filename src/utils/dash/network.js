@@ -12,6 +12,7 @@ import {
 import {
   walletFunds,
   userInfo,
+  appComponents,
 } from '../../state/index.js'
 
 import {
@@ -39,6 +40,7 @@ import {
   parseAddressField,
   getUniqueAlias,
   sortAddrs,
+  getContactAliases,
 } from './local.js'
 
 let defaultSocketEvents = {
@@ -763,7 +765,7 @@ export async function processURI(state, target, value) {
   }
 
   let preferredAlias = await getUniqueAlias(
-    aliases,
+    getContactAliases(),
     preferred_username
   )
 
@@ -904,7 +906,7 @@ export async function processURI(state, target, value) {
         if (res) {
           appState.contacts = res
 
-          return contactsList.restate({
+          return appComponents.contactsList?.restate?.({
             contacts: res,
             userInfo,
           })

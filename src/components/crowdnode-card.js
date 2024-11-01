@@ -237,7 +237,7 @@ export const CrowdNodeCard = (() => {
       this.elements.form.name = this.slugs.form
       this.elements.form.innerHTML = this.markup.content()
 
-      console.log('CN Card render', this.stage, this.elements.form.innerHTML)
+      console.log('CN Card render', this.stage)
 
       this.elements.form.addEventListener(
         'submit',

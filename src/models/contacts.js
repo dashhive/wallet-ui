@@ -17,31 +17,13 @@ import {
 
 import {
   getUniqueAlias,
+  getContactAliases,
   deriveWalletData,
   batchGenAcctAddrs,
   parseAddressField,
 } from '../utils/dash/local.js'
 
 // Create & Update Contact
-
-export function getContactAliases(
-  direction // 'outgoing' | 'incoming'
-) {
-  if (!direction) {
-    return appState.contacts
-      .filter(
-        c => c.alias
-      )
-      .map(contact => contact.alias)
-  }
-
-  return appState.contacts
-    .filter(
-      c => c.alias &&
-      !isEmpty(c[direction])
-    )
-    .map(contact => contact.alias)
-}
 
 export async function parseContactURI(uri) {
   let data = {
