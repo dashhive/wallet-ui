@@ -77,10 +77,11 @@ const initialState = {
     let txDate = new Date(tx.time * 1000)
     let user = cnt?.alias || cnt?.info?.preferred_username || tx?.alias || ''
     let name = cnt?.info?.name
-    let addr = tx?.vout?.[0]?.scriptPubKey?.addresses?.[0]
+    let addr = tx?.vout?.[0]?.scriptPubKey?.address || tx?.vout?.[0]?.scriptPubKey?.addresses?.[0]
+    let itemDir = `To <strong>${name}</strong>`
 
     if (!['sent', 'outgoing'].includes(tx?.dir)) {
-      addr = tx?.vin?.[0]?.addr
+      addr = tx?.vin?.[0]?.address
     }
     if (tx.time) {
       time = timeago(Date.now() - txDate.getTime())
@@ -91,22 +92,30 @@ const initialState = {
     ) {
       name = `@${user}`
     } else if (
-      !name && !user
+      !name && !user && addr
     ) {
       name = html`<span title="${addr}">${addr.substring(0,3)}...${addr.substring(addr.length - 3)}</span>`
+    } else if (
+      !name && !user && !addr
+    ) {
+      itemDir = html`<span title="${tx.txid}">${'Unknown TX Type'}</span>`
     }
 
-    let itemAmount = tx.receivedAmount || tx.valueOut || 0
+    if (name) {
+      itemDir = `To <strong>${name}</strong>`
+    }
+    let itemAmount = tx.sentAmount || tx.valueOut || 0
 
     let itemCtrls = html`<aside class="inline row dang" title="-${itemAmount}">
       -${itemAmount}
     </aside>`
     let itemTitle = `Sent on`
-    let itemDir = `To <strong>${name}</strong>`
+    // itemDir = `To <strong>${name}</strong>`
 
     if (!['sent', 'outgoing'].includes(tx?.dir)) {
       itemTitle = `Received on`
       itemDir = `From <strong>${name}</strong>`
+      itemAmount = tx.receivedAmount || tx.valueIn || 0
       itemCtrls = html`<aside class="inline row succ" title="+${itemAmount}">
         +${itemAmount}
       </aside>`

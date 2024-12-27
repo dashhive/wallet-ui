@@ -1017,16 +1017,17 @@ async function main() {
     Object.values(appState.transactions || {})
   )
 
+  // Load Cached TXs
   await transactionsList.render({
     userInfo,
     contacts: appState.contacts,
     transactions: Object.values(txs.byTx),
   })
 
+  // Update TX Cache
   txs = await getTxs(appState)
 
-  console.log('main getTxs', txs)
-
+  // Re-Render TXs with Updated Cache
   transactionsList.render({
     userInfo,
     contacts: appState.contacts,

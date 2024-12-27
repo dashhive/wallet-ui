@@ -1,5 +1,6 @@
 import {
   OIDC_CLAIMS,
+  DCD_RPC_ENDPOINT,
 } from '../constants.js'
 
 import {
@@ -622,21 +623,89 @@ export async function sendTx(
 
 
 
+export async function rpcAddrsTransactions({
+  addresses,
+  txs = [],
+}) {
+  let basicAuth = btoa(`user:pass`);
+  let txidPayload = JSON.stringify({
+    method: "getaddresstxids",
+    params: [
+      {
+        addresses,
+      }
+    ]
+  });
+  let txidResp = await fetch(DCD_RPC_ENDPOINT, {
+      method: "POST",
+      headers: {
+          "Authorization": `Basic ${basicAuth}`,
+          "Content-Type": "application/json",
+      },
+      body: txidPayload,
+  });
+  let txidData = await txidResp.json();
+  if (txidData.error) {
+      let err = new Error(txidData.error.message);
+      Object.assign(err, txidData.error);
+      throw err;
+  }
+
+  let txids = txidData?.result || []
+
+  let VERBOSE_INFO = true
+
+  let txInfoPayload = JSON.stringify({
+    method: "getrawtransactionmulti",
+    params: [
+      {
+        "0": txids,
+      },
+      VERBOSE_INFO
+    ]
+  });
+  let txInfoResp = await fetch(DCD_RPC_ENDPOINT, {
+      method: "POST",
+      headers: {
+          "Authorization": `Basic ${basicAuth}`,
+          "Content-Type": "application/json",
+      },
+      body: txInfoPayload,
+  });
+  let txInfoData = await txInfoResp.json();
+  if (txInfoData.error) {
+      let err = new Error(txInfoData.error.message);
+      Object.assign(err, txInfoData.error);
+      throw err;
+  }
+  txs = Object.values(txInfoData?.result || {})
+
+  console.log('rpcAddrsTransactions', {
+    txInfoResp,
+    txInfoData,
+    txids,
+    txs,
+  })
+
+  return txs;
+}
+
 export async function getAddrsTransactions({
-  appState, addrs, contactAddrs = {},
+  appState,
+  addrs,
+  contactAddrs = {},
   txs = [],
 }) {
   let storeAddrs = await loadStoreObject(store.addresses)
   if (txs.length === 0) {
-    txs = await dashsight.getAllTxs(addrs)
+    txs = await rpcAddrsTransactions({
+      addresses: addrs,
+      txs,
+    })
   }
   let byAddress = {}
   let byAlias = {}
   let byTx = {}
-
-  // console.log('getAddrsTransactions', {
-  //   txs, addrs, contactAddrs, appT: appState.transactions
-  // })
 
   for await (let tx of txs) {
     let dir = 'received'
@@ -645,7 +714,7 @@ export async function getAddrsTransactions({
     let receivedAmount = 0
 
     for await (let vin of tx.vin) {
-      let addr = vin.addr
+      let addr = vin.address
       conAddr = contactAddrs[addr]
 
       if(storeAddrs[addr]) {
@@ -661,30 +730,38 @@ export async function getAddrsTransactions({
       }
     }
 
+    function voutSort({ addr, vout, }) {
+      let conAddr = contactAddrs[addr]
+
+      if(storeAddrs[addr]) {
+        receivedAmount += Number(vout.value)
+      } else {
+        // sentAmount -= Number(vout.value)
+      }
+
+      if (conAddr) {
+        sortIncomingAndOutgoingTxs({
+          tx, addr, conAddr, dir, receivedAmount,
+          byAlias, byAddress, byTx,
+        })
+      }
+    }
+
     for await (let vout of tx.vout) {
+      if (vout?.scriptPubKey?.address) {
+        let addr = vout?.scriptPubKey?.address
+        voutSort({ addr, vout })
+      }
       if (vout?.scriptPubKey?.addresses) {
         for await (let addr of vout.scriptPubKey.addresses) {
-          // let addr = vout.scriptPubKey.addresses[0]
-          conAddr = contactAddrs[addr]
-
-          if(storeAddrs[addr]) {
-            receivedAmount += Number(vout.value)
-          } else {
-            // sentAmount -= Number(vout.value)
-          }
-
-          if (conAddr) {
-            sortIncomingAndOutgoingTxs({
-              tx, addr, conAddr, dir, receivedAmount,
-              byAlias, byAddress, byTx,
-            })
-          }
+          voutSort({ addr, vout })
         }
       }
     }
 
     byTx[tx.txid] = {
       ...byTx[tx.txid],
+      ...tx,
       receivedAmount,
       sentAmount,
     }

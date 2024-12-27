@@ -73,7 +73,7 @@ export function isEmpty(value) {
  * https://www.freecodecamp.org/news/javascript-debounce-example/
  *
  * @example
- *    const change = debounce((a) => console.log('Saving data', a));
+ *    const change = debouncePromise((a) => console.log('Saving data', a));
  *    change('b');change('c');change('d');
  *    'Saving data d'
  *

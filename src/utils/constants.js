@@ -155,6 +155,10 @@ export const DIALOG_STATUS = {
   ERROR
 }
 
+export const DCD_RPC_ENDPOINT = 'https://rpc.digitalcash.dev/'
+
+export const CORS_BYPASS = 'https://wallet.dashing.trade/api/cors'
+
 export const CROWDNODE = {
   offset: 20000,
   duffs: 100000000,
@@ -165,12 +169,12 @@ export const CROWDNODE = {
   network: {
     main: {
       // baseUrl: "https://app.crowdnode.io",
-      baseUrl: "https://wallet.dashincubator.dev/api/cors/app.crowdnode.io",
+      baseUrl: `${CORS_BYPASS}/app.crowdnode.io`,
       hotwallet: "XjbaGWaGnvEtuQAUoBgDxJWe8ZNv45upG2",
     },
     test: {
       // baseUrl: "https://test.crowdnode.io",
-      baseUrl: "https://wallet.dashincubator.dev/api/cors/test.crowdnode.io",
+      baseUrl: `${CORS_BYPASS}/test.crowdnode.io`,
       hotwallet: "yMY5bqWcknGy5xYBHSsh2xvHZiJsRucjuy",
     },
   },

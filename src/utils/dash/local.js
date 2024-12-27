@@ -1317,7 +1317,8 @@ export function selectOptimalUtxos(utxos, output) {
 }
 
 export function sortIncomingAndOutgoingTxs({
-  conAddr, tx, addr, dir, sentAmount = null, receivedAmount = null,
+  conAddr, tx, addr, dir,
+  sentAmount = null, receivedAmount = null,
   byAlias = {}, byAddress = {}, byTx = {},
 }) {
   let alias = byTx?.[tx.txid]?.alias || conAddr.alias
