@@ -135,6 +135,8 @@ export const DASH_URI_REGEX = new RegExp(
   'ig'
 )
 
+export const VERBOSE = true
+
 export const RECEIVE = 0 // DashHd.RECEIVE
 export const CHANGE = 1 // DashHd.CHANGE
 
@@ -156,6 +158,7 @@ export const DIALOG_STATUS = {
 }
 
 export const DCD_RPC_ENDPOINT = 'https://rpc.digitalcash.dev/'
+export const DCD_RPC_AUTH = btoa(`user:pass`);
 
 export const CORS_BYPASS = 'https://wallet.dashing.trade/api/cors'
 

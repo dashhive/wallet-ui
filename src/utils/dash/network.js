@@ -1,6 +1,9 @@
 import {
   OIDC_CLAIMS,
   DCD_RPC_ENDPOINT,
+  DCD_RPC_AUTH,
+  VERBOSE,
+  DUFFS,
 } from '../constants.js'
 
 import {
@@ -11,16 +14,15 @@ import {
 } from '../../imports.js'
 
 import {
-  walletFunds,
+  wallets,
   userInfo,
+  walletFunds,
   appComponents,
 } from '../../state/index.js'
 
 import {
-  getStoredWallet,
   appState,
   appTools,
-  appDialogs,
 } from '../../store/index.js'
 
 import {
@@ -76,12 +78,40 @@ export async function initDashSocket(
   return dashsocket
 }
 
+export async function rpcApi({
+  method,
+  // 'getaddressdeltas' | 'getaddresstxids'
+  // 'getaddressutxos' | 'getrawtransactionmulti'
+  params,
+}) {
+  let resp = await fetch(DCD_RPC_ENDPOINT, {
+      method: "POST",
+      headers: {
+          "Authorization": `Basic ${DCD_RPC_AUTH}`,
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        method,
+        params,
+      }),
+  });
+  let data = await resp.json();
+
+  if (data.error) {
+      let err = new Error(data.error.message);
+      Object.assign(err, data.error);
+      throw err;
+  }
+
+  return data;
+}
+
 export async function updateAddrFunds(
   wallet, insightRes,
 ) {
   let updatedAt = Date.now()
-  let { addrStr, ...res } = insightRes
-  let $addr = await store.addresses.getItem(addrStr) || {}
+  let { address, ...res } = insightRes
+  let $addr = await store.addresses.getItem(address) || {}
   let {
     walletId,
     xkeyId,
@@ -97,7 +127,7 @@ export async function updateAddrFunds(
     }
 
     store.addresses.setItem(
-      addrStr,
+      address,
       $addr,
     )
 
@@ -109,14 +139,16 @@ export async function updateAddrFunds(
       )
     }
     if (storedWallet.accountIndex < $addr.accountIndex) {
-      store.wallets.setItem(
+      let upWallet = await store.wallets.setItem(
         walletId,
         {
           ...storedWallet,
           accountIndex: $addr.accountIndex,
+          updatedAt: (new Date()).toISOString(),
         }
       )
       let storeAcctLen = (await store.accounts.length())-1
+      wallets[localStorage.selectedWallet] = upWallet
 
       console.log('updateAddrFunds', {
         acctIdx: $addr.accountIndex,
@@ -147,40 +179,85 @@ export async function updateAddrFunds(
   return { balance: 0 }
 }
 
+/**
+ * Modified version of `dashsight.getInstantBalance`
+ * to work with {@link https://rpc.digitalcash.dev/ DCD RPC Proxy}
+ *
+ * @param {string[]} addresses
+ * @returns {Promise<InstantBalance[]>}
+ */
+export async function getInstantBalances(addresses) {
+  let rpcUtxos = (await rpcApi({
+    method: "getaddressutxos",
+    params: [{ addresses }]
+  }));
+
+  let utxos = rpcUtxos?.result || []
+  let balanceOfAddrs = {}
+
+  utxos?.forEach(function (utxo) {
+    let {
+      txid, address, satoshis,
+      height, outputIndex, script,
+    } = utxo
+    let balanceDuffs = satoshis || 0
+    let balanceDash = (balanceDuffs / DUFFS).toFixed(8);
+
+    let utxoAddrSum = balanceOfAddrs[address] || {}
+
+    let balance = utxoAddrSum.balance || 0
+    let balanceSat = utxoAddrSum.balanceSat || 0
+    let _utxoCount = utxoAddrSum._utxoCount || 0
+    let _utxs = utxoAddrSum._utxs || {}
+    _utxs[txid] = {
+      txid, satoshis,
+      height, outputIndex, script,
+    }
+
+    utxoAddrSum = {
+      address,
+      balance: balance + parseFloat(balanceDash),
+      balanceSat: balanceSat + balanceDuffs,
+      _utxoCount: _utxoCount + 1,
+      _utxs,
+    }
+
+    balanceOfAddrs[utxo.address] = utxoAddrSum
+  });
+
+  let balanceArray = Object.values(balanceOfAddrs);
+
+  return balanceArray;
+}
+
 export async function updateAllFunds(wallet) {
   let funds = 0
-  let addrKeys = await store.addresses.keys()
+  let addresses = await store.addresses.keys()
 
-  if (addrKeys.length === 0) {
+  if (addresses.length === 0) {
     walletFunds.balance = funds
     return funds
   }
 
-  console.log(
-    'updateAllFunds getInstantBalances for',
-    {addrKeys},
-    addrKeys.length,
-  )
-
-  let balances = await dashsight.getInstantBalances(addrKeys)
+  let balances = await getInstantBalances(addresses)
 
   if (balances.length >= 0) {
     walletFunds.balance = funds
   }
 
-  // add insight balances to address
-  for (const insightRes of balances) {
-    let { addrStr } = insightRes
-    let addrIdx = addrKeys.indexOf(addrStr)
+  // add balances to address
+  for (const balanceRes of balances) {
+    let { address } = balanceRes
+    let addrIdx = addresses.indexOf(address)
     if (addrIdx > -1) {
-      addrKeys.splice(addrIdx, 1)
+      addresses.splice(addrIdx, 1)
     }
-    funds += (await updateAddrFunds(wallet, insightRes))?.balance || 0
+    funds += (await updateAddrFunds(wallet, balanceRes))?.balance || 0
     walletFunds.balance = funds
   }
 
-  // remove insight balances from address
-  for (const addr of addrKeys) {
+  // remove balances from address
+  for (const addr of addresses) {
     let { insight, ...$addr } = await store.addresses.getItem(addr) || {}
 
     // walletFunds.balance = funds - (_insight?.balance || 0)
@@ -622,66 +699,37 @@ export async function sendTx(
 }
 
 
-
 export async function rpcAddrsTransactions({
   addresses,
   txs = [],
 }) {
-  let basicAuth = btoa(`user:pass`);
-  let txidPayload = JSON.stringify({
+  let txidData = (await rpcApi({
     method: "getaddresstxids",
     params: [
       {
         addresses,
       }
     ]
-  });
-  let txidResp = await fetch(DCD_RPC_ENDPOINT, {
-      method: "POST",
-      headers: {
-          "Authorization": `Basic ${basicAuth}`,
-          "Content-Type": "application/json",
-      },
-      body: txidPayload,
-  });
-  let txidData = await txidResp.json();
-  if (txidData.error) {
-      let err = new Error(txidData.error.message);
-      Object.assign(err, txidData.error);
-      throw err;
-  }
+  }));
 
   let txids = txidData?.result || []
 
-  let VERBOSE_INFO = true
+  if (txids.length === 0) {
+    return []
+  }
 
-  let txInfoPayload = JSON.stringify({
+  let txInfoData = (await rpcApi({
     method: "getrawtransactionmulti",
     params: [
       {
         "0": txids,
       },
-      VERBOSE_INFO
+      VERBOSE
     ]
-  });
-  let txInfoResp = await fetch(DCD_RPC_ENDPOINT, {
-      method: "POST",
-      headers: {
-          "Authorization": `Basic ${basicAuth}`,
-          "Content-Type": "application/json",
-      },
-      body: txInfoPayload,
-  });
-  let txInfoData = await txInfoResp.json();
-  if (txInfoData.error) {
-      let err = new Error(txInfoData.error.message);
-      Object.assign(err, txInfoData.error);
-      throw err;
-  }
+  }));
   txs = Object.values(txInfoData?.result || {})
 
   console.log('rpcAddrsTransactions', {
-    txInfoResp,
     txInfoData,
     txids,
     txs,
