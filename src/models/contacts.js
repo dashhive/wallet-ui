@@ -12,10 +12,6 @@ import {
 } from '../state/index.js'
 
 import {
-  isEmpty,
-} from '../utils/generic.js'
-
-import {
   getUniqueAlias,
   getContactAliases,
   deriveWalletData,
@@ -112,6 +108,7 @@ export async function putContact(
 ) {
   let selectedWallet = getStoredWallet()
   let accountIndex = getUnusedAccountIndex(selectedWallet)
+  // TODO: find Account Index With No TXs
 
   let shareAccount
   let parsedUri = {}

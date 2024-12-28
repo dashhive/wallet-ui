@@ -1,3 +1,18 @@
+/**
+ * Why is there `state/index.js` & `store/index.js`?
+ *
+ * `store` is using Signals via the `createSignal` function
+ * and is what we're moving towards and is meant to be
+ * the only one interacting with localForage data. The
+ * intention is to shift all localStorage/IndexedDB
+ * interactions into signal listeners so the loaded app
+ * state and stored data is synchronized.
+ *
+ * For various reasons, the migration to the Signal based
+ * setup is only partially completed and thus both exist.
+ *
+ * See `state/index.js` for its purpose.
+ */
 import {
   createSignal,
 } from '../utils/retort.js'

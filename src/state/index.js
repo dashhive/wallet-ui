@@ -1,3 +1,16 @@
+/**
+ * Why is there `state/index.js` & `store/index.js`?
+ *
+ * `state` is using currently using JS Proxies via the
+ * `envoy` function which is the original implementation
+ * in the wallet, but as has some issues. The intention
+ * is to shift it to pure objects with no side effects.
+ *
+ * For various reasons, the migration to the Signal based
+ * setup is only partially completed and thus both exist.
+ *
+ * See `store/index.js` for its purpose.
+ */
 import {
   OIDC_CLAIMS,
 } from '../utils/constants.js'
