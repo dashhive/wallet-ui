@@ -269,6 +269,7 @@ async function main() {
   )
   appState.selectedAlias = localStorage?.selectedAlias || ''
   appState.selectedAccount = localStorage?.selectedAccount || ''
+  appState.selectedWallet = localStorage?.selectedWallet || ''
 
   wallets = await getStoredItems(store.wallets)
 
@@ -681,6 +682,7 @@ async function main() {
                   }
 
                   let cnContactExists = await findContactByAlias('crowdnode')
+                  // TODO: find Contact by Hot Wallet Address in Transactions
 
                   if (!cnContactExists) {
                     let generatedContact = await putContact({
@@ -708,6 +710,11 @@ async function main() {
 
                     console.log('use existing crowdnode contact', cnContactExists, shareAccount)
                   }
+
+                  await contactsList.render({
+                    userInfo,
+                    contacts: appState.contacts,
+                  })
 
                   appTools.storedData?.encryptItem?.(
                     store.integrations,
