@@ -60,4 +60,12 @@
  *  xpubId: string;
  *  address: string;
  * }} ContactAddr
+ *
+ * @typedef {{
+ *  address: string;
+ *  balance: number;
+ *  balanceSat: number;
+ *  _utxoCount: number;
+ *  _utxs: Record<string, any>;
+ * }} InstantBalance
  */
