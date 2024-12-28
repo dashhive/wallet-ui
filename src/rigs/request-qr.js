@@ -22,11 +22,8 @@ import { qrSvg } from '../utils/qr.js'
 
 import {
   appState,
-  appTools,
   appDialogs,
-} from '../store/index.js'
-
-import {
+  appTools,
   userInfo,
 } from '../state/index.js'
 
