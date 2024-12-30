@@ -14,16 +14,13 @@ import {
 } from '../../imports.js'
 
 import {
-  wallets,
-  userInfo,
-  walletFunds,
-  appComponents,
-} from '../../state/index.js'
-
-import {
   appState,
   appTools,
-} from '../../store/index.js'
+  appComponents,
+  userInfo,
+  wallets,
+  walletFunds,
+} from '../../state/index.js'
 
 import {
   DatabaseSetup,
@@ -148,7 +145,7 @@ export async function updateAddrFunds(
         }
       )
       let storeAcctLen = (await store.accounts.length())-1
-      wallets[localStorage.selectedWallet] = upWallet
+      wallets[walletId] = upWallet
 
       console.log('updateAddrFunds', {
         acctIdx: $addr.accountIndex,
@@ -900,7 +897,7 @@ export async function processURI(state, target, value) {
   let contactWallet
 
   if (!xkey && address) {
-    existingContacts = appState.contacts.filter(
+    existingContacts = appState.contacts?.filter(
       c => c.outgoing?.[address]
     )
 
@@ -923,7 +920,7 @@ export async function processURI(state, target, value) {
       address: addr,
     } = contactWallet
 
-    existingContacts = appState.contacts.filter(
+    existingContacts = appState.contacts?.filter(
       c => c.outgoing?.[xkeyId]
     )
 

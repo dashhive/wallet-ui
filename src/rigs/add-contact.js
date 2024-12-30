@@ -272,7 +272,7 @@ export let addContactRig = (async function (globals) {
             // )
             if (
               startAlias !== event.target?.value &&
-              aliases.includes(event.target?.value)
+              !aliases[event.target?.value]
             ) {
               event.target.setCustomValidity(
                 'Alias already used. A unique alias is required.'
@@ -407,7 +407,7 @@ export let addContactRig = (async function (globals) {
 
           if (
             startAlias !== currentAlias &&
-            aliases.includes(currentAlias)
+            !aliases[currentAlias]
           ) {
             event.target.contactAlias.setCustomValidity(
               'Alias already used. A unique alias is required.'
