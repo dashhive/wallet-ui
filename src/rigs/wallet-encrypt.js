@@ -142,7 +142,6 @@ export let walletEncryptRig = (async function (globals) {
                 preferred_username: appState.selectedAlias,
               }
             )
-            wallets = initialized.wallets
 
             appTools.storedData = storedData(
               appState.encryptionPassword,

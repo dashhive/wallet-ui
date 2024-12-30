@@ -15,10 +15,11 @@ import {
   getTarget,
   handlePasswordToggle,
   showNotification,
+  isEmpty,
 } from './utils/generic.js'
 
 import {
-  fixedDash,
+  // fixedDash,
   roundUsing,
   getUserInfo,
   batchGenAccts,
@@ -28,7 +29,7 @@ import {
   batchGenAcctAddrs,
   generateWalletData,
   batchGenAcctsAddrs,
-  loadWalletsForAlias,
+  // loadWalletsForAlias,
   getUnusedChangeAddress,
   batchXkeyAddressGenerate,
   getTransactionsByContactAlias,
@@ -67,12 +68,10 @@ import {
   appTools,
   userInfo,
   walletFunds,
-} from './state/index.js'
-
-import {
+  wallets,
   store,
   getStoredWallet,
-} from './store/index.js'
+} from './state/index.js'
 
 import {
   putContact,
@@ -120,7 +119,6 @@ CrowdNode.init({
 
 // app/data state
 let accounts
-let wallets
 let wallet
 
 // element
@@ -178,7 +176,7 @@ let contactsList = await setupContactsList(
             contactAccountID,
           )
 
-          if (!contactData.outgoing) {
+          if (isEmpty(contactData.outgoing)) {
             // Finish Pairing
             let contactName = contactData?.info?.name || 'Contact'
             await appDialogs.addContact.render(
@@ -236,7 +234,28 @@ let contactsList = await setupContactsList(
         if (
           getTarget(event, 'add_contact')
         ) {
-          // model.putContact
+          let generateNewContact = await putContact({})
+
+          appState.contacts = [
+            ...appState.contacts,
+            generateNewContact.newContact,
+          ]
+
+          await contactsList.render({
+            userInfo,
+            contacts: appState.contacts,
+          })
+
+          await appDialogs.addContact.render(
+            {
+              name: 'Add a New Contact',
+              wallet: generateNewContact.shareAccount,
+              contact: generateNewContact.newContact,
+              userInfo,
+            },
+            'afterend',
+          )
+          appDialogs.addContact.showModal()
         }
       },
     },
@@ -270,8 +289,6 @@ async function main() {
   appState.selectedAlias = localStorage?.selectedAlias || ''
   appState.selectedAccount = localStorage?.selectedAccount || ''
   appState.selectedWallet = localStorage?.selectedWallet || ''
-
-  wallets = await getStoredItems(store.wallets)
 
   console.log('main wallets', wallets)
 
@@ -555,8 +572,6 @@ async function main() {
   })
   mainFtr.render()
 
-  wallets = wallets || await getStoredItems(store.wallets)
-
   await getUserInfo()
 
   // contactsList.render({
@@ -613,6 +628,45 @@ async function main() {
         'crowdnode',
       )
       let cnEncAPI = await store.integrations.getItem('crowdnode')
+      // let minimumNeededFunds = 1.1
+      let minimumNeededFunds = 0.01
+      let cnShareAccount
+      let cnAddr
+
+      let cnContactExists = await findContactByAlias(
+        'crowdnode'
+      )
+
+      if (cnContactExists) {
+        let contactAccountIndex = Object.values(
+          cnContactExists.incoming || {}
+        )?.[0]?.accountIndex
+
+        cnShareAccount = await deriveWalletData(
+          appState.phrase,
+          contactAccountIndex,
+        )
+
+        cnAddr = await store.addresses.getItem(
+          cnShareAccount.address
+        )
+
+        console.log('use existing crowdnode contact', {
+          cnContactExists,
+          cnShareAccount,
+          cnAddr,
+        })
+      }
+      // TODO: find Contact by Hot Wallet Address in Transactions
+
+      console.warn(
+        'CN Funds',
+        {
+          walletBalance: walletFunds.balance,
+          crowdnodeAddrBalance: cnAddr?.insight?.balance || 0,
+          minimumNeededFunds,
+        }
+      )
 
       console.log(
         `CrowdNodeCard`,
@@ -632,6 +686,15 @@ async function main() {
             console.log(
               `Crowdnode Card submit`,
               {event, fde},
+            )
+
+            console.warn(
+              'CN Funds',
+              {
+                walletBalance: walletFunds.balance,
+                crowdnodeAddrBalance: cnAddr?.insight?.balance || 0,
+                minimumNeededFunds,
+              }
             )
 
             if (fde.intent === 'signup') {
@@ -665,8 +728,6 @@ async function main() {
                   </fieldset>
                 `,
                 callback: async (state, fde) => {
-                  let shareAccount
-
                   state.status = DIALOG_STATUS.LOADING
 
                   if (fde?.acceptToS === 'on') {
@@ -680,9 +741,6 @@ async function main() {
                     acceptedToS: true,
                     balance: 0,
                   }
-
-                  let cnContactExists = await findContactByAlias('crowdnode')
-                  // TODO: find Contact by Hot Wallet Address in Transactions
 
                   if (!cnContactExists) {
                     let generatedContact = await putContact({
@@ -699,16 +757,16 @@ async function main() {
                       ...appState.contacts,
                       generatedContact.newContact
                     ]
-                    shareAccount = generatedContact.shareAccount
+                    cnShareAccount = generatedContact.shareAccount
                   } else {
                     let contactAccountIndex = Object.values(cnContactExists.incoming || {})?.[0]?.accountIndex
 
-                    shareAccount = await deriveWalletData(
+                    cnShareAccount = await deriveWalletData(
                       appState.phrase,
                       contactAccountIndex,
                     )
 
-                    console.log('use existing crowdnode contact', cnContactExists, shareAccount)
+                    console.log('use existing crowdnode contact', cnContactExists, cnShareAccount)
                   }
 
                   await contactsList.render({
@@ -726,11 +784,11 @@ async function main() {
                   )
 
                   let cnActive = (
-                    await CrowdNode.http.IsAddressInUse(shareAccount.address)
+                    await CrowdNode.http.IsAddressInUse(cnShareAccount.address)
                   )?.inUse
 
                   if (cnActive) {
-                    let cnBalance = await CrowdNode.http.GetBalance(shareAccount.address)
+                    let cnBalance = await CrowdNode.http.GetBalance(cnShareAccount.address)
 
                     cnCard.api.value = {
                       ...(cnCard.api.value || {}),
@@ -740,7 +798,7 @@ async function main() {
                   }
 
                   let cnAddr = await store.addresses.getItem(
-                    shareAccount.address
+                    cnShareAccount.address
                   )
 
                   console.log(
@@ -749,7 +807,6 @@ async function main() {
                   )
 
                   let cnFunding
-                  let minimumNeededFunds = 1.1
                   let neededFunds = roundUsing(
                     Math.ceil,
                     minimumNeededFunds - walletFunds.balance,
@@ -765,7 +822,7 @@ async function main() {
                       walletFunds.balance < minimumNeededFunds
                     ) {
                       cnFunding = await showQrCode({
-                        wallet: shareAccount,
+                        wallet: cnShareAccount,
                         name: 'CrowdNode Funding',
                         amount: neededFunds,
                         status: DIALOG_STATUS.LOADING,
@@ -831,35 +888,70 @@ async function main() {
             }
 
             if (fde.intent === 'fund') {
-              let minimumNeededFunds = 1.1
-              let neededFunds = roundUsing(
-                Math.ceil,
-                minimumNeededFunds - walletFunds.balance,
-                3
-              )
-              let cnFunding = await showQrCode({
-                wallet,
-                name: 'CrowdNode Funding',
-                amount: neededFunds,
-                status: DIALOG_STATUS.LOADING,
-                fieldsetHeader: state => html`
-                  Send ${neededFunds} Dash or more<br/>
-                  to signup & fund your CrowdNode account.
-                `,
-                footer: state => html`
-                  <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
-                    See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
-                    <!-- <div class="ta-left" style="max-width:450px;">
-                      CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
-                    </div> -->
-                  </footer>
-                `,
-              })
+              if (
+                walletFunds.balance < minimumNeededFunds
+              ) {
+                let neededFunds = roundUsing(
+                  Math.ceil,
+                  minimumNeededFunds - walletFunds.balance,
+                  3
+                )
+                let cnFunding = await showQrCode({
+                  wallet,
+                  name: 'CrowdNode Funding',
+                  amount: neededFunds,
+                  status: DIALOG_STATUS.LOADING,
+                  fieldsetHeader: state => html`
+                    Send ${neededFunds} Dash or more<br/>
+                    to signup & fund your CrowdNode account.
+                  `,
+                  footer: state => html`
+                    <footer class="inline col center" title="CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.">
+                      See "Active Balance" in <a href="https://crowdnode.io/terms/" target="_blank">CrowdNode Terms and Conditions</a> for more details.
+                      <!-- <div class="ta-left" style="max-width:450px;">
+                        CrowdNode requires a small amount of funds to signup and a minimum balance of 1 dash to receive rewards.
+                      </div> -->
+                    </footer>
+                  `,
+                })
 
-              console.log(
-                `confirm action SUCCESS`,
-                {fde, cnFunding},
-              )
+                console.log(
+                  `confirm action SUCCESS`,
+                  {fde, cnFunding},
+                )
+              } else {
+                // Show Confirmation Dialog to redistribute
+                // funds to the correct address
+                console.warn(
+                  'wallet has sufficient funds but they need to be transferred to correct address to be deposited',
+                  { cnAddr, walletFunds, wallet }
+                )
+                appDialogs.sendOrReceive?.elements?.form?.classList.add?.('min-h-auto')
+                await appDialogs.sendOrReceive.render({
+                  name: 'Consolidate Funds for CrowdNode',
+                  actionTxt: 'Consolidate',
+                  actionAlt: 'Consolidate Funds',
+                  action: 'consolidate', // fde.intent,
+                  actionType: 'infoo',
+                  placement: 'center auto-height',
+                  cashSend: () => html`
+                    <fieldset class="inline">
+                      <article class="px-3 col">
+                        <span>CrowdNode requires funds to come from one single address.</span>
+                        <span>You have enough funds but must consolidate them to <strong>${cnShareAccount.address}</strong></span>
+                      </article>
+                    </fieldset>
+                  `,
+                  hideAddressee: true,
+                  wallet,
+                  // wallet: cnShareAccount,
+                  userInfo,
+                  // account: appState.account,
+                  // contacts: appState.contacts,
+                  to: cnShareAccount.address,
+                })
+                appDialogs.sendOrReceive.showModal()
+              }
             }
 
             console.log(
@@ -872,9 +964,11 @@ async function main() {
               appDialogs.sendOrReceive?.elements?.form?.classList.add?.('min-h-auto')
               await appDialogs.sendOrReceive.render({
                 name: 'Deposit to CrowdNode',
+                actionTxt: 'Deposit',
+                actionAlt: 'Deposit to CrowdNode',
                 cashSend: () => html``,
                 hideAddressee: true,
-                action: fde.intent,
+                action: 'send', // fde.intent,
                 wallet,
                 account: appState.account,
                 userInfo,
@@ -993,6 +1087,9 @@ async function main() {
 
       cnCard.api.value = {
         ...(cnAPI || {}),
+        // acceptedToS: true,
+        // balance: 1.23,
+        // earned: 0.567,
       }
 
       cnCard.render({
@@ -1018,6 +1115,12 @@ async function main() {
   //     </div>
   //   </section>
   // `)
+  appState.encryptionPassword = window.atob(
+    sessionStorage.encryptionPassword || ''
+  )
+  appState.selectedAlias = localStorage?.selectedAlias || ''
+  appState.selectedAccount = localStorage?.selectedAccount || ''
+  appState.selectedWallet = localStorage?.selectedWallet || ''
 
   let txs = await getTxs(
     appState,
@@ -1365,6 +1468,8 @@ async function main() {
       }
     },
   })
+
+  await getUserInfo()
 }
 
 main()

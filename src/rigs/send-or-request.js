@@ -133,7 +133,7 @@ export let sendOrReceiveRig = (async function (globals) {
         `
       },
       fundAmountBtns: state => {
-        if (state.action !== 'send') {
+        if (!['send','deposit','consolidate'].includes(state.action)) {
           return ''
         }
 

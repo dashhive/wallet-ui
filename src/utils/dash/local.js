@@ -27,13 +27,12 @@ import {
 } from '../cryptic.js'
 
 import {
+  appState,
   appTools,
   appDialogs,
-} from '../../store/index.js'
-
-import {
-  appState,
   getStoredWallet,
+  storedWallets,
+  wallets,
   userInfo,
 } from '../../state/index.js'
 
@@ -364,8 +363,6 @@ export async function loadWalletsForAlias($alias) {
 export async function initWalletsInfo(
   info = {},
 ) {
-  let wallets = await getStoredItems(store.wallets)
-
   info = {
     ...OIDC_CLAIMS,
     ...info,
@@ -373,14 +370,15 @@ export async function initWalletsInfo(
 
   let alias = info.preferred_username
 
-  wallets = Object.values(wallets || {})
-  wallets = wallets
+  let walletIds = Object.values(wallets || {})
+  walletIds = walletIds
     .filter(w => w.alias === alias)
     .map(w => w.id)
 
   return {
     alias,
     wallets,
+    walletIds,
     info,
   }
 }
@@ -395,21 +393,10 @@ export async function initWallet(
 ) {
   let {
     alias,
-    wallets,
     info,
   } = await initWalletsInfo(infoOverride)
 
   let { id, recoveryPhrase } = wallet
-
-  // console.log(
-  //   'initWallet wallets',
-  //   wallets,
-  //   info,
-  // )
-
-  if (!wallets.includes(id)) {
-    wallets.push(id)
-  }
 
   let addrs = await batchAddressUsageGenerate(
     wallet,
@@ -447,23 +434,19 @@ export async function initWallet(
     }
   )
 
+  let aliasWalletJSON = JSON.stringify({
+    wallets: Object.keys(wallets),
+    info,
+  })
+
   let storedAlias = await store.aliases.setItem(
     `${alias}`,
     await encryptData(
       encryptionPassword,
       storeWallet.keystore,
-      JSON.stringify({
-        wallets,
-        info,
-      })
+      aliasWalletJSON,
     )
   )
-
-  // console.log(
-  //   'initWallet stored values',
-  //   storeWallet,
-  //   storedAlias,
-  // )
 
   let contacts = '{}'
 
@@ -1465,7 +1448,15 @@ export function getTransactionsByContactAlias(appState) {
 }
 
 export async function getUserInfo() {
-  let ks = getStoredWallet()?.keystore
+  let sw = appState.selectedWallet
+  let wal = getStoredWallet(sw)
+
+  if (sw && !wal) {
+    wal = await store.wallets.getItem(sw)
+    wallets[sw] = wal
+  }
+
+  let ks = wal?.keystore
 
   if (
     appState.encryptionPassword &&
@@ -1482,20 +1473,11 @@ export async function getUserInfo() {
       appState.selectedAlias,
     )
     .then(async $alias => {
-      let { $wallets, ...$userInfo } = await loadWalletsForAlias(
+      let loadedAlias = await loadWalletsForAlias(
         $alias
       )
-      // wallets = $wallets
-      console.log(
-        'getUserInfo $alias',
-        {
-          $alias,
-          $wallets,
-          $userInfo,
-        }
-      )
 
-      Object.entries(($userInfo?.info || {}))
+      Object.entries((loadedAlias?.info || {}))
         .forEach(
           ([k,v]) => userInfo[k] = v
         )

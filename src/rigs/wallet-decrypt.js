@@ -174,8 +174,6 @@ export let walletDecryptRig = (async function (globals) {
                 }
               )
 
-              wallets = initialized.wallets
-
               let usage = [0,0]
               // usage[wallet.usageIndex] = wallet.addressIndex
 
