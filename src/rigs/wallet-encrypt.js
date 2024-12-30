@@ -5,6 +5,9 @@ import {
 import {
   initWallet,
 } from '../utils/dash/local.js'
+import {
+  storedData,
+} from '../utils/cryptic.js'
 
 export let walletEncryptRig = (async function (globals) {
   'use strict';
@@ -139,7 +142,11 @@ export let walletEncryptRig = (async function (globals) {
                 preferred_username: appState.selectedAlias,
               }
             )
-            wallets = initialized.wallets
+
+            appTools.storedData = storedData(
+              appState.encryptionPassword,
+              initialized.keystore,
+            )
           }
 
           // console.log('ENCRYPT wallet!', wallet, appState.selectedAlias)

@@ -39,7 +39,7 @@
  *  wpub: string;
  *  derivedWallet: HDWallet;
  *  account: HDAccount;
- *  recoveryPhrase: string;
+ *  recoveryPhrase?: string;
  * }} SeedWallet
  *
  * @typedef {{
@@ -60,4 +60,12 @@
  *  xpubId: string;
  *  address: string;
  * }} ContactAddr
+ *
+ * @typedef {{
+ *  address: string;
+ *  balance: number;
+ *  balanceSat: number;
+ *  _utxoCount: number;
+ *  _utxs: Record<string, any>;
+ * }} InstantBalance
  */

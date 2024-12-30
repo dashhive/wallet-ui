@@ -1,12 +1,63 @@
+/**
+ * Why is there `state/index.js` & `store/index.js`?
+ *
+ * `state` is using currently using JS Proxies via the
+ * `envoy` function which is the original implementation
+ * in the wallet, but as has some issues. The intention
+ * is to shift it to pure objects with no side effects.
+ *
+ * For various reasons, the migration to the Signal based
+ * setup is only partially completed and thus both exist.
+ *
+ * See `store/index.js` for its purpose.
+ */
 import {
   OIDC_CLAIMS,
 } from '../utils/constants.js'
 import {
   envoy,
 } from '../utils/retort.js'
+
 import {
-  store,
-} from '../utils/dash/network.js'
+  DatabaseSetup,
+  getStoredItems,
+} from '../utils/db.js'
+
+export const store = await DatabaseSetup()
+
+export const storedWallets = await getStoredItems(store.wallets)
+
+export const wallets = envoy(
+  {
+    ...storedWallets,
+  },
+  // async (state, oldState, prop) => {
+  //   if (state[prop] !== oldState[prop]) {
+  //     console.log({ prop, new: state[prop], old: oldState[prop] })
+
+  //     store.wallets.getItem(state[prop].id)
+  //       .then(async storedWallet => {
+  //         store.addresses.setItem(state[prop].id, storedWallet)
+  //       })
+  //   }
+  // },
+)
+
+export function getStoredWallet(
+  selectedWallet = localStorage.selectedWallet,
+) {
+  return wallets?.[selectedWallet]
+}
+
+export function getUnusedAccountIndex(
+  wallet = getStoredWallet()
+) {
+  let accountIndex = wallet?.accountIndex || 0
+
+  accountIndex += 1
+
+  return accountIndex
+}
 
 export const appDialogs = envoy(
   {
@@ -26,6 +77,12 @@ export const appDialogs = envoy(
   },
 )
 
+export const appComponents = envoy(
+  {
+    contactsList: {},
+  },
+)
+
 export const appState = envoy(
   {
     phrase: null,
@@ -33,16 +90,14 @@ export const appState = envoy(
     selectedWallet: '',
     selectedAlias: '',
     aliasInfo: {},
+    aliases: [],
     contacts: [],
     sentTransactions: {},
     transactions: {},
+    integrations: {},
     account: {},
+    keystore: {},
   },
-  // async (state, oldState, prop) => {
-  //   if (prop === 'sentTransactions') {
-  //     console.log(prop, state[prop])
-  //   }
-  // },
 )
 
 export const appTools = envoy(
@@ -61,11 +116,11 @@ export const userInfo = envoy(
       state[prop] !== oldState[prop] &&
       appState.selectedAlias
     ) {
-      let decryptedAlias = await appTools.storedData.decryptItem(
+      let decryptedAlias = await appTools.storedData?.decryptItem?.(
         store.aliases,
         appState.selectedAlias,
       )
-      appTools.storedData.encryptItem(
+      appTools.storedData?.encryptItem?.(
         store.aliases,
         appState.selectedAlias,
         {

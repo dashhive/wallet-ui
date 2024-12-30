@@ -1,4 +1,12 @@
 import {
+  OIDC_CLAIMS,
+  DCD_RPC_ENDPOINT,
+  DCD_RPC_AUTH,
+  VERBOSE,
+  DUFFS,
+} from '../constants.js'
+
+import {
   DashWallet,
   DashTx,
   DashSight,
@@ -6,12 +14,18 @@ import {
 } from '../../imports.js'
 
 import {
+  appState,
+  appTools,
+  appComponents,
+  userInfo,
+  wallets,
   walletFunds,
 } from '../../state/index.js'
 
 import {
   DatabaseSetup,
   loadStoreObject,
+  getStoreData,
 } from '../db.js'
 
 import {
@@ -20,9 +34,13 @@ import {
   deriveWalletData,
   deriveContactAddrs,
   getContactsFromAddrs,
-  selectOptimalUtxos,
-  sortAddrs,
+  batchXkeyAddressGenerate,
   sortIncomingAndOutgoingTxs,
+  selectOptimalUtxos,
+  parseAddressField,
+  getUniqueAlias,
+  sortAddrs,
+  getContactAliases,
 } from './local.js'
 
 let defaultSocketEvents = {
@@ -57,12 +75,40 @@ export async function initDashSocket(
   return dashsocket
 }
 
+export async function rpcApi({
+  method,
+  // 'getaddressdeltas' | 'getaddresstxids'
+  // 'getaddressutxos' | 'getrawtransactionmulti'
+  params,
+}) {
+  let resp = await fetch(DCD_RPC_ENDPOINT, {
+      method: "POST",
+      headers: {
+          "Authorization": `Basic ${DCD_RPC_AUTH}`,
+          "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        method,
+        params,
+      }),
+  });
+  let data = await resp.json();
+
+  if (data.error) {
+      let err = new Error(data.error.message);
+      Object.assign(err, data.error);
+      throw err;
+  }
+
+  return data;
+}
+
 export async function updateAddrFunds(
   wallet, insightRes,
 ) {
   let updatedAt = Date.now()
-  let { addrStr, ...res } = insightRes
-  let $addr = await store.addresses.getItem(addrStr) || {}
+  let { address, ...res } = insightRes
+  let $addr = await store.addresses.getItem(address) || {}
   let {
     walletId,
     xkeyId,
@@ -78,7 +124,7 @@ export async function updateAddrFunds(
     }
 
     store.addresses.setItem(
-      addrStr,
+      address,
       $addr,
     )
 
@@ -90,14 +136,16 @@ export async function updateAddrFunds(
       )
     }
     if (storedWallet.accountIndex < $addr.accountIndex) {
-      store.wallets.setItem(
+      let upWallet = await store.wallets.setItem(
         walletId,
         {
           ...storedWallet,
           accountIndex: $addr.accountIndex,
+          updatedAt: (new Date()).toISOString(),
         }
       )
       let storeAcctLen = (await store.accounts.length())-1
+      wallets[walletId] = upWallet
 
       console.log('updateAddrFunds', {
         acctIdx: $addr.accountIndex,
@@ -128,40 +176,85 @@ export async function updateAddrFunds(
   return { balance: 0 }
 }
 
+/**
+ * Modified version of `dashsight.getInstantBalance`
+ * to work with {@link https://rpc.digitalcash.dev/ DCD RPC Proxy}
+ *
+ * @param {string[]} addresses
+ * @returns {Promise<InstantBalance[]>}
+ */
+export async function getInstantBalances(addresses) {
+  let rpcUtxos = (await rpcApi({
+    method: "getaddressutxos",
+    params: [{ addresses }]
+  }));
+
+  let utxos = rpcUtxos?.result || []
+  let balanceOfAddrs = {}
+
+  utxos?.forEach(function (utxo) {
+    let {
+      txid, address, satoshis,
+      height, outputIndex, script,
+    } = utxo
+    let balanceDuffs = satoshis || 0
+    let balanceDash = (balanceDuffs / DUFFS).toFixed(8);
+
+    let utxoAddrSum = balanceOfAddrs[address] || {}
+
+    let balance = utxoAddrSum.balance || 0
+    let balanceSat = utxoAddrSum.balanceSat || 0
+    let _utxoCount = utxoAddrSum._utxoCount || 0
+    let _utxs = utxoAddrSum._utxs || {}
+    _utxs[txid] = {
+      txid, satoshis,
+      height, outputIndex, script,
+    }
+
+    utxoAddrSum = {
+      address,
+      balance: balance + parseFloat(balanceDash),
+      balanceSat: balanceSat + balanceDuffs,
+      _utxoCount: _utxoCount + 1,
+      _utxs,
+    }
+
+    balanceOfAddrs[utxo.address] = utxoAddrSum
+  });
+
+  let balanceArray = Object.values(balanceOfAddrs);
+
+  return balanceArray;
+}
+
 export async function updateAllFunds(wallet) {
   let funds = 0
-  let addrKeys = await store.addresses.keys()
+  let addresses = await store.addresses.keys()
 
-  if (addrKeys.length === 0) {
+  if (addresses.length === 0) {
     walletFunds.balance = funds
     return funds
   }
 
-  console.log(
-    'updateAllFunds getInstantBalances for',
-    {addrKeys},
-    addrKeys.length,
-  )
-
-  let balances = await dashsight.getInstantBalances(addrKeys)
+  let balances = await getInstantBalances(addresses)
 
   if (balances.length >= 0) {
     walletFunds.balance = funds
   }
 
-  // add insight balances to address
-  for (const insightRes of balances) {
-    let { addrStr } = insightRes
-    let addrIdx = addrKeys.indexOf(addrStr)
+  // add balances to address
+  for (const balanceRes of balances) {
+    let { address } = balanceRes
+    let addrIdx = addresses.indexOf(address)
     if (addrIdx > -1) {
-      addrKeys.splice(addrIdx, 1)
+      addresses.splice(addrIdx, 1)
     }
-    funds += (await updateAddrFunds(wallet, insightRes))?.balance || 0
+    funds += (await updateAddrFunds(wallet, balanceRes))?.balance || 0
     walletFunds.balance = funds
   }
 
-  // remove insight balances from address
-  for (const addr of addrKeys) {
+  // remove balances from address
+  for (const addr of addresses) {
     let { insight, ...$addr } = await store.addresses.getItem(addr) || {}
 
     // walletFunds.balance = funds - (_insight?.balance || 0)
@@ -603,22 +696,61 @@ export async function sendTx(
 }
 
 
+export async function rpcAddrsTransactions({
+  addresses,
+  txs = [],
+}) {
+  let txidData = (await rpcApi({
+    method: "getaddresstxids",
+    params: [
+      {
+        addresses,
+      }
+    ]
+  }));
+
+  let txids = txidData?.result || []
+
+  if (txids.length === 0) {
+    return []
+  }
+
+  let txInfoData = (await rpcApi({
+    method: "getrawtransactionmulti",
+    params: [
+      {
+        "0": txids,
+      },
+      VERBOSE
+    ]
+  }));
+  txs = Object.values(txInfoData?.result || {})
+
+  console.log('rpcAddrsTransactions', {
+    txInfoData,
+    txids,
+    txs,
+  })
+
+  return txs;
+}
 
 export async function getAddrsTransactions({
-  appState, addrs, contactAddrs = {},
+  appState,
+  addrs,
+  contactAddrs = {},
   txs = [],
 }) {
   let storeAddrs = await loadStoreObject(store.addresses)
   if (txs.length === 0) {
-    txs = await dashsight.getAllTxs(addrs)
+    txs = await rpcAddrsTransactions({
+      addresses: addrs,
+      txs,
+    })
   }
   let byAddress = {}
   let byAlias = {}
   let byTx = {}
-
-  // console.log('getAddrsTransactions', {
-  //   txs, addrs, contactAddrs, appT: appState.transactions
-  // })
 
   for await (let tx of txs) {
     let dir = 'received'
@@ -627,7 +759,7 @@ export async function getAddrsTransactions({
     let receivedAmount = 0
 
     for await (let vin of tx.vin) {
-      let addr = vin.addr
+      let addr = vin.address
       conAddr = contactAddrs[addr]
 
       if(storeAddrs[addr]) {
@@ -643,30 +775,38 @@ export async function getAddrsTransactions({
       }
     }
 
+    function voutSort({ addr, vout, }) {
+      let conAddr = contactAddrs[addr]
+
+      if(storeAddrs[addr]) {
+        receivedAmount += Number(vout.value)
+      } else {
+        // sentAmount -= Number(vout.value)
+      }
+
+      if (conAddr) {
+        sortIncomingAndOutgoingTxs({
+          tx, addr, conAddr, dir, receivedAmount,
+          byAlias, byAddress, byTx,
+        })
+      }
+    }
+
     for await (let vout of tx.vout) {
+      if (vout?.scriptPubKey?.address) {
+        let addr = vout?.scriptPubKey?.address
+        voutSort({ addr, vout })
+      }
       if (vout?.scriptPubKey?.addresses) {
         for await (let addr of vout.scriptPubKey.addresses) {
-          // let addr = vout.scriptPubKey.addresses[0]
-          conAddr = contactAddrs[addr]
-
-          if(storeAddrs[addr]) {
-            receivedAmount += Number(vout.value)
-          } else {
-            // sentAmount -= Number(vout.value)
-          }
-
-          if (conAddr) {
-            sortIncomingAndOutgoingTxs({
-              tx, addr, conAddr, dir, receivedAmount,
-              byAlias, byAddress, byTx,
-            })
-          }
+          voutSort({ addr, vout })
         }
       }
     }
 
     byTx[tx.txid] = {
       ...byTx[tx.txid],
+      ...tx,
       receivedAmount,
       sentAmount,
     }
@@ -724,4 +864,196 @@ export async function getTxs(appState, transactions = []) {
   // })
 
   return txs
+}
+
+export async function processURI(state, target, value) {
+  let {
+    address,
+    xpub,
+    xprv,
+    name,
+    preferred_username,
+    sub,
+  } = parseAddressField(value)
+
+  let xkey = xprv || xpub
+
+  let xkeyOrAddr = xkey || address
+
+  let info = {
+    name: name || '',
+    sub,
+    preferred_username,
+  }
+
+  let preferredAlias = await getUniqueAlias(
+    getContactAliases(),
+    preferred_username
+  )
+
+  let outgoing = {}
+
+  let existingContacts
+  let contactWallet
+
+  if (!xkey && address) {
+    existingContacts = appState.contacts?.filter(
+      c => c.outgoing?.[address]
+    )
+
+    outgoing = {
+      ...(state.contact.outgoing || {}),
+      [address]: {
+        address,
+      },
+    }
+  }
+
+  if (xkey) {
+    contactWallet = await deriveWalletData(
+      xkey,
+    )
+    let {
+      xkeyId,
+      addressKeyId,
+      addressIndex,
+      address: addr,
+    } = contactWallet
+
+    existingContacts = appState.contacts?.filter(
+      c => c.outgoing?.[xkeyId]
+    )
+
+    outgoing = {
+      ...(state.contact.outgoing || {}),
+      [xkeyId]: {
+        addressIndex,
+        addressKeyId,
+        address: address || addr,
+        xkeyId,
+        xprv,
+        xpub,
+      },
+    }
+
+    // console.log(
+    //   'add contact handleInput parsedAddr',
+    //   value,
+    //   xkey,
+    // )
+  }
+
+  let newContact
+
+  if (existingContacts?.length > 0) {
+    console.warn(
+      `You've already paired with this contact`,
+      {
+        existingContacts,
+        newContact: {
+          alias: preferredAlias,
+          outgoing,
+        }
+      }
+    )
+
+    // newContact = existingContacts[0]
+
+    let pairings = existingContacts.map(c => `@${c.alias}`)
+    if (pairings.length > 1) {
+      let lastPairing = pairings.pop()
+      pairings = `${pairings.join(', ')} & ${lastPairing}`
+    } else {
+      pairings = pairings[0]
+    }
+
+    // TODO: maybe prompt to show original pairing info
+    // in the scenario where your contact
+    // lost their contacts list
+    target.contactAddr.setCustomValidity(
+      `You've already paired with this contact (@${preferred_username}) as ${pairings}`,
+    )
+    target.reportValidity()
+    return;
+  } else {
+    if (Object.keys(outgoing).length > 0 && contactWallet) {
+      let xkeyAddrs = await batchXkeyAddressGenerate(
+        contactWallet,
+        contactWallet.addressIndex,
+      )
+      let contactAddrs = {}
+      let addresses = xkeyAddrs.addresses.map(g => {
+        contactAddrs[g.address] = {
+          alias: preferredAlias,
+          xkeyId: contactWallet.xkeyId,
+        }
+        return g.address
+      })
+
+      let txs = await getAddrsTransactions({
+        appState,
+        addrs: addresses,
+        contactAddrs,
+      })
+
+      // outgoing[contactWallet.xkeyId] = {
+      //   ...(outgoing[contactWallet.xkeyId] || {}),
+      //   addressIndex: xkeyAddrs.finalAddressIndex,
+      // }
+
+      // console.log('xkeyAddrs', {addresses, txs})
+    }
+
+    newContact = await appTools.storedData.encryptItem(
+      store.contacts,
+      state.wallet.xkeyId,
+      {
+        ...state.contact,
+        updatedAt: (new Date()).toISOString(),
+        info: {
+          ...OIDC_CLAIMS,
+          ...(state.contact.info || {}),
+          ...info,
+        },
+        outgoing,
+        alias: preferredAlias,
+        uri: value,
+      },
+      false,
+    )
+
+    getStoreData(
+      store.contacts,
+      res => {
+        if (res) {
+          appState.contacts = res
+
+          return appComponents.contactsList?.restate?.({
+            contacts: res,
+            userInfo,
+          })
+        }
+      },
+      res => async v => {
+        res.push(await appTools.storedData.decryptData(v))
+      }
+    )
+
+    state.contact = newContact
+
+    if (value) {
+      target.contactURI.value = value
+    }
+    if (xkeyOrAddr) {
+      target.contactAddr.value = xkeyOrAddr
+    }
+    if (name) {
+      target.contactName.value = name
+    }
+    if (preferred_username) {
+      target.contactAlias.value = preferredAlias
+    }
+  }
+
+  return
 }

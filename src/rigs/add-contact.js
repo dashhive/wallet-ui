@@ -15,15 +15,17 @@ import {
   getStoreData,
 } from '../utils/db.js'
 
-import { qrSvg } from '../utils/qr.js'
+import {
+  generateContactPairingURI,
+} from '../utils/dash/local.js'
 
 import {
-  deriveWalletData,
-  parseAddressField,
-  generateContactPairingURI,
-  getUniqueAlias,
-  isUniqueAlias,
-} from '../utils/dash/local.js'
+  processURI,
+} from '../utils/dash/network.js'
+
+import * as model from '../models/contacts.js'
+
+import { qrSvg } from '../utils/qr.js'
 
 export let addContactRig = (async function (globals) {
   'use strict';
@@ -91,198 +93,6 @@ export let addContactRig = (async function (globals) {
       }
     )
   }, 1000)
-
-  async function processURI(state, target, value) {
-    let {
-      address,
-      xpub,
-      xprv,
-      name,
-      preferred_username,
-      sub,
-    } = parseAddressField(value)
-
-    let xkey = xprv || xpub
-
-    let xkeyOrAddr = xkey || address
-
-    let info = {
-      name: name || '',
-      sub,
-      preferred_username,
-    }
-
-    let preferredAlias = await getUniqueAlias(
-      aliases,
-      preferred_username
-    )
-
-    let outgoing = {}
-
-    let existingContacts
-    let contactWallet
-
-    if (!xkey && address) {
-      existingContacts = appState.contacts.filter(
-        c => c.outgoing?.[address]
-      )
-
-      outgoing = {
-        ...(state.contact.outgoing || {}),
-        [address]: {
-          address,
-        },
-      }
-    }
-
-    if (xkey) {
-      contactWallet = await deriveWalletData(
-        xkey,
-      )
-      let {
-        xkeyId,
-        addressKeyId,
-        addressIndex,
-        address: addr,
-      } = contactWallet
-
-      existingContacts = appState.contacts.filter(
-        c => c.outgoing?.[xkeyId]
-      )
-
-      outgoing = {
-        ...(state.contact.outgoing || {}),
-        [xkeyId]: {
-          addressIndex,
-          addressKeyId,
-          address: address || addr,
-          xkeyId,
-          xprv,
-          xpub,
-        },
-      }
-
-      // console.log(
-      //   'add contact handleInput parsedAddr',
-      //   value,
-      //   xkey,
-      // )
-    }
-
-    let newContact
-
-    if (existingContacts?.length > 0) {
-      console.warn(
-        `You've already paired with this contact`,
-        {
-          existingContacts,
-          newContact: {
-            alias: preferredAlias,
-            outgoing,
-          }
-        }
-      )
-
-      // newContact = existingContacts[0]
-
-      let pairings = existingContacts.map(c => `@${c.alias}`)
-      if (pairings.length > 1) {
-        let lastPairing = pairings.pop()
-        pairings = `${pairings.join(', ')} & ${lastPairing}`
-      } else {
-        pairings = pairings[0]
-      }
-
-      // TODO: maybe prompt to show original pairing info
-      // in the scenario where your contact
-      // lost their contacts list
-      target.contactAddr.setCustomValidity(
-        `You've already paired with this contact (@${preferred_username}) as ${pairings}`,
-      )
-      target.reportValidity()
-      return;
-    } else {
-      if (Object.keys(outgoing).length > 0 && contactWallet) {
-        let xkeyAddrs = await batchXkeyAddressGenerate(
-          contactWallet,
-          contactWallet.addressIndex,
-        )
-        let contactAddrs = {}
-        let addresses = xkeyAddrs.addresses.map(g => {
-          contactAddrs[g.address] = {
-            alias: preferredAlias,
-            xkeyId: contactWallet.xkeyId,
-          }
-          return g.address
-        })
-
-        let txs = await getAddrsTransactions({
-          appState,
-          addrs: addresses,
-          contactAddrs,
-        })
-
-        // outgoing[contactWallet.xkeyId] = {
-        //   ...(outgoing[contactWallet.xkeyId] || {}),
-        //   addressIndex: xkeyAddrs.finalAddressIndex,
-        // }
-
-        // console.log('xkeyAddrs', {addresses, txs})
-      }
-
-      newContact = await appTools.storedData.encryptItem(
-        store.contacts,
-        state.wallet.xkeyId,
-        {
-          ...state.contact,
-          updatedAt: (new Date()).toISOString(),
-          info: {
-            ...OIDC_CLAIMS,
-            ...(state.contact.info || {}),
-            ...info,
-          },
-          outgoing,
-          alias: preferredAlias,
-          uri: value,
-        },
-        false,
-      )
-
-      getStoreData(
-        store.contacts,
-        res => {
-          if (res) {
-            appState.contacts = res
-
-            return contactsList.restate({
-              contacts: res,
-              userInfo,
-            })
-          }
-        },
-        res => async v => {
-          res.push(await appTools.storedData.decryptData(v))
-        }
-      )
-
-      state.contact = newContact
-
-      if (value) {
-        target.contactURI.value = value
-      }
-      if (xkeyOrAddr) {
-        target.contactAddr.value = xkeyOrAddr
-      }
-      if (name) {
-        target.contactName.value = name
-      }
-      if (preferred_username) {
-        target.contactAlias.value = preferredAlias
-      }
-    }
-
-    return
-  }
 
   let addContact = await setupDialog(
     mainApp,
@@ -462,7 +272,7 @@ export let addContactRig = (async function (globals) {
             // )
             if (
               startAlias !== event.target?.value &&
-              !isUniqueAlias(aliases, event.target?.value)
+              !aliases[event.target?.value]
             ) {
               event.target.setCustomValidity(
                 'Alias already used. A unique alias is required.'
@@ -594,9 +404,10 @@ export let addContactRig = (async function (globals) {
             event.target.reportValidity()
             return;
           }
+
           if (
             startAlias !== currentAlias &&
-            !isUniqueAlias(aliases, currentAlias)
+            !aliases[currentAlias]
           ) {
             event.target.contactAlias.setCustomValidity(
               'Alias already used. A unique alias is required.'
@@ -605,54 +416,12 @@ export let addContactRig = (async function (globals) {
             return;
           }
 
-          let storedContact = await appTools.storedData.decryptItem(
-            store.contacts,
-            state.wallet.xkeyId,
-          )
-          let pairedContact = appTools.storedData.encryptItem(
-            store.contacts,
-            state.wallet.xkeyId,
-            {
-              ...storedContact,
-              updatedAt: (new Date()).toISOString(),
-              info: {
-                // ...OIDC_CLAIMS,
-                ...(storedContact.info || {}),
-                // @ts-ignore
-                sub: parsedAddr?.sub || '',
-                name: event.target.contactName.value,
-              },
-              uri: event.target.contactURI.value,
-              alias: currentAlias || event.target.contactAlias.value,
+          model.putContact({
+            info: {
+              name: event.target.contactName.value,
             },
-            false,
-          )
-
-          pairedContact.then(pc => {
-            // console.log('pairedContact', pc)
-
-            getStoreData(
-              store.contacts,
-              res => {
-                if (res) {
-                  appState.contacts = res
-
-                  updateAllFunds(state.wallet)
-                    .then(funds => {
-                      // console.log('updateAllFunds then funds', funds)
-                    })
-                    .catch(err => console.error('catch updateAllFunds', err, state.wallet))
-
-                  return contactsList.restate({
-                    contacts: res,
-                    userInfo,
-                  })
-                }
-              },
-              res => async v => {
-                res.push(await appTools.storedData.decryptData(v))
-              }
-            )
+            alias: currentAlias || event.target.contactAlias.value,
+            uri: event.target.contactURI.value,
           })
 
           addContact.close()

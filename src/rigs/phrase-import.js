@@ -60,10 +60,10 @@ export let phraseImportRig = (async function (globals) {
 
       state.elements.form.alias.value = appState.selectedAlias
 
-      appState.selectedWallet = Object.keys(
+      localStorage.selectedWallet = Object.keys(
         res.wallets
       )?.[0]
-      localStorage.selectedWallet = appState.selectedWallet
+      appState.selectedWallet = wallet.id
     } else {
       console.log('kestore file', { res, file })
       state.keystoreData = res
@@ -476,8 +476,8 @@ export let phraseImportRig = (async function (globals) {
 
           wallet = await deriveWalletData(appState.phrase)
 
+          localStorage.selectedWallet = wallet.id
           appState.selectedWallet = wallet.id
-          localStorage.selectedWallet = appState.selectedWallet
 
           let usage = [0,0]
           // usage[wallet.usageIndex] = wallet.addressIndex

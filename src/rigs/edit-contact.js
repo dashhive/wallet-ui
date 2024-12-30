@@ -18,7 +18,6 @@ import {
   deriveWalletData,
   parseAddressField,
   getUniqueAlias,
-  isUniqueAlias,
 } from '../utils/dash/local.js'
 
 export let editContactRig = (async function (globals) {
@@ -349,7 +348,7 @@ export let editContactRig = (async function (globals) {
           ) {
             if (
               startAlias !== event.target?.value &&
-              !isUniqueAlias(aliases, event.target?.value)
+              !aliases[event.target?.value]
             ) {
               event.target.setCustomValidity(
                 'Alias already used. A unique alias is required.'
@@ -477,7 +476,7 @@ export let editContactRig = (async function (globals) {
           }
           if (
             startAlias !== currentAlias &&
-            !isUniqueAlias(aliases, currentAlias)
+            !aliases[currentAlias]
           ) {
             event.target.contactAlias.setCustomValidity(
               'Alias already used. A unique alias is required.'

@@ -23,7 +23,20 @@ import {
 import {
   encryptData,
   encryptKeystore,
+  storedData,
 } from '../cryptic.js'
+
+import {
+  appState,
+  appTools,
+  appDialogs,
+  getStoredWallet,
+  storedWallets,
+  wallets,
+  userInfo,
+} from '../../state/index.js'
+
+import showErrorDialog from '../../rigs/show-error.js'
 
 export const store = await DatabaseSetup()
 
@@ -79,7 +92,7 @@ export async function deriveWalletData(
   addressKeyId = await DashHd.toId(addressKey);
   address = await DashHd.toAddr(addressKey.publicKey);
 
-  return {
+  let derivedData = {
     id,
     accountIndex,
     usageIndex,
@@ -95,8 +108,16 @@ export async function deriveWalletData(
     wpub,
     account,
     derivedWallet,
-    recoveryPhrase,
+    // recoveryPhrase,
   }
+
+  Object.defineProperties(derivedData, {
+    recoveryPhrase: {
+      get: () => recoveryPhrase,
+    },
+  });
+
+  return derivedData
 }
 
 /**
@@ -225,7 +246,16 @@ export function fixedDash(dash, fix = 8) {
   .toFixed(fix);
 }
 
-// https://stackoverflow.com/a/27946310
+/**
+ * Based on https://stackoverflow.com/a/27946310
+ * @example
+ *    let roof = roundUsing(Math.ceil, 0.1111111, 3)
+ *    let base = roundUsing(Math.floor, 0.1111111, 3)
+ *
+ * @param {Function} func - Math.ceil
+ * @param {Number} number - ex: 0.00000000
+ * @param {Number} [prec] - precision - ex: 8
+ */
 export function roundUsing(func, number, prec = 8) {
   var tempnumber = number * Math.pow(10, prec);
   tempnumber = func(tempnumber);
@@ -333,8 +363,6 @@ export async function loadWalletsForAlias($alias) {
 export async function initWalletsInfo(
   info = {},
 ) {
-  let wallets = await getStoredItems(store.wallets)
-
   info = {
     ...OIDC_CLAIMS,
     ...info,
@@ -342,14 +370,15 @@ export async function initWalletsInfo(
 
   let alias = info.preferred_username
 
-  wallets = Object.values(wallets || {})
-  wallets = wallets
+  let walletIds = Object.values(wallets || {})
+  walletIds = walletIds
     .filter(w => w.alias === alias)
     .map(w => w.id)
 
   return {
     alias,
     wallets,
+    walletIds,
     info,
   }
 }
@@ -364,21 +393,10 @@ export async function initWallet(
 ) {
   let {
     alias,
-    wallets,
     info,
   } = await initWalletsInfo(infoOverride)
 
   let { id, recoveryPhrase } = wallet
-
-  // console.log(
-  //   'initWallet wallets',
-  //   wallets,
-  //   info,
-  // )
-
-  if (!wallets.includes(id)) {
-    wallets.push(id)
-  }
 
   let addrs = await batchAddressUsageGenerate(
     wallet,
@@ -416,27 +434,24 @@ export async function initWallet(
     }
   )
 
+  let aliasWalletJSON = JSON.stringify({
+    wallets: Object.keys(wallets),
+    info,
+  })
+
   let storedAlias = await store.aliases.setItem(
     `${alias}`,
     await encryptData(
       encryptionPassword,
       storeWallet.keystore,
-      JSON.stringify({
-        wallets,
-        info,
-      })
+      aliasWalletJSON,
     )
   )
-
-  // console.log(
-  //   'initWallet stored values',
-  //   storeWallet,
-  //   storedAlias,
-  // )
 
   let contacts = '{}'
 
   return {
+    keystore: storeWallet.keystore,
     wallets,
     contacts,
   }
@@ -675,6 +690,11 @@ export function generatePaymentRequestURI(
 ) {
   let addr = state.wallet?.address || ''
   let claims = []
+  // console.log(
+  //   'generatePaymentRequestURI',
+  //   state,
+  //   protocol
+  // )
 
   if (state.userInfo) {
     let filteredInfo = Array.from(
@@ -737,15 +757,10 @@ export async function verifyPhrase(phrase) {
   return await DashPhrase.verify(phrase).catch(_ => false)
 }
 
-export function isUniqueAlias(aliases, preferredAlias) {
-  return !aliases[preferredAlias]
-}
-
 export async function getUniqueAlias(aliases, preferredAlias) {
   let uniqueAlias = preferredAlias
-  let notUnique = !isUniqueAlias(aliases, uniqueAlias)
 
-  if (notUnique) {
+  if (aliases.includes(preferredAlias)) {
     let aliasArr = uniqueAlias.split('_')
     let randomWords = (await getRandomWords()).split(' ')
 
@@ -1285,7 +1300,8 @@ export function selectOptimalUtxos(utxos, output) {
 }
 
 export function sortIncomingAndOutgoingTxs({
-  conAddr, tx, addr, dir, sentAmount = null, receivedAmount = null,
+  conAddr, tx, addr, dir,
+  sentAmount = null, receivedAmount = null,
   byAlias = {}, byAddress = {}, byTx = {},
 }) {
   let alias = byTx?.[tx.txid]?.alias || conAddr.alias
@@ -1429,4 +1445,69 @@ export function getTransactionsByContactAlias(appState) {
 
     return res
   }
+}
+
+export async function getUserInfo() {
+  let sw = appState.selectedWallet
+  let wal = getStoredWallet(sw)
+
+  if (sw && !wal) {
+    wal = await store.wallets.getItem(sw)
+    wallets[sw] = wal
+  }
+
+  let ks = wal?.keystore
+
+  if (
+    appState.encryptionPassword &&
+    appState.selectedAlias &&
+    ks
+  ) {
+    appTools.storedData = storedData(
+      appState.encryptionPassword,
+      ks,
+    )
+
+    await appTools.storedData?.decryptItem(
+      store.aliases,
+      appState.selectedAlias,
+    )
+    .then(async $alias => {
+      let loadedAlias = await loadWalletsForAlias(
+        $alias
+      )
+
+      Object.entries((loadedAlias?.info || {}))
+        .forEach(
+          ([k,v]) => userInfo[k] = v
+        )
+    })
+    .catch(err => {
+      showErrorDialog({
+        title: 'Unable to decrypt seed phrase',
+        msg: err,
+        showActBtn: false,
+        confirmAction: appDialogs.confirmAction,
+      })
+    })
+  }
+}
+
+export function getContactAliases(
+  direction // 'outgoing' | 'incoming'
+) {
+  if (!direction) {
+    return appState.contacts
+      .filter(
+        c => c.alias
+      )
+      .map(contact => contact.alias)
+  }
+
+  return appState.contacts
+    .filter(
+      c => c.alias &&
+      !isEmpty(c[direction])
+    )
+    .map(contact => contact.alias)
 }

@@ -1,3 +1,5 @@
+export const DEFAULT_ENTRYPOINT = document.querySelector('main#app')
+
 export const KS_PRF = {
   'hmac-sha256': 'SHA-256',
 }
@@ -113,7 +115,7 @@ export const TIMEAGO_LOCALE_EN = {
   weeks: "%w weeks ago",
   month: "a month ago",
   months: "%M months ago",
-  years: "more than a year ago",
+  years: "over a year ago",
   never: "never",
 }
 
@@ -132,6 +134,8 @@ export const DASH_URI_REGEX = new RegExp(
   /^(?:web\+)?(?<protocol>dash)(?:[:])(?:\/\/)?(?<address>X[a-zA-Z0-9]{33})?(?:(?:[?])(?<params>.+))?/,
   'ig'
 )
+
+export const VERBOSE = true
 
 export const RECEIVE = 0 // DashHd.RECEIVE
 export const CHANGE = 1 // DashHd.CHANGE
@@ -153,12 +157,30 @@ export const DIALOG_STATUS = {
   ERROR
 }
 
+export const DCD_RPC_ENDPOINT = 'https://rpc.digitalcash.dev/'
+export const DCD_RPC_AUTH = btoa(`user:pass`);
+
+export const CORS_BYPASS = 'https://wallet.dashing.trade/api/cors'
+
 export const CROWDNODE = {
   offset: 20000,
   duffs: 100000000,
   satoshis: 100000000,
   depositMinimum: 100000,
   stakeMinimum: 50000000,
+
+  network: {
+    main: {
+      // baseUrl: "https://app.crowdnode.io",
+      baseUrl: `${CORS_BYPASS}/app.crowdnode.io`,
+      hotwallet: "XjbaGWaGnvEtuQAUoBgDxJWe8ZNv45upG2",
+    },
+    test: {
+      // baseUrl: "https://test.crowdnode.io",
+      baseUrl: `${CORS_BYPASS}/test.crowdnode.io`,
+      hotwallet: "yMY5bqWcknGy5xYBHSsh2xvHZiJsRucjuy",
+    },
+  },
 
   /**
    * @type {Record<String, Number>}

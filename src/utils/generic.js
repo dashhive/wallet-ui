@@ -29,23 +29,42 @@ let eventHandlers = []
  */
 export const lit = (s, ...v) => String.raw({ raw: s }, ...(v.map(x => x || '')))
 
+const html = lit
+
 export function isEmpty(value) {
-  if (value === null) {
+  if (
+    undefined === value ||
+    null === value ||
+    'undefined' === typeof value
+  ) {
     return true
   }
-  // if (typeof value === 'boolean' && value === false) {
+  // if (
+  //   typeof value === 'boolean' &&
+  //   value === false
+  // ) {
   //   return true
   // }
-  if (typeof value === 'string' && value?.length === 0) {
+  if (
+    typeof value === 'string' &&
+    value.length === 0
+  ) {
     return true
   }
-  if (typeof value === 'object' && Object.keys(value)?.length === 0) {
+  if (
+    typeof value === 'object' &&
+    Object.keys(value || {}).length === 0
+  ) {
     return true
   }
-  if (Array.isArray(value) && value.length === 0) {
+  if (
+    Array.isArray(value) &&
+    value.length === 0
+  ) {
     return true
   }
-  return false;
+
+  return false
 }
 
 /**
@@ -54,7 +73,7 @@ export function isEmpty(value) {
  * https://www.freecodecamp.org/news/javascript-debounce-example/
  *
  * @example
- *    const change = debounce((a) => console.log('Saving data', a));
+ *    const change = debouncePromise((a) => console.log('Saving data', a));
  *    change('b');change('c');change('d');
  *    'Saving data d'
  *
@@ -257,7 +276,7 @@ export async function getAvatar(c) {
   }
 
   if (c?.info?.picture) {
-    avStr += `color:transparent;background-image:url(${c.info.picture});`
+    avStr += `color:transparent;background-color:transparent;background-image:url(${c.info.picture});`
   }
 
   // Gravatar
@@ -536,4 +555,62 @@ export function openBlobSVG(target) {
 	const url = URL.createObjectURL(svgBlob);
 	const win = open(url);
 	win.onload = (evt) => URL.revokeObjectURL(url);
+}
+
+export async function handlePasswordToggle(event) {
+  let {
+    // @ts-ignore
+    name: fieldName, form,
+  } = event?.target
+
+  if (
+    fieldName === 'show_pass'
+  ) {
+    event.stopPropagation()
+    event.preventDefault()
+
+    let { pass, show_pass, } = form
+
+    if (show_pass?.checked) {
+      pass.type = 'text'
+    } else {
+      pass.type = 'password'
+    }
+  }
+}
+
+export function getTarget(event, selector) {
+  let {
+    // @ts-ignore
+    id,
+    // @ts-ignore
+    parentElement,
+    // @ts-ignore
+    parentNode,
+  } = event?.target
+
+  let target
+
+  if (id === selector) {
+    target = event?.target
+  }
+
+  if (parentElement?.id === selector) {
+    target = parentElement
+  }
+
+  if (parentNode?.id === selector) {
+    target = parentNode
+  }
+
+  return target
+}
+
+export async function showNotification({
+  type = '',
+  title = '',
+  msg = '',
+  sticky = false,
+}) {
+  console.log('notification', {type, title, msg, sticky})
 }

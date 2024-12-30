@@ -69,10 +69,15 @@
   align-items: flex-start;
   gap: 0.375rem;
   font-style: normal;
-  flex: 1 1 auto;
+  flex: 1 0 auto;
 }
 .cols > section > div > a > aside {
-  display: flex;
+  display: inline-block;
+  width: 5rem;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  text-align: left;
 }
 .cols > section > div > a > aside > button {
   padding: 0.5rem;
@@ -91,6 +96,7 @@
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
+  flex-shrink: 0;
 }
 
 .contacts {

@@ -38,6 +38,7 @@ export async function DatabaseSetup() {
   loadInstance('accounts');
   loadInstance('addresses');
   loadInstance('transactions');
+  loadInstance('integrations');
 
   return loadedStores
 }
@@ -176,7 +177,14 @@ export function exportWalletData(name, version) {
       .catch(console.error)
   }
 }
-
+/**
+ * Returns data from the store in an array
+ *
+ * @param {*} store
+ * @param {Function} [callback]
+ * @param {Function} [iterableCallback]
+ * @returns {Promise<any[]?>}
+ */
 export async function getStoreData(
   store,
   callback,
@@ -199,6 +207,14 @@ export async function getStoreData(
   });
 }
 
+/**
+ * Returns data from the store in an array
+ *
+ * @param {*} store
+ * @param {Function} [callback]
+ * @param {Function} [iterableCallback]
+ * @returns {Promise<any[]?>}
+ */
 export async function loadStore(
   store,
   callback,
@@ -214,6 +230,13 @@ export async function loadStore(
   });
 }
 
+/**
+ * Returns data from the store in an object
+ *
+ * @param {*} store
+ * @param {Function} [callback]
+ * @returns {Promise<any?>}
+ */
 export async function loadStoreObject(store, callback) {
   let result = {}
 
